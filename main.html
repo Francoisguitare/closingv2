@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grille de Qualification R1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Librairies pour l'export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- SDK Firebase (Firestore) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Configuration Firebase (globale pour ce script)
+        let db, auth, appId, userId;
+
+        try {
+            // NOTE: La config Firebase reste ici car cette page est la seule à en avoir besoin.
+            const firebaseConfig = {
+                apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
+                authDomain: "closing-gia.firebaseapp.com",
+                projectId: "closing-gia",
+                storageBucket: "closing-gia.firebasestorage.app",
+                messagingSenderId: "260776101981",
+                appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
+            };
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // setLogLevel('debug');
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Firebase Auth prête. UserID:", userId);
+                } else {
+                    console.log("Firebase Auth: Utilisateur non connecté.");
+                }
+            });
+
+            await signInAnonymously(auth);
+
+            // Rendre db et auth accessibles à l'objet App
+            window.firebaseServices = { db, auth, appId };
+
+        } catch (error) {
+            console.error("Erreur initialisation Firebase:", error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-50';
+            errorDiv.textContent = 'Erreur critique: Impossible de charger la base de données. L\'enregistrement sera désactivé.';
+            document.body.prepend(errorDiv);
+        }
+
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
+    
+        /* Spinner pour l'export PDF */
+        #pdf-spinner {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #pdf-spinner::after {
+            content: ''; width: 50px; height: 50px;
+            border: 5px solid #475569; border-top-color: #38bdf8;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        #pdf-spinner-text { color: white; margin-top: 20px; font-size: 1.1rem; font-weight: 500; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
+
+    <div id="app" class="h-full">
+        <!-- Les écrans 1, 2, 3 ont été déplacés -->
+
+        <!-- ======================================= -->
+        <!-- ÉCRAN 4: ESPACE DE TRAVAIL              -->
+        <!-- ======================================= -->
+        <div id="mainScreen" class="grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 hidden w-full max-w-7xl mx-auto">
+            
+            <!-- Colonne de Gauche : Prise de notes -->
+            <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden"> 
+                
+                <!-- Boutons (MAJ: 'Retour' et 'Reset' sont maintenant des liens <a>) -->
+                <div class="flex justify-between items-center p-2 flex-shrink-0">
+                    <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">
+                        &larr; Retour Script
+                    </a>
+                    <h2 class="text-lg font-semibold text-gray-300">
+                        Prospect: <span id="mainProspectName" class="text-white font-bold"></span>
+                    </h2>
+                    <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">
+                        Reset (Accueil)
+                    </a>
+                </div>
+
+                <!-- Coach de Questions -->
+                <div id="questionCoachContainer" class="bg-slate-900/50 rounded-xl border border-amber-500/50 shadow-lg flex-shrink-0">
+                    <button id="coachToggleTrigger" class="flex items-center justify-between w-full text-lg font-semibold text-amber-300 p-4">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>
+                            <span>Coach de Questions</span>
+                        </span>
+                        <svg id="coachToggleIcon" class="w-5 h-5 transition-transform duration-300 transform -rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden">
+                        <li class="text-gray-400 italic">Remplissez les badges pour voir les suggestions...</li>
+                    </ul>
+                </div>
+
+                <!-- Conteneur de badges scrollable -->
+                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
+                        <div class="space-y-6 pt-4">
+                    
+                            <!-- 1. Compétence -->
+                            <fieldset class="border border-slate-700 rounded-lg p-4">
+                                <legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-300 mb-2">Expérience Totale</label>
+                                        <div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-300 mb-2">Parcours / Cours Suivis</label>
+                                        <div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <!-- 2. Matériel -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Matériel</label>
+                                <div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <!-- 4. Style de prédilection -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Style de prédilection</label>
+                                <div id="contextStyleContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <!-- 5. Objectifs -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Objectifs</label>
+                                <div id="contextDouleursContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <!-- 7. Temps à consacrer -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Temps Dispo / Semaine</label>
+                                <div id="contextTempsContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <hr class="border-slate-700">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Statut</label>
+                                <div id="contextStatutContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Tranche d'Âge</label>
+                                <div id="contextAgeContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Conséquence si inaction (6 mois) ?</label>
+                                <div id="contextConsequenceContainer" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne de Droite : Tableau de Bord -->
+            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto custom-scrollbar">
+                <div id="dashboardContent" class="sticky top-0 space-y-5 bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-2xl">
+                    
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
+                        <h3 class="text-md font-semibold text-gray-100 text-center mb-2">Diagnostic Prospect</h3>
+                        <div class="w-full">
+                            <span id="gaugeDispoLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Disponibilité (Temps)</span>
+                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
+                                <div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <span id="gaugeMotivLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Objectifs (Douleur)</span>
+                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
+                                <div id="gaugeMotiv" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <span id="gaugeAdeqLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Adéquation (Vision)</span>
+                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
+                                <div id="gaugeAdeq" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <span id="gaugeCompetenceLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Compétence (Niveau)</span>
+                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
+                                <div id="gaugeCompetence" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <span id="gaugeCapaLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Capacité (Finances)</span>
+                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
+                                <div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="text-center pt-3 border-t border-slate-700 mt-4">
+                                <span class="text-sm font-medium text-gray-300">Score Total : </span>
+                                <span id="totalScore" class="text-2xl font-bold text-teal-300">0</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner">
+                        <span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">
+                            En attente...
+                        </span>
+                        <p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">
+                            Remplir les badges...
+                        </p>
+                    </div>
+
+                    <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border">
+                        <h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3>
+                            <div class="space-y-2 pt-2">
+                                <h4 class="text-sm font-semibold text-green-400">Points Forts (Ce que tu as) :</h4>
+                                <ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1">
+                                </ul>
+                            </div>
+                            <div class="space-y-2 pt-2">
+                                <h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Tes Points d'Effort (Ce qu'il faut) :</h4>
+                                <ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1">
+                                </ul>
+                            </div>
+                    </div>
+
+                    <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">
+                        Suite : Voir la Proposition GIA &rarr;
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="saveR1Button" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-blue-600 hover:bg-blue-500 text-white shadow-blue-800/40 flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+                            </svg>
+                            <span>Enregistrer R1</span>
+                        </button>
+
+                        <button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Exporter PDF</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner">
+                        <label for="notesTextarea" class="block text-sm font-medium text-gray-300 mb-2">Résumé R1 & Notes Personnelles</label>
+                        <textarea id="notesTextarea" rows="6" placeholder="Les badges et vos notes perso apparaîtront ici..." class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 px-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"></textarea>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ======================================= -->
+        <!-- ÉCRAN 5: PITCH GIA (VISUEL EFFICACE)    -->
+        <!-- ======================================= -->
+        <div id="giaPitchScreen" class="h-full flex flex-col items-center justify-center p-4 hidden">
+            <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue dans la Guitare Impro Académie</h1>
+                <p class="text-md md:text-lg text-gray-200 text-center mb-6">Ce n'est pas un "cours de guitare".<br>C'est un <span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center flex-grow">
+                    <!-- Pilier 1 -->
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
+                        <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        </svg>
+                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA MÉTHODE</h3>
+                        <p class="text-gray-300 text-sm">Une transformation de 9 mois pour maîtriser la <span class="font-semibold text-white">logique</span> de la musique (harmonie, rythme, oreille). Tu ne dépendras plus jamais des tablatures.</p>
+                    </div>
+                    <!-- Pilier 2 -->
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
+                        <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m10.116 0a5.97 5.97 0 00-4.682-2.72m-5.438 2.72A5.97 5.97 0 016 18.72m0 0a5.97 5.97 0 01-.94-3.197m0 0c0-1.06.318-2.053.87-2.882m-1.14 0a6.062 6.062 0 01-1.636 2.882M12 12.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
+                        </svg>
+                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">L'ACCOMPAGNEMENT</h3>
+                        <p class="text-gray-300 text-sm">Un suivi <span class="font-semibold text-white">direct et personnel</span>. Nous ne lâchons personne. Fini la frustration et la solitude de l'autodidacte face à son mur.</p>
+                    </div>
+                    <!-- Pilier 3 -->
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
+                            <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                        </svg>
+                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA TRANSFORMATION</h3>
+                        <p class="text-gray-300 text-sm">Notre promesse : devenir un guitariste <span class="font-semibold text-white">autonome</span>, capable d'improviser librement et de jouer en groupe. C'est la fin du syndrome de l'imposteur.</p>
+                    </div>
+                </div>
+
+                <hr class="border-slate-600 my-6"/>
+
+                <div class="bg-slate-900/60 p-4 md:p-5 rounded-lg border border-amber-500/30 text-center">
+                    <h4 class="text-lg font-semibold text-amber-300 mb-2">Ceci est un engagement intensif.</h4>
+                    <p class="text-gray-200 text-base">Pour garantir ce niveau de transformation et d'accompagnement, l'investissement pour ce programme complet se situe entre <span class="font-bold text-white">3000€ et 3600€</span>.</p>
+                </div>
+
+                <div class="flex justify-between items-center pt-4">
+                    <button id="pitchBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
+                        &larr; Revoir le Diagnostic
+                    </button>
+                    <button id="pitchNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                        Je suis prêt à m'engager
+                    </button>
+                </div>
+            </div>
+        </div> <!-- Fin giaPitchScreen -->
+    </div>
+
+    <!-- ======================================= -->
+    <!-- JAVASCRIPT REFACTORISÉ                  -->
+    <!-- ======================================= -->
+    <script type="module">
+        // Import Firestore services depuis la config globale
+        const { db, auth, appId } = window.firebaseServices || {};
+        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+        // --- (DÉBUT) CONSTANTES DE CONFIGURATION ---
+        const allBadgeNames = [
+            // Statut (0-2)
+            "Chomage/Instable", "Actif/Libéral", "Retraité",
+            // Temps (3-6)
+            "< 3h/sem.", "3-5h/sem.", "+5h/sem.", "+8h/sem.",
+            // Age (7-10)
+            "18-35 ans", "36-50 ans", "51-65 ans", "+ 65 ans",
+            // Motivation (11-21)
+            "Plaisir", "Pas d'objectif", "Jouer des solos", "Rêve jeunesse", "Challenge perso",
+            "Technique", "Composer", "Jeu en groupe", "Liberté manche",
+            "Improviser librement", "Parcours structuré",
+            // Experience (22-25)
+            "< 1 an", "1-5 ans", "5-10 ans", "+ 10 ans",
+            // Parcours (26-29)
+            "Pas de cours", "< 1 an cours", "1-3 ans cours", "+ 3 ans cours",
+            // Style (30-33)
+            "Pop/Chanson", "Metal", "Jazz/Funk", "Blues/Rock",
+            // Matériel (34-36)
+            "Pas de matériel", "Électrique", "Home Studio",
+            // Conséquence (37-40)
+            "Aucun", "Stagnation", "Abandon", "Grosse frustration"
+        ];
+        
+        const badgeCategories = {
+            statut: [0, 1, 2], 
+            temps: [3, 4, 5, 6],
+            age: [7, 8, 9, 10], 
+            douleur: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], // "douleur" est le nom interne pour "Objectifs"
+            experience: [22, 23, 24, 25], 
+            parcours: [26, 27, 28, 29], 
+            style: [30, 31, 32, 33],
+            materiel: [34, 35, 36],
+            consequence: [37, 38, 39, 40]
+        };
+        
+        const badgeData = {
+            // Dispo, Motiv, Adéq, Capa, Comp
+            // Statut (0-2): R, G, V
+            0: [0, 0, 0, -2, 0], 1: [1, 0, 0, 2, 0], 2: [3, 0, 0, 3, 0],
+            // Temps (3-6): R, G, V, V+
+            3: [0, 0, 0, 0, 0], 4: [2, 0, 0, 0, 0], 5: [4, 0, 0, 0, 0], 6: [5, 0, 0, 0, 0],
+            // Age (7-10): O, O, G, G
+            7: [0, 0, 0, 0, 0], 8: [0, 1, 0, 0, 0], 9: [0, 2, 0, 0, 0], 10: [0, 2, 0, 0, 0],
+            // Motivation (11-21): R, RD, G, O, O, G, G, V, V, V, V
+            11: [0, -1, -2, 0, 0], 12: [0, -5, -2, 0, 0], 13: [0, 2, 0, 0, 0], 14: [0, 2, 1, 0, 0], 15: [0, 2, 2, 0, 0],
+            16: [0, 2, 0, 0, 0], 17: [0, 0, 2, 0, 0], 18: [0, 0, 3, 0, 0], 19: [0, 0, 4, 0, 0],
+            20: [0, 0, 5, 0, 0], 21: [0, 0, 5, 0, 0],
+            // Experience (22-25): O, O, G, V
+            22: [0, 0, 0, 0, 1], 23: [0, 0, 0, 0, 2], 24: [0, 0, 0, 0, 3], 25: [0, 0, 0, 0, 4],
+            // Parcours (26-29): O, G, G, V
+            26: [0, 1, 0, 0, 1], 27: [0, 1, 0, 0, 2], 28: [0, 2, 0, 0, 3], 29: [0, 3, 0, 0, 3],
+            // Style (30-33): O, O, G, V
+            30: [0, 0, 0, 0, 0], 31: [0, 0, 0, 0, 0], 32: [0, 0, 1, 0, 0], 33: [0, 0, 2, 0, 0],
+            // Matériel (34-36): RD, G, V
+            34: [0, 0, 0, -2, 0], 35: [0, 0, 0, 1, 0], 36: [0, 0, 0, 3, 0],
+            // Conséquence (37-40): R, G, G, V
+            37: [0, -3, -1, 0, 0], 38: [0, 1, 0, 0, 0], 39: [0, 2, 0, 0, 0], 40: [0, 5, 0, 0, 0]
+        }; 
+        
+        const maxScores = { dispo: 8, motiv: 18, adeq: 25, capa: 6, competence: 7 };
+        const SEUILS = { motiv: 5, capa: 2, total: 30, dispo: 3, adeq: 3, competence: 3 };
+
+        // État initial simplifié (les infos prospect viennent de l'URL)
+        const initialState = {
+            prospectFirstName: '', 
+            prospectLastName: '', 
+            prospectDate: '', 
+            customNotes: '',
+            context: { 
+                statut: '', temps: '', age: '', experience: '', parcours: '', 
+                materiel: [], douleur: [], consequence: '', style: [] 
+            }
+        };
+
+        const badgeColorRanks = {
+            0: 'red', 1: 'green', 2: 'rainbow', 3: 'red', 4: 'green', 5: 'rainbow', 6: 'rainbow',
+            7: 'orange', 8: 'orange', 9: 'green', 10: 'green', 11: 'red', 12: 'red-dark', 13: 'green',
+            14: 'orange', 15: 'orange', 16: 'green', 17: 'green', 18: 'rainbow', 19: 'rainbow',
+            20: 'rainbow', 21: 'rainbow', 22: 'orange', 23: 'orange', 24: 'green', 25: 'rainbow',
+            26: 'orange', 27: 'green', 28: 'green', 29: 'rainbow', 30: 'orange', 31: 'orange',
+            32: 'green', 33: 'rainbow', 34: 'red-dark', 35: 'green', 36: 'rainbow', 37: 'red',
+            38: 'green', 39: 'green', 40: 'rainbow'
+        };
+
+        const colorRankOrder = { 'red-dark': 0, 'red': 1, 'orange': 2, 'green': 3, 'rainbow': 4 };
+        // --- (FIN) CONSTANTES DE CONFIGURATION ---
+
+
+        /**
+         * Module App pour encapsuler toute la logique de la grille de qualification.
+         */
+        const App = {
+            state: null,
+            elements: {},
+            tagStyles: {
+                base: "w-[140px] min-h-[44px] inline-flex items-center justify-center text-center p-1 rounded-lg text-xs font-medium transition-all duration-200 shadow-md border",
+                inactive: "bg-slate-700 text-slate-300 hover:bg-slate-600",
+                active: {
+                    'rainbow': "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg -translate-y-0.5",
+                    'green': "bg-green-600 text-white shadow-lg -translate-y-0.5",
+                    'orange': "bg-amber-600 text-white shadow-lg -translate-y-0.5",
+                    'red': "bg-red-600 text-white shadow-lg -translate-y-0.5",
+                    'red-dark': "bg-red-800 text-white shadow-lg -translate-y-0.5"
+                },
+                borders: {
+                    'rainbow': "border-purple-700", 'green': "border-green-700", 'orange': "border-amber-700",
+                    'red': "border-red-700", 'red-dark': "border-red-900"
+                }
+            },
+            gaugeLabelColors: {
+                green: "text-green-400", red: "text-red-400",
+                amber: "text-amber-300", neutral: "text-teal-300"
+            },
+            diagBorderColors: {
+                green: "border-green-400 border-2 shadow-lg",
+                red: "border-red-400 border-2 shadow-lg",
+                neutral: "border-slate-700"
+            },
+
+            init() {
+                this.state = structuredClone(initialState);
+                this.cacheElements();
+                
+                // --- NOUVELLE LOGIQUE D'INIT ---
+                const params = new URLSearchParams(window.location.search);
+                this.state.prospectFirstName = params.get('firstName') || '';
+                this.state.prospectLastName = params.get('lastName') || '';
+                this.state.prospectDate = params.get('date') || '';
+
+                // Mettre à jour l'UI avec les infos de l'URL
+                this.elements.mainProspectName.textContent = `${this.state.prospectFirstName} ${this.state.prospectLastName}`;
+                
+                // Configurer les liens de navigation (qui sont des <a>)
+                this.elements.mainBackButton.href = `script.html?${params.toString()}`;
+                this.elements.resetButton.href = 'index.html';
+                // --- FIN NOUVELLE LOGIQUE D'INIT ---
+                
+                this.bindEvents();
+                this.renderAllTags();
+                this.updateDashboard();
+                this.switchScreen('main'); // Afficher l'écran principal par défaut
+            },
+
+            cacheElements() {
+                const $ = (id) => document.getElementById(id);
+                // IDs des écrans 1, 2, 3 et leurs inputs ont été retirés
+                const ids = [
+                    'mainScreen', 'giaPitchScreen',
+                    'mainBackButton', 'resetButton', 'mainProspectName',
+                    'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer',
+                    'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer',
+                    'contextParcoursContainer', 'contextStyleContainer',
+                    'contextMaterielContainer',
+                    'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence',
+                    'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel',
+                    'totalScore', 'qualificationStatus', 'qualificationText',
+                    'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle',
+                    'questionCoachList', 'showPitchButton', 'notesTextarea',
+                    'pitchBackButton', 'pitchNextButton',
+                    'coachToggleTrigger', 'coachToggleIcon',
+                    'exportPdfButton', 'dashboardColumn', 'dashboardContent',
+                    'mainGrid', 'leftColumn', 'leftColumnContent', // Pour PDF
+                    'saveR1Button' // Pour Firestore
+                ];
+                
+                ids.forEach(id => {
+                    const el = $(id);
+                    this.elements[id] = el;
+                });
+            },
+
+            bindEvents() {
+                // Les listeners pour les écrans 1, 2, 3 ont été retirés
+                // Les listeners pour mainBackButton et resetButton ont été retirés (ce sont des <a>)
+                
+                this.elements.mainScreen.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-type]');
+                    if (btn) {
+                        this.handleTagClick(btn);
+                    }
+                });
+
+                this.elements.notesTextarea.addEventListener('input', (e) => this.handleNotesInput(e));
+                this.elements.showPitchButton.addEventListener('click', () => this.switchScreen('giaPitch'));
+                this.elements.pitchBackButton.addEventListener('click', () => this.switchScreen('main'));
+                
+                this.elements.pitchNextButton.addEventListener('click', () => {
+                    console.log("Événement de clôture / paiement à implémenter.");
+                });
+
+                this.elements.coachToggleTrigger.addEventListener('click', () => {
+                    this.elements.questionCoachList.classList.toggle('hidden');
+                    this.elements.coachToggleIcon.classList.toggle('-rotate-180');
+                });
+                
+                this.elements.exportPdfButton.addEventListener('click', () => this.exportToPDF());
+                this.elements.saveR1Button.addEventListener('click', () => this.saveR1ToFirestore());
+            },
+
+            // La fonction reset() est supprimée (gérée par le lien vers index.html)
+            // La fonction updateIntroButton() est supprimée
+
+            switchScreen(screenName) {
+                // Fonction simplifiée pour ne gérer que 'main' et 'giaPitch'
+                const screens = { 
+                    main: this.elements.mainScreen,
+                    giaPitch: this.elements.giaPitchScreen
+                };
+                
+                Object.values(screens).forEach(s => {
+                    if (s) {
+                        s.classList.add('hidden');
+                        s.classList.remove('grid', 'flex');
+                    }
+                });
+
+                const screen = screens[screenName];
+                if (screen) {
+                    screen.classList.remove('hidden');
+                    if (screenName === 'main') {
+                        screen.classList.add('grid');
+                    } else {
+                        screen.classList.add('flex');
+                    }
+                }
+            },
+
+            handleTagClick(btn) {
+                const { type, value } = btn.dataset;
+                
+                if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) {
+                    this.state.context[type] = (this.state.context[type] === value) ? '' : value;
+                } 
+                else {
+                    const arr = this.state.context[type];
+                    if (!arr) {
+                        console.warn(`Le type de contexte '${type}' n'existe pas dans l'état initial.`);
+                        return;
+                    }
+                    const index = arr.indexOf(value);
+                    if (index > -1) arr.splice(index, 1);
+                    else arr.push(value);
+                }
+
+                this.renderAllTags();
+                this.updateDashboard();
+            },
+
+            handleNotesInput(e) {
+                const parts = e.target.value.split("\n\n--- NOTES PERSO ---\n");
+                this.state.customNotes = parts.length > 1 ? parts.slice(1).join("\n\n--- NOTES PERSO ---\n").trim() : '';
+            },
+            
+            updateDashboard() {
+                const { context } = this.state;
+                const scores = this.calculateScores(context);
+                const isReady = context.statut && context.temps && context.douleur.length > 0 && context.consequence;
+                const qual = this.updateQualification(scores, context, isReady);
+                
+                this.updateGauges(scores);
+                this.updateFinalDiagnostic(scores, qual, isReady, context);
+                this.updateQuestionCoach(scores, context, isReady);
+                this.updateNotes();
+                
+                this.elements.totalScore.textContent = scores.total;
+            },
+            
+            calculateScores(context) {
+                const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 };
+                const addPoints = (text) => {
+                    if (!text) return;
+                    const index = allBadgeNames.indexOf(text);
+                    if (index === -1) return;
+                    const points = badgeData[index];
+                    if (points) points.forEach((p, i) => scores[Object.keys(scores)[i]] += p);
+                };
+                
+                addPoints(context.statut);
+                addPoints(context.temps);
+                addPoints(context.age);
+                addPoints(context.consequence);
+                addPoints(context.experience);
+                addPoints(context.parcours);
+                context.materiel.forEach(addPoints);
+                context.douleur.forEach(addPoints);
+                context.style.forEach(addPoints);
+
+                Object.keys(scores).forEach(key => {
+                    scores[key] = Math.max(0, Math.min(scores[key], maxScores[key]));
+                });
+                
+                scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence;
+                return scores;
+            },
+
+            updateGauges(scores) {
+                const updateGaugeUI = (gaugeEl, labelEl, percentage, score, seuilKey) => {
+                    if (!gaugeEl || !labelEl) return; 
+                    
+                    const perc = Math.max(0, Math.min(100, percentage));
+                    gaugeEl.style.width = `${perc}%`;
+                    
+                    gaugeEl.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500');
+                    Object.values(this.gaugeLabelColors).forEach(colorClass => labelEl.classList.remove(colorClass));
+
+                    let seuil = SEUILS[seuilKey];
+                    
+                    if (seuilKey === 'motiv' || seuilKey === 'capa') {
+                        labelEl.classList.add(score > seuil ? this.gaugeLabelColors.green : this.gaugeLabelColors.red);
+                    } else {
+                        labelEl.classList.add(score >= seuil ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber);
+                    }
+                    
+                    if (perc < (seuil / maxScores[seuilKey] * 100)) {
+                        gaugeEl.classList.add('bg-red-500');
+                    } else if (perc < 80) {
+                        gaugeEl.classList.add('bg-amber-500');
+                    } else {
+                        gaugeEl.classList.add('bg-green-500');
+                    }
+                };
+
+                updateGaugeUI(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, (scores.dispo / maxScores.dispo) * 100, scores.dispo, 'dispo');
+                updateGaugeUI(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, (scores.motiv / maxScores.motiv) * 100, scores.motiv, 'motiv');
+                updateGaugeUI(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, (scores.adeq / maxScores.adeq) * 100, scores.adeq, 'adeq');
+                updateGaugeUI(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, (scores.capa / maxScores.capa) * 100, scores.capa, 'capa');
+                updateGaugeUI(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, (scores.competence / maxScores.competence) * 100, scores.competence, 'competence');
+            },
+
+            updateQualification(scores, context, isReady) {
+                const isCapable = scores.capa > SEUILS.capa;
+                const isMotivated = scores.motiv > SEUILS.motiv;
+                const isTotalOK = scores.total >= SEUILS.total;
+
+                let qual = { status: "En attente...", text: "...", color: "bg-gray-500", isCapable, isMotivated, isTotalOK, isFinal: isReady };
+
+                if (!isReady) {
+                    let missing = [];
+                    if (!context.statut) missing.push("Statut");
+                    if (!context.temps) missing.push("Temps");
+                    if (context.douleur.length === 0) missing.push("Objectifs");
+                    if (!context.consequence) missing.push("Conséquence");
+                    qual.text = `Remplir: ${missing.join(', ')}.`;
+                } else {
+                    if (!isCapable || !isMotivated || !isTotalOK) {
+                        qual.status = "FEU ROUGE";
+                        qual.text = "Inqualifiable. Pas de R2.";
+                        qual.color = "bg-red-600";
+                    } else {
+                        const isIdeal = scores.total >= 30;
+                        qual.status = `FEU VERT ${isIdeal ? " (Client Rêvé)" : ""}`;
+                        qual.text = "À Closer ! Prospect qualifié pour le R2.";
+                        qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600";
+                    }
+                }
+                
+                this.elements.qualificationStatus.textContent = qual.status;
+                this.elements.qualificationText.textContent = qual.text;
+                this.elements.qualificationStatus.className = `inline-block text-lg font-bold px-5 py-2 rounded-lg text-white shadow-lg ${qual.color}`;
+                
+                this.elements.showPitchButton.classList.toggle('hidden', !qual.status.includes("VERT"));
+                
+                this.elements.saveR1Button.disabled = !isReady;
+                this.elements.saveR1Button.classList.toggle('opacity-50', !isReady);
+                this.elements.saveR1Button.classList.toggle('cursor-not-allowed', !isReady);
+
+                return qual;
+            },
+
+            updateFinalDiagnostic(scores, qual, isReady, context) {
+                const container = this.elements.finalDiagnosticContainer;
+                const { diagnosticForts: fortsEl, diagnosticVigilance: vigilanceEl, diagnosticVigilanceTitle } = this.elements;
+
+                Object.values(this.diagBorderColors).forEach(cls => {
+                    cls.split(' ').forEach(c => container.classList.remove(c));
+                });
+                
+                if (!isReady) {
+                    container.classList.add('hidden');
+                    this.diagBorderColors.neutral.split(' ').forEach(c => container.classList.add(c));
+                    return;
+                }
+                
+                container.classList.remove('hidden');
+                const { isCapable, isMotivated } = qual;
+                const isGreen = qual.status.includes("VERT");
+                const isRed = qual.status.includes("ROUGE");
+
+                if (isGreen) {
+                    this.diagBorderColors.green.split(' ').forEach(c => container.classList.add(c));
+                    diagnosticVigilanceTitle.textContent = "Tes Points d'Effort (Pour réussir)";
+                } else if (isRed) {
+                    this.diagBorderColors.red.split(' ').forEach(c => container.classList.add(c));
+                    diagnosticVigilanceTitle.textContent = "Points Bloquants (Ce qui manque)";
+                } else {
+                    this.diagBorderColors.neutral.split(' ').forEach(c => container.classList.add(c));
+                }
+
+                fortsEl.innerHTML = '';
+                vigilanceEl.innerHTML = '';
+                let forts = [];
+                let vigilance = [];
+
+                // --- POINTS FORTS ---
+                if (isMotivated) {
+                    const vision = context.douleur.includes("Improviser librement") ? "d'improviser librement" : 
+                                   (context.douleur.includes("Liberté manche") ? "de maîtriser le manche" : 
+                                   (context.douleur.includes("Jeu en groupe") ? "de jouer en groupe" : 
+                                   (context.douleur.includes("Parcours structuré") ? "de suivre un parcours structuré" : "d'atteindre ton objectif")));
+                    forts.push(`Ta motivation est claire. Ton envie ${vision} et ta frustration ('${context.consequence || 'N/A'}') sont de puissants moteurs.`);
+                }
+                if (scores.competence >= SEUILS.competence) {
+                    forts.push(`Ton expérience ('${context.experience || 'N/A'}') est un excellent point de départ. Tu as la maturité pour apprécier une méthode structurée.`);
+                }
+                if (scores.dispo >= SEUILS.dispo) {
+                        forts.push(`Ta disponibilité ('${context.temps || 'N/A'}') montre que tu es prêt à t'investir pour ce projet.`);
+                }
+                if (forts.length === 0 && !isGreen) {
+                    fortsEl.innerHTML = `<li class="text-gray-400 italic">Aucun levier majeur (Motivation, Expérience) détecté pour l'instant.</li>`;
+                }
+
+                // --- POINTS DE VIGILANCE ---
+                if (!isCapable) {
+                    vigilance.push(`Point de focus : valider ta *capacité à t'investir* pleinement. Un programme premium comme la GIA demande un *engagement total* pour garantir ton propre succès.`);
+                }
+                if (!isMotivated) {
+                    vigilance.push(`Point de focus : ton *Envie*. La GIA est une formation *intensive*. Si ton "Pourquoi" n'est pas puissant, l'abandon est probable. Il faut être sûr que c'est ta priorité N°1.`);
+                }
+                if (scores.dispo < SEUILS.dispo) {
+                    vigilance.push(`Point de focus : le *Temps*. Avec '${context.temps}', cela demandera une *discipline de fer*. C'est un effort crucial de *priorisation* et *d'engagement* de ta part.`);
+                }
+                if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) {
+                    vigilance.push(`Point de focus : la *Vision*. Ton objectif ('${context.douleur[0] || 'N/A'}') est super, mais le défi sera d'adopter la *vision* GIA (le 'cerveau' musical) plutôt que de chercher des résultats immédiats.`);
+                }
+                if (scores.competence < SEUILS.competence) {
+                    vigilance.push(`Point de focus : *l'Humilité*. Ton niveau ('${context.experience || 'N/A'}') est un point de départ. L'effort consistera à accepter de revoir des bases, même si elles semblent simples.`);
+                }
+                if (context.douleur.includes("Jouer des solos")) {
+                    vigilance.push(`Point de focus (Adéquation) : Ton objectif 'Jouer des solos' est un 'piège à tablatures'. L'effort sera *d'accepter* de te concentrer sur la *compétence* (le 'pourquoi') avant le 'comment'.`);
+                }
+                if (context.douleur.includes("Technique")) {
+                    vigilance.push(`Point de focus (Volonté) : Tu mentionnes un blocage 'Technique'. C'est souvent une 'fausse douleur'. L'effort sera *d'accepter* que le vrai blocage est dans le 'cerveau' (la compréhension) et de travailler dessus.`);
+                }
+                if (context.consequence === "Aucun") {
+                    vigilance.push(`Point de focus (Urgence) : Ta conséquence ('Aucun') montre un *manque d'urgence*. L'effort sera de trouver ta vraie raison d'agir *maintenant*, sinon l'abandon est garanti.`);
+                }
+
+                if (vigilance.length === 0 && isGreen) {
+                    vigilanceEl.innerHTML = `<li class="text-green-300 italic">Aucune réserve majeure. Ton profil est idéal, l'effort sera uniquement dans la régularité et l'engagement.</li>`;
+                }
+
+                forts.forEach(text => { fortsEl.innerHTML += `<li>${text}</li>`; });
+                vigilance.forEach(text => { vigilanceEl.innerHTML += `<li>${text}</li>`; });
+            },
+
+            updateQuestionCoach(scores, context, isReady) {
+                let questions = [];
+                const { statut, temps, douleur, consequence, experience, parcours } = context;
+
+                // --- 1. Questions proactives pour remplir les champs VIDES ---
+                if (douleur.length === 0) {
+                    questions.push(`Au fond, quel est ton *rêve* de guitariste ? (→ *Vise 'Improviser librement'*)`);
+                    questions.push(`Qu'est-ce qui te frustre le plus aujourd'hui ? (→ *Vise 'Grosse frustration'*)`);
+                }
+                if (!temps) {
+                    questions.push(`Combien d'heures par semaine serais-tu *vraiment* prêt à bloquer ? (→ *Vise '+5h'*)`);
+                }
+                if (!consequence) {
+                    questions.push(`Si on se reparle dans 6 mois et que rien n'a changé... tu te sens comment ? (→ *Vise 'Grosse frustration'*)`);
+                }
+                if (!statut) {
+                    questions.push(`Pour comprendre ton rythme, tu es actif, ou tu as plus de temps, comme les retraités ? (→ *Vise 'Retraité'*)`);
+                }
+                if (!experience || !parcours) {
+                    questions.push(`Tu joues depuis combien de temps ? As-tu déjà suivi des cours structurés ? (→ *Vise '+10 ans'*)`);
+                }
+                if (context.style.length === 0) {
+                    questions.push(`Quels styles t'ont donné envie de jouer ? (→ *Vise 'Blues/Rock'*)`);
+                }
+
+                // --- 2. Si tout est rempli, questions d'alerte ---
+                if (isReady && questions.length === 0) {
+                    if (scores.dispo < SEUILS.dispo) {
+                            questions.push(`[ALERTE TEMPS] Tu m'as dit avoir '${temps}'. La GIA demande 5h min. Où vas-tu *concrètement* trouver les 2-3h qui manquent ?`);
+                    }
+                    if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) {
+                            questions.push(`[ALERTE VISION] Tu vises '${douleur[0]}'. Es-tu prêt à passer 3 mois sur de la théorie pure avant de voir des résultats directs ?`);
+                    }
+                    if (context.consequence === "Aucun") {
+                            questions.push(`[ALERTE URGENCE] Tu ne sembles pas avoir de 'douleur' forte. Pourquoi t'inscrire *maintenant* ?`);
+                    }
+                    if (scores.capa < SEUILS.capa) {
+                            questions.push(`[ALERTE CAPA] As-tu déjà eu l'occasion d'investir plusieurs milliers d'euros dans une formation pour toi ?`);
+                    }
+                }
+                
+                const listEl = this.elements.questionCoachList;
+                if (isReady && questions.length === 0) {
+                    listEl.innerHTML = `<li class="text-green-300 italic">Excellent profil ! Tous les voyants sont au vert. Prépare le R2.</li>`;
+                } else if (questions.length === 0) {
+                    listEl.innerHTML = `<li class="text-gray-400 italic">Remplis les badges pour voir les suggestions...</li>`;
+                } else {
+                    listEl.innerHTML = questions.map(q => {
+                        let formattedQ = q.replace(/(\(→.*?\))/g, '<span class="text-amber-400/60 italic text-xs">$1</span>');
+                        if (q.startsWith("[ALERTE")) {
+                            formattedQ = `<span class="font-semibold text-red-300">${formattedQ.replace(/\[ALERTE.*?\]/g, "Alerte :")}</span>`;
+                        }
+                        return `<li class="pb-1">${formattedQ}</li>`;
+                    }).join('');
+                }
+            },
+
+            updateNotes() {
+                const { context, customNotes } = this.state;
+                const allBadges = [
+                    context.statut, context.temps, context.age, context.consequence, 
+                    context.experience, context.parcours, 
+                    ...context.materiel, ...context.douleur, ...context.style
+                ].filter(Boolean);
+                
+                let notesContent = allBadges.join('\n');
+                notesContent += `\n\n--- NOTES PERSO ---\n${customNotes}`;
+                this.elements.notesTextarea.value = notesContent;
+            },
+
+            renderAllTags() {
+                const { context } = this.state;
+                this.renderTags('contextStatutContainer', 'statut', context.statut);
+                this.renderTags('contextTempsContainer', 'temps', context.temps);
+                this.renderTags('contextAgeContainer', 'age', context.age);
+                this.renderTags('contextExperienceContainer', 'experience', context.experience);
+                this.renderTags('contextParcoursContainer', 'parcours', context.parcours);
+                this.renderTags('contextConsequenceContainer', 'consequence', context.consequence);
+                
+                this.renderTags('contextMaterielContainer', 'materiel', context.materiel, true);
+                this.renderTags('contextStyleContainer', 'style', context.style, true);
+                this.renderTags('contextDouleursContainer', 'douleur', context.douleur, true);
+            },
+
+            renderTags(containerId, type, stateValue, isMulti = false) {
+                const container = this.elements[containerId];
+                if (!container) return;
+                
+                container.innerHTML = '';
+                const badgeIndexes = badgeCategories[type];
+                if (!badgeIndexes) return; 
+
+                const sortedBadgeIndexes = [...badgeIndexes].sort((indexA, indexB) => {
+                    const colorA = badgeColorRanks[indexA] || 'orange';
+                    const colorB = badgeColorRanks[indexB] || 'orange';
+                    return colorRankOrder[colorA] - colorRankOrder[colorB];
+                });
+                
+                sortedBadgeIndexes.forEach(index => {
+                    if (!allBadgeNames[index]) return; 
+
+                    const text = allBadgeNames[index];
+                    const isSelected = isMulti ? stateValue.includes(text) : stateValue === text;
+                    const btn = document.createElement('button');
+                    btn.dataset.type = type;
+                    btn.dataset.value = text;
+                    btn._pointsData = badgeData[index];
+                    
+                    const colorKey = badgeColorRanks[index] || 'orange';
+                    const borderColor = this.tagStyles.borders[colorKey];
+                    const stateClasses = isSelected ? this.tagStyles.active[colorKey] : this.tagStyles.inactive;
+                    
+                    btn.textContent = text;
+                    btn.className = `${this.tagStyles.base} ${stateClasses} ${borderColor}`;
+                    
+                    container.appendChild(btn);
+                });
+            },
+        
+            async exportToPDF() {
+                const prospectName = `${this.state.prospectFirstName} ${this.state.prospectLastName}`;
+                const { prospectDate } = this.state;
+                const filename = `Fiche_Qualif_GIA_${prospectName.replace(/\s+/g, '_') || 'Prospect'}_${prospectDate || 'aujourdhui'}.pdf`;
+                
+                const spinner = document.createElement('div');
+                spinner.id = 'pdf-spinner';
+                spinner.innerHTML = '<span id="pdf-spinner-text">Génération du PDF en cours...</span>';
+                document.body.appendChild(spinner);
+
+                const mainGrid = this.elements.mainGrid;
+                const leftCol = this.elements.leftColumn;
+                const leftColContent = this.elements.leftColumnContent;
+                const dashboardContainer = this.elements.dashboardColumn;
+                const dashboardContent = this.elements.dashboardContent;
+
+                const originalGridTemplate = mainGrid.style.gridTemplateColumns;
+                const originalLeftOverflow = leftCol.style.overflow;
+                const originalLeftContentOverflow = leftColContent.style.overflowY;
+                const originalDashContainerOverflow = dashboardContainer.style.overflowY;
+                const originalDashContentPosition = dashboardContent.style.position;
+
+                try {
+                    mainGrid.style.gridTemplateColumns = '2fr 1fr'; 
+                    leftCol.style.overflow = 'visible';
+                    leftColContent.style.overflowY = 'visible';
+                    dashboardContainer.style.overflowY = 'visible';
+                    dashboardContent.style.position = 'relative'; 
+
+                    const { jsPDF } = window.jspdf;
+                    
+                    const canvas = await html2canvas(this.elements.mainScreen, {
+                        useCORS: true,
+                        backgroundColor: '#0f172a',
+                        scale: 1.5,
+                        logging: false
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    const pdf = new jsPDF('l', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+                    
+                    const canvasRatio = canvasWidth / canvasHeight;
+                    const pdfRatio = pdfWidth / pdfHeight;
+                    
+                    let imgWidth, imgHeight;
+
+                    if (canvasRatio > pdfRatio) {
+                        imgWidth = pdfWidth - 20;
+                        imgHeight = imgWidth / canvasRatio;
+                    } else {
+                        imgHeight = pdfHeight - 20;
+                        imgWidth = imgHeight * canvasRatio;
+                    }
+                    
+                    const x = (pdfWidth - imgWidth) / 2;
+                    const y = (pdfHeight - imgHeight) / 2;
+
+                    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+                    pdf.save(filename);
+
+                } catch (error) {
+                    console.error("Erreur lors de la génération du PDF:", error);
+                } finally {
+                    mainGrid.style.gridTemplateColumns = originalGridTemplate;
+                    leftCol.style.overflow = originalLeftOverflow;
+                    leftColContent.style.overflowY = originalLeftContentOverflow;
+                    dashboardContainer.style.overflowY = originalDashContainerOverflow;
+                    dashboardContent.style.position = originalDashContentPosition;
+                    document.body.removeChild(spinner);
+                }
+            },
+            
+            async saveR1ToFirestore() {
+                const saveBtn = this.elements.saveR1Button;
+                if (!db || !auth) {
+                    console.error("Erreur: Connexion à la base de données échouée. Impossible d'enregistrer.");
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.querySelector('span').textContent = 'Enregistrement...';
+                
+                try {
+                    const scores = this.calculateScores(this.state.context);
+                    const qualification = this.updateQualification(scores, this.state.context, true); 
+                    
+                    const r1Data = {
+                        prospectFirstName: this.state.prospectFirstName,
+                        prospectLastName: this.state.prospectLastName,
+                        prospectName: `${this.state.prospectFirstName} ${this.state.prospectLastName}`,
+                        prospectDate: this.state.prospectDate,
+                        context: this.state.context,
+                        customNotes: this.state.customNotes,
+                        scores: scores,
+                        qualificationStatus: qualification.status,
+                        qualificationText: qualification.text,
+                        savedAt: new Date().toISOString(),
+                        closerId: auth.currentUser ? auth.currentUser.uid : 'unknown'
+                    };
+                    
+                    const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
+                    
+                    const docRef = await addDoc(collection(db, collectionPath), r1Data);
+                    
+                    console.log("R1 enregistré avec l'ID: ", docRef.id);
+                    
+                    saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    saveBtn.classList.add('bg-green-600', 'hover:bg-green-500');
+                    saveBtn.querySelector('span').textContent = 'Enregistré !';
+                    
+                    setTimeout(() => {
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
+                        saveBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+                        saveBtn.querySelector('span').textContent = 'Enregistrer R1';
+                    }, 2000);
+
+                } catch (error) {
+                    console.error("Erreur lors de l'enregistrement Firestore: ", error);
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    saveBtn.classList.add('bg-red-600', 'hover:bg-red-500');
+                    saveBtn.querySelector('span').textContent = 'Échec';
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkFirebase = setInterval(() => {
+                if (window.firebaseServices && window.firebaseServices.db) {
+                    clearInterval(checkFirebase);
+                    App.init();
+                }
+            }, 100);
+        });
+    </script>
+
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Étape 1: Préparation R1</title>
+    <title>GIA - Nouveau R1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,46 +12,42 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
+<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full flex items-center justify-center">
 
-    <div id="app" class="h-full">
-        <!-- ======================================= -->
-        <!-- ÉCRAN 1: INTRODUCTION                   -->
-        <!-- ======================================= -->
-        <div id="introScreen" class="h-full flex flex-col items-center justify-center max-w-3xl mx-auto p-4">
-            <h1 class="text-3xl md:text-4xl font-bold text-teal-300 mb-8">Étape 1 : Préparation R1</h1>
-            <div class="w-full bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-5">
-                
-                <!-- Grille pour Prénom/Nom -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label for="prospectFirstNameInput" class="block text-sm font-medium text-gray-300 mb-2">Prénom du Prospect</label>
-                        <input id="prospectFirstNameInput" type="text" placeholder="Jean" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
-                    </div>
-                    <div>
-                        <label for="prospectLastNameInput" class="block text-sm font-medium text-gray-300 mb-2">Nom du Prospect</label>
-                        <input id="prospectLastNameInput" type="text" placeholder="Dupont" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
-                    </div>
-                </div>
-                
-                <!-- Date sur sa propre ligne -->
+    <div class="w-full max-w-lg mx-auto p-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-teal-300 mb-8 text-center">Étape 1 : Préparation R1</h1>
+        <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-5">
+
+            <!-- Lien vers le Dashboard -->
+            <a href="dashboard.html" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-lg transition-all duration-300 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg mb-6">
+                &larr; Voir le Tableau de Bord
+            </a>
+            <hr class="border-slate-700 mb-6"/>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label for="prospectDateInput" class="block text-sm font-medium text-gray-300 mb-2">Date R1</label>
-                    <input id="prospectDateInput" type="date" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
+                    <label for="prospectFirstNameInput" class="block text-sm font-medium text-gray-300 mb-2">Prénom du Prospect</label>
+                    <input id="prospectFirstNameInput" type="text" placeholder="Jean" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
                 </div>
-
-                <hr class="border-slate-700"/>
-                
-                <!-- Le bouton "Commencer" est maintenant un lien (<a>) -->
-                <a id="startButton" href="#" class="block w-full text-center text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-gray-600 text-gray-400 opacity-50 cursor-not-allowed">
-                    Veuillez remplir le nom et la date
-                </a>
-                
-                <!-- Lien vers stats.html -->
-                <a href="stats.html" class="block w-full text-center text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40">
-                    Voir les Statistiques &rarr;
-                </a>
+                <div>
+                    <label for="prospectLastNameInput" class="block text-sm font-medium text-gray-300 mb-2">Nom du Prospect</label>
+                    <input id="prospectLastNameInput" type="text" placeholder="Dupont" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
+                </div>
             </div>
+
+            <div>
+                <label for="prospectDateInput" class="block text-sm font-medium text-gray-300 mb-2">Date R1</label>
+                <input id="prospectDateInput" type="date" class="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2.5 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400">
+            </div>
+
+            <hr class="border-slate-700"/>
+            <button id="startButton" disabled class="w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 bg-gray-600 text-gray-400 cursor-not-allowed shadow-lg">
+                Veuillez remplir prénom, nom et date
+            </button>
+
+            <!-- Suppression du lien Stats (remplacé par Dashboard) -->
+            <!-- <a href="stats.html" ... > -->
         </div>
     </div>
 
@@ -62,45 +58,46 @@
             const dateInput = document.getElementById('prospectDateInput');
             const startButton = document.getElementById('startButton');
 
-            // Pré-remplir la date du jour
-            const todayDate = new Date();
-            const year = todayDate.getFullYear();
-            const month = (todayDate.getMonth() + 1).toString().padStart(2, '0');
-            const day = todayDate.getDate().toString().padStart(2, '0');
-            dateInput.value = `${year}-${month}-${day}`;
-
-            function checkInputs() {
+            function updateStartButton() {
                 const firstName = firstNameInput.value.trim();
                 const lastName = lastNameInput.value.trim();
-                const date = dateInput.value.trim();
+                const date = dateInput.value;
+                const canStart = firstName && lastName && date;
 
-                if (firstName && lastName && date) {
-                    startButton.textContent = "Commencer la Qualification";
-                    startButton.classList.remove('bg-gray-600', 'text-gray-400', 'opacity-50', 'cursor-not-allowed');
-                    startButton.classList.add('bg-teal-600', 'hover:bg-teal-500', 'text-white', 'shadow-teal-800/40');
-                    
-                    // Construire l'URL avec les paramètres
+                startButton.disabled = !canStart;
+                startButton.textContent = canStart ? "Commencer la Qualification" : "Veuillez remplir prénom, nom et date";
+                startButton.className = `w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg ${
+                    canStart ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-teal-800/40 cursor-pointer' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`;
+
+                if(canStart) {
+                    // Mettre a jour le lien dynamiquement
                     const params = new URLSearchParams();
                     params.append('firstName', firstName);
                     params.append('lastName', lastName);
                     params.append('date', date);
-                    startButton.href = `script.html?${params.toString()}`;
-
+                    startButton.onclick = () => {
+                        window.location.href = `script.html?${params.toString()}`;
+                    };
                 } else {
-                    startButton.textContent = "Veuillez remplir prénom, nom et date";
-                    startButton.classList.add('bg-gray-600', 'text-gray-400', 'opacity-50', 'cursor-not-allowed');
-                    startButton.classList.remove('bg-teal-600', 'hover:bg-teal-500', 'text-white', 'shadow-teal-800/40');
-                    startButton.href = "#";
+                     startButton.onclick = null; // Desactiver le clic si champs vides
                 }
             }
 
-            // Vérifier les inputs au chargement (pour la date pré-remplie) et à chaque modification
-            checkInputs();
-            firstNameInput.addEventListener('input', checkInputs);
-            lastNameInput.addEventListener('input', checkInputs);
-            dateInput.addEventListener('input', checkInputs);
+            // Initialiser la date a aujourd'hui
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+
+            // Ecouter les changements sur les inputs
+            firstNameInput.addEventListener('input', updateStartButton);
+            lastNameInput.addEventListener('input', updateStartButton);
+            dateInput.addEventListener('input', updateStartButton);
+
+            // Mise a jour initiale au cas ou les champs sont pre-remplis
+            updateStartButton();
         });
     </script>
 
 </body>
 </html>
+

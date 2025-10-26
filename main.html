@@ -4,63 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Qualification R1</title>
-    <script src="https://cdn.tailwindcss.com"></script> {/* Script Tailwind CDN */}
+    {/* Script Tailwind CDN - ESSENTIEL */}
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    {/* PDF Libs */}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    {/* SDK Firebase (inchangé) */}
+    {/* SDK Firebase */}
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         let db, auth, appId, userId;
         try {
+            // Remplacez par votre configuration Firebase
             const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" };
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
             const authPromise = new Promise((resolve) => {
-                 onAuthStateChanged(auth, async (user) => {
+                onAuthStateChanged(auth, async (user) => {
                     if (user) { userId = user.uid; console.log("Auth prête:", userId); resolve(); }
-                    else { try { await signInAnonymously(auth); console.log("Connecté anonymement."); resolve(); } catch (e) { console.error("Err anon:", e); resolve(); }}
-                 });
+                    else { try { await signInAnonymously(auth); console.log("Connecté anonymement."); resolve(); } catch (e) { console.error("Err anon:", e); resolve(); } }
+                });
             });
             authPromise.then(() => {
-                 window.firebaseServices = { db, auth, appId }; // Exposer les services globalement
-                 console.log("Firebase services exposed.");
-                 // Déclencher l'initialisation de l'App si elle est prête
-                 if (typeof initializeAppFromModule === 'function') {
+                window.firebaseServices = { db, auth, appId };
+                console.log("Firebase services exposed.");
+                // Déclencher l'initialisation de l'App si la fonction existe déjà
+                if (typeof initializeAppFromModule === 'function') {
                     initializeAppFromModule();
-                 }
+                } else {
+                    // Sinon, définir un drapeau pour que le module sache que Firebase est prêt
+                    window.firebaseIsReady = true;
+                }
             });
         } catch (error) {
             console.error("Err init Firebase:", error);
+            // Affichage erreur UI
             const errorDiv = document.createElement('div'); errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]'; errorDiv.textContent = 'Erreur critique: Connexion DB impossible.'; document.body.prepend(errorDiv);
         }
     </script>
 
-     {/* Styles Simplifiés */}
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
-        #pdf-spinner { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #pdf-spinner::after { content:''; width: 50px; height: 50px; border: 4px solid #475569; border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; }
-        #pdf-spinner-text { color: white; margin-top: 1rem; font-weight: 500; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #appFeedback { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
-        #appFeedback.show { opacity: 1; pointer-events: auto; }
-        .l { display: block; font-size: 0.875rem; font-weight: 500; color: #d1d5db; margin-bottom: 0.5rem; }
-    </style>
+    {/* SUPPRESSION de la balise <style> ici */}
+
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
+{/* Ajout des classes de base directement sur body */}
+<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden font-[Inter,sans-serif]">
 
     <div id="app" class="h-full">
-        {/* ÉCRAN PRINCIPAL */}
+        {/* ÉCRAN PRINCIPAL (avec classes Tailwind) */}
         <div id="mainScreen" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
             {/* Colonne Gauche */}
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
@@ -77,29 +74,29 @@
                     </button>
                     <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden"></ul>
                 </div>
-                {/* Conteneur Badges */}
-                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                {/* Conteneur Badges (Ajout scrollbar via classe) */}
+                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
                     <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
                         <div class="space-y-6 pt-4">
-                            {/* Les fieldset et divs pour les badges (HTML avec classes Tailwind directement) */}
-                            <fieldset class="border border-slate-700 rounded-lg p-4"><legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend><div class="space-y-6"><div><label class="l">Expérience Totale</label><div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div></div><div><label class="l">Parcours / Cours Suivis</label><div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div></div></div></fieldset>
-                            <div><label class="l">Matériel</label><div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div></div>
-                            <div><label class="l">Style</label><div id="contextStyleContainer" class="flex flex-wrap gap-2"></div></div>
-                            <div><label class="l">Objectifs</label><div id="contextDouleursContainer" class="flex flex-wrap gap-2"></div></div>
-                            <div><label class="l">Temps Dispo</label><div id="contextTempsContainer" class="flex flex-wrap gap-2"></div></div>
+                            {/* Les fieldset et divs pour les badges */}
+                            <fieldset class="border border-slate-700 rounded-lg p-4"><legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend><div class="space-y-6"><div><label class="block text-sm font-medium text-gray-300 mb-2">Expérience Totale</label><div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div></div><div><label class="block text-sm font-medium text-gray-300 mb-2">Parcours / Cours Suivis</label><div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div></div></div></fieldset>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Matériel</label><div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Style</label><div id="contextStyleContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Objectifs</label><div id="contextDouleursContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Temps Dispo</label><div id="contextTempsContainer" class="flex flex-wrap gap-2"></div></div>
                             <hr class="border-slate-700">
-                            <div><label class="l">Statut</label><div id="contextStatutContainer" class="flex flex-wrap gap-2"></div></div>
-                            <div><label class="l">Tranche d'Âge</label><div id="contextAgeContainer" class="flex flex-wrap gap-2"></div></div>
-                            <div><label class="l">Conséquence si inaction</label><div id="contextConsequenceContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Statut</label><div id="contextStatutContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Tranche d'Âge</label><div id="contextAgeContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="block text-sm font-medium text-gray-300 mb-2">Conséquence si inaction</label><div id="contextConsequenceContainer" class="flex flex-wrap gap-2"></div></div>
                         </div>
                     </div>
                 </div>
-                 {/* Feedback Element */}
-                 <div id="appFeedback"></div>
+                 {/* Feedback Element (sera stylisé par JS) */}
+                 <div id="appFeedback" class="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
             </div>
 
-            {/* Colonne Droite: Dashboard R1 */}
-            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto custom-scrollbar">
+            {/* Colonne Droite (Ajout scrollbar via classe) */}
+            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
                 <div id="dashboardContent" class="sticky top-0 space-y-5 bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-2xl">
                     {/* Jauges */}
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
@@ -127,7 +124,7 @@
 
         {/* ÉCRAN PITCH GIA (Modifié) */}
         <div id="giaPitchScreen" class="hidden h-full flex flex-col items-center justify-center p-4">
-             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
+             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
                 {/* Contenu Pitch */}
                 <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue GIA</h1>
                 <p class="text-md md:text-lg text-gray-200 text-center mb-6">...<span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
@@ -153,33 +150,34 @@
                  </div>
             </div>
         </div>
-         {/* Feedback Element */}
-         <div id="appFeedback"></div>
+         {/* Feedback Element (pas dans le HTML initial, ajouté par JS si besoin) */}
+         {/* <div id="appFeedback"></div> */}
     </div>
 
-    {/* Appel du module JS (Modification pour attendre Firebase) */}
+    {/* Appel du module JS (Inchangé) */}
     <script type="module">
         import { App } from './app.mjs'; // Chemin relatif standard
 
-        // Fonction globale pour initialiser l'app, appelée par le script Firebase ci-dessus
+        // Fonction globale pour initialiser l'app
         window.initializeAppFromModule = () => {
              console.log("initializeAppFromModule appelé.");
-             // Vérifier si App n'est pas déjà initialisée
-             if (!App.state) {
+             if (!App.state) { // Eviter double init
                  App.init();
              } else {
                  console.log("App déjà initialisée, skip.");
              }
         };
 
-        // Sécurité: Si Firebase est déjà prêt au moment où ce script s'exécute
+        // Si Firebase est prêt immédiatement (improbable mais securite)
         if (window.firebaseServices) {
              console.log("Firebase déjà prêt (sécurité module), initialisation App...");
              initializeAppFromModule();
         } else {
+             // Definir window.firebaseIsReady = true ne sert a rien ici,
+             // car le module App attend l'appel de initializeAppFromModule
+             // qui est declenche par le script Firebase plus haut.
              console.log("Module App chargé, attente de Firebase...");
         }
-
     </script>
 
 </body>

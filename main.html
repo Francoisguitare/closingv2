@@ -8,351 +8,186 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Librairies pour l'export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    <!-- ======================================= -->
-    <!-- INITIALISATION FIREBASE                 -->
-    <!-- ======================================= -->
+
+    <!-- SDK Firebase (inchangé) -->
     <script type="module">
-        // Ce bloc se charge en premier et prepare Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
+        let db, auth, appId, userId;
         try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
-                authDomain: "closing-gia.firebaseapp.com",
-                projectId: "closing-gia",
-                storageBucket: "closing-gia.firebasestorage.app",
-                messagingSenderId: "260776101981",
-                appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
-            };
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-            
-            // setLogLevel('debug'); // Decommenter pour le debug
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    console.log("Firebase Auth prete. UserID:", user.uid);
-                } else {
-                    console.log("Firebase Auth: Utilisateur non connecte.");
-                }
+            const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" };
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
+            // Gerer la connexion Auth une seule fois et exposer les services
+            const authPromise = new Promise((resolve) => {
+                 onAuthStateChanged(auth, async (user) => {
+                    if (user) { userId = user.uid; console.log("Auth prête:", userId); resolve(); }
+                    else { try { await signInAnonymously(auth); console.log("Connecté anonymement."); resolve(); } catch (e) { console.error("Err anon:", e); resolve(); /* Resoudre meme si echec */ }}
+                 });
             });
-
-            await signInAnonymously(auth);
-
-            // Exposer les services Firebase a l'objet window pour que app.mjs puisse les utiliser
-            window.firebaseServices = { db, auth, appId };
-
+            // Attendre que l'authentification soit terminee avant d'exposer
+            authPromise.then(() => {
+                 window.firebaseServices = { db, auth, appId };
+                 console.log("Firebase services exposed.");
+                 // Declencher un evenement personnalise si necessaire pour app.mjs
+                 document.dispatchEvent(new CustomEvent('firebaseReady'));
+            });
         } catch (error) {
-            console.error("Erreur initialisation Firebase:", error);
+            console.error("Err init Firebase:", error);
+            // Afficher une erreur a l'utilisateur
             const errorDiv = document.createElement('div');
-            errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-50';
-            errorDiv.textContent = 'Erreur critique: Impossible de charger la base de données. L\'enregistrement sera désactivé.';
+            errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]';
+            errorDiv.textContent = 'Erreur critique: Connexion DB impossible.';
             document.body.prepend(errorDiv);
         }
     </script>
 
-    <!-- Styles CSS (inchange) -->
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
-        #pdf-spinner {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+    <style type="text/tailwindcss">
+        @layer base { body { font-family: 'Inter', sans-serif; } }
+        @layer components {
+            .custom-scrollbar { @apply scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800; }
+            #pdf-spinner { @apply fixed inset-0 bg-black/70 z-[9999] flex flex-col items-center justify-center; }
+            #pdf-spinner::after { content:''; @apply w-12 h-12 border-4 border-slate-600 border-t-sky-400 rounded-full animate-spin; }
+            #pdf-spinner-text { @apply text-white mt-4 font-medium; }
+            /* Feedback message style */
+            #appFeedback { @apply fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0; }
+            /* Helper class for labels reused in HTML comments */
+            .l { @apply block text-sm font-medium text-gray-300 mb-2; }
         }
-        #pdf-spinner::after {
-            content: ''; width: 50px; height: 50px;
-            border: 5px solid #475569; border-top-color: #38bdf8;
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
-        #pdf-spinner-text { color: white; margin-top: 20px; font-size: 1.1rem; font-weight: 500; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
 
     <div id="app" class="h-full">
-
-        <!-- ======================================= -->
-        <!-- ÉCRAN 4: ESPACE DE TRAVAIL              -->
-        <!-- Affiche par defaut (plus de 'hidden') -->
-        <!-- ======================================= -->
-        <div id="mainScreen" class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
-            
-            <!-- Colonne de Gauche : Prise de notes -->
-            <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden"> 
-                
+        <!-- ÉCRAN PRINCIPAL (Grille de qualification) -->
+        <div id="mainScreen" class="hidden grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
+            {/* Colonne Gauche: Badges */}
+            <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
                 <div class="flex justify-between items-center p-2 flex-shrink-0">
-                    <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">
-                        &larr; Retour Script
-                    </a>
-                    <h2 class="text-lg font-semibold text-gray-300">
-                        Prospect: <span id="mainProspectName" class="text-white font-bold"></span>
-                    </h2>
-                    <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">
-                        Reset (Accueil)
-                    </a>
+                    <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Script</a>
+                    <h2 class="text-lg font-semibold text-gray-300">Prospect: <span id="mainProspectName" class="text-white font-bold"></span></h2>
+                    <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">Reset</a>
                 </div>
-
-                <!-- Coach de Questions -->
+                {/* Coach Questions */}
                 <div id="questionCoachContainer" class="bg-slate-900/50 rounded-xl border border-amber-500/50 shadow-lg flex-shrink-0">
                     <button id="coachToggleTrigger" class="flex items-center justify-between w-full text-lg font-semibold text-amber-300 p-4">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>
-                            <span>Coach de Questions</span>
-                        </span>
-                        <svg id="coachToggleIcon" class="w-5 h-5 transition-transform duration-300 transform -rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
+                        <span class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>Coach Questions</span>
+                        <svg id="coachToggleIcon" class="w-5 h-5 transition-transform duration-300 transform -rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     </button>
-                    <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden">
-                        <li class="text-gray-400 italic">Remplissez les badges pour voir les suggestions...</li>
-                    </ul>
+                    <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden"></ul>
                 </div>
-
-                <!-- Conteneur de badges scrollable -->
+                {/* Conteneur Badges */}
                 <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
                     <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
                         <div class="space-y-6 pt-4">
-                    
-                            <!-- 1. Compétence -->
-                            <fieldset class="border border-slate-700 rounded-lg p-4">
-                                <legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend>
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-300 mb-2">Expérience Totale</label>
-                                        <div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-300 mb-2">Parcours / Cours Suivis</label>
-                                        <div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div>
-                                    </div>
-                                </div>
-                            </fieldset>
-
-                            <!-- 2. Matériel -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Matériel</label>
-                                <div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-
-                            <!-- 4. Style de prédilection -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Style de prédilection</label>
-                                <div id="contextStyleContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-
-                            <!-- 5. Objectifs -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Objectifs</label>
-                                <div id="contextDouleursContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-
-                            <!-- 7. Temps à consacrer -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Temps Dispo / Semaine</label>
-                                <div id="contextTempsContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-
+                            {/* Les fieldset et divs pour les badges */}
+                            <fieldset class="border border-slate-700 rounded-lg p-4"><legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend><div class="space-y-6"><div><label class="l">Expérience Totale</label><div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div></div><div><label class="l">Parcours / Cours Suivis</label><div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div></div></div></fieldset>
+                            <div><label class="l">Matériel</label><div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="l">Style</label><div id="contextStyleContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="l">Objectifs</label><div id="contextDouleursContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="l">Temps Dispo</label><div id="contextTempsContainer" class="flex flex-wrap gap-2"></div></div>
                             <hr class="border-slate-700">
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Statut</label>
-                                <div id="contextStatutContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Tranche d'Âge</label>
-                                <div id="contextAgeContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Conséquence si inaction (6 mois) ?</label>
-                                <div id="contextConsequenceContainer" class="flex flex-wrap gap-2"></div>
-                            </div>
-                        
+                            <div><label class="l">Statut</label><div id="contextStatutContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="l">Tranche d'Âge</label><div id="contextAgeContainer" class="flex flex-wrap gap-2"></div></div>
+                            <div><label class="l">Conséquence si inaction</label><div id="contextConsequenceContainer" class="flex flex-wrap gap-2"></div></div>
                         </div>
                     </div>
                 </div>
+                 {/* Feedback Element */}
+                 <div id="appFeedback"></div>
             </div>
 
-            <!-- Colonne de Droite : Tableau de Bord -->
+            {/* Colonne Droite: Dashboard R1 */}
             <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto custom-scrollbar">
                 <div id="dashboardContent" class="sticky top-0 space-y-5 bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-2xl">
-                    
+                    {/* Jauges */}
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
                         <h3 class="text-md font-semibold text-gray-100 text-center mb-2">Diagnostic Prospect</h3>
-                        <div class="w-full">
-                            <span id="gaugeDispoLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Disponibilité (Temps)</span>
-                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
-                                <div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                            <span id="gaugeMotivLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Objectifs (Douleur)</span>
-                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
-                                <div id="gaugeMotiv" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                            <span id="gaugeAdeqLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Adéquation (Vision)</span>
-                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
-                                <div id="gaugeAdeq" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                            <span id="gaugeCompetenceLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Compétence (Niveau)</span>
-                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
-                                <div id="gaugeCompetence" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                            <span id="gaugeCapaLabel" class="text-sm font-medium transition-colors duration-500 text-teal-300">Capacité (Finances)</span>
-                            <div class="w-full bg-slate-700 rounded-full h-3 shadow-inner mt-1">
-                                <div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="text-center pt-3 border-t border-slate-700 mt-4">
-                                <span class="text-sm font-medium text-gray-300">Score Total : </span>
-                                <span id="totalScore" class="text-2xl font-bold text-teal-300">0</span>
-                        </div>
+                        <div><span id="gaugeDispoLabel" class="text-sm font-medium">Dispo (Temps)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeMotivLabel" class="text-sm font-medium">Objectifs (Douleur)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeMotiv" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeAdeqLabel" class="text-sm font-medium">Adéquation (Vision)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeAdeq" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeCompetenceLabel" class="text-sm font-medium">Compétence (Niveau)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCompetence" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeCapaLabel" class="text-sm font-medium">Capacité (Finances)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div class="text-center pt-3 border-t border-slate-700 mt-4"><span class="text-sm font-medium text-gray-300">Score Total : </span><span id="totalScore" class="text-2xl font-bold text-teal-300">0</span></div>
                     </div>
+                    {/* Statut Qualification */}
+                    <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner"><span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">En attente...</span><p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">Remplir les badges...</p></div>
+                    {/* Diagnostic Final */}
+                    <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border"><h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-green-400">Points Forts:</h4><ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Points d'Effort:</h4><ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div></div>
 
-                    <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner">
-                        <span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">
-                            En attente...
-                        </span>
-                        <p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">
-                            Remplir les badges...
-                        </p>
-                    </div>
-
-                    <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border">
-                        <h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3>
-                            <div class="space-y-2 pt-2">
-                                <h4 class="text-sm font-semibold text-green-400">Points Forts (Ce que tu as) :</h4>
-                                <ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1">
-                                </ul>
-                            </div>
-                            <div class="space-y-2 pt-2">
-                                <h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Tes Points d'Effort (Ce qu'il faut) :</h4>
-                                <ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1">
-                                </ul>
-                            </div>
-                    </div>
-
+                    {/* Bouton pour aller au Pitch (affiché si Feu Vert) */}
                     <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">
-                        Suite : Voir la Proposition GIA &rarr;
+                        Voir la Proposition GIA &rarr;
                     </button>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="saveR1Button" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-blue-600 hover:bg-blue-500 text-white shadow-blue-800/40 flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-                            </svg>
-                            <span>Enregistrer R1</span>
-                        </button>
 
-                        <button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            <span>Exporter PDF</span>
-                        </button>
-                    </div>
-                    
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner">
-                        <label for="notesTextarea" class="block text-sm font-medium text-gray-300 mb-2">Résumé R1 & Notes Personnelles</label>
-                        <textarea id="notesTextarea" rows="6" placeholder="Les badges et vos notes perso apparaîtront ici..." class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 px-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"></textarea>
-                    </div>
+                    {/* Export PDF */}
+                    <div class="mt-4"><button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg><span>Exporter PDF</span></button></div>
+                    {/* Notes */}
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner mt-4"><label for="notesTextarea" class="block text-sm font-medium text-gray-300 mb-2">Résumé & Notes Perso</label><textarea id="notesTextarea" rows="6" placeholder="Badges + notes perso..." class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 px-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"></textarea></div>
                 </div>
             </aside>
         </div>
 
-        <!-- ======================================= -->
-        <!-- ÉCRAN 5: PITCH GIA (Masque par defaut)  -->
-        <!-- ======================================= -->
-        <div id="giaPitchScreen" class="h-full flex flex-col items-center justify-center p-4 hidden">
-            <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
+        {/* ÉCRAN PITCH GIA (Modifié) */}
+        <div id="giaPitchScreen" class="hidden h-full flex flex-col items-center justify-center p-4">
+             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
+                {/* Contenu Pitch (Piliers, Prix) */}
                 <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue dans la Guitare Impro Académie</h1>
                 <p class="text-md md:text-lg text-gray-200 text-center mb-6">Ce n'est pas un "cours de guitare".<br>C'est un <span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center flex-grow">
-                    <!-- Pilier 1 -->
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
-                        <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                        </svg>
-                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA MÉTHODE</h3>
-                        <p class="text-gray-300 text-sm">Une transformation de 9 mois pour maîtriser la <span class="font-semibold text-white">logique</span> de la musique (harmonie, rythme, oreille). Tu ne dépendras plus jamais des tablatures.</p>
-                    </div>
-                    <!-- Pilier 2 -->
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
-                        <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m10.116 0a5.97 5.97 0 00-4.682-2.72m-5.438 2.72A5.97 5.97 0 016 18.72m0 0a5.97 5.97 0 01-.94-3.197m0 0c0-1.06.318-2.053.87-2.882m-1.14 0a6.062 6.062 0 01-1.636 2.882M12 12.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
-                        </svg>
-                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">L'ACCOMPAGNEMENT</h3>
-                        <p class="text-gray-300 text-sm">Un suivi <span class="font-semibold text-white">direct et personnel</span>. Nous ne lâchons personne. Fini la frustration et la solitude de l'autodidacte face à son mur.</p>
-                    </div>
-                    <!-- Pilier 3 -->
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start">
-                            <svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                        </svg>
-                        <h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA TRANSFORMATION</h3>
-                        <p class="text-gray-300 text-sm">Notre promesse : devenir un guitariste <span class="font-semibold text-white">autonome</span>, capable d'improviser librement et de jouer en groupe. C'est la fin du syndrome de l'imposteur.</p>
-                    </div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA MÉTHODE</h3><p class="text-gray-300 text-sm">9 mois pour maîtriser la <span class="font-semibold text-white">logique</span> musique (harmonie, rythme, oreille). Fini dépendance tablatures.</p></div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m10.116 0a5.97 5.97 0 00-4.682-2.72m-5.438 2.72A5.97 5.97 0 016 18.72m0 0a5.97 5.97 0 01-.94-3.197m0 0c0-1.06.318-2.053.87-2.882m-1.14 0a6.062 6.062 0 01-1.636 2.882M12 12.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">L'ACCOMPAGNEMENT</h3><p class="text-gray-300 text-sm">Suivi <span class="font-semibold text-white">direct et personnel</span>. Fini frustration et solitude autodidacte.</p></div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA TRANSFORMATION</h3><p class="text-gray-300 text-sm">Promesse : guitariste <span class="font-semibold text-white">autonome</span>, improvise, joue en groupe. Fin syndrome imposteur.</p></div>
                 </div>
-
                 <hr class="border-slate-600 my-6"/>
+                <div class="bg-slate-900/60 p-4 md:p-5 rounded-lg border border-amber-500/30 text-center"><h4 class="text-lg font-semibold text-amber-300 mb-2">Engagement intensif.</h4><p class="text-gray-200 text-base">Investissement pour programme complet entre <span class="font-bold text-white">3000€ et 3600€</span>.</p></div>
 
-                <div class="bg-slate-900/60 p-4 md:p-5 rounded-lg border border-amber-500/30 text-center">
-                    <h4 class="text-lg font-semibold text-amber-300 mb-2">Ceci est un engagement intensif.</h4>
-                    <p class="text-gray-200 text-base">Pour garantir ce niveau de transformation et d'accompagnement, l'investissement pour ce programme complet se situe entre <span class="font-bold text-white">3000€ et 3600€</span>.</p>
-                </div>
+                 {/* --- NOUVEAUX BOUTONS DECISION & CHAMP RAISON --- */}
+                 <div class="mt-6 space-y-4">
+                     {/* Champ Raison (cache par defaut) */}
+                     <div id="lostReasonContainer" class="hidden space-y-2 transition-all duration-300 ease-in-out">
+                         <label for="lostReasonInput" class="block text-sm font-medium text-gray-300">Raison du refus (optionnel) :</label>
+                         <input type="text" id="lostReasonInput" placeholder="Ex: Prix, Timing, Pas prêt..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                     </div>
 
-                <div class="flex justify-between items-center pt-4">
-                    <button id="pitchBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
-                        &larr; Revoir le Diagnostic
-                    </button>
-                    <button id="pitchNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
-                        Je suis prêt à m'engager
-                    </button>
-                </div>
+                     {/* Boutons de decision */}
+                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4 border-t border-slate-700/50">
+                        <button id="pitchBackButton" type="button" class="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200 order-3 sm:order-1">
+                            &larr; Revoir le Diagnostic
+                        </button>
+                        <button id="rejectR2Button" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg order-2">
+                            Ne passe pas en R2
+                        </button>
+                        <button id="scheduleR2ConfirmButton" type="button" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 order-1 sm:order-3">
+                            Valider Passage en R2 &rarr;
+                        </button>
+                    </div>
+                 </div>
             </div>
         </div>
+         {/* Feedback Element */}
+         <div id="appFeedback"></div>
     </div>
 
-    <!-- ======================================= -->
-    <!-- APPEL DU FICHIER JAVASCRIPT EXTERNE     -->
-    <!-- ======================================= -->
+    <!-- Appel du module JS -->
     <script type="module">
-        // Importer l'objet App depuis notre fichier externe
-        import { App } from './app.mjs';
-
-        // Attendre que les services Firebase (definis dans le <head>) soient prets
-        const checkFirebase = setInterval(() => {
-            if (window.firebaseServices && window.firebaseServices.db) {
-                clearInterval(checkFirebase);
-                // Une fois Firebase pret, initialiser l'application
+        import { App } from './app.mjs'; // Utilisation du chemin relatif standard
+        // Attendre l'evenement personnalise avant d'initialiser
+        document.addEventListener('firebaseReady', () => {
+            console.log("Event firebaseReady reçu, initialisation App...");
+            App.init();
+        }, { once: true });
+        // Securite: si l'event est manque ou deja parti
+        if (window.firebaseServices) {
+             console.log("Firebase déjà prêt, initialisation App...");
+             // Verifier si App n'est pas deja initiee
+             if (!App.state) { // Simple check pour eviter double init
                 App.init();
-            } else {
-                // Optionnel: Ajouter un message si Firebase prend du temps
-                // console.log("Attente de Firebase...");
-            }
-        }, 100); // Verifier toutes les 100ms
+             }
+        }
     </script>
 
 </body>

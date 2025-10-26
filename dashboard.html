@@ -8,16 +8,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Optionnel: Ajouter une librairie de graphiques comme Chart.js plus tard --><!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --><style type="text/tailwindcss">
+    <!-- Optionnel: Chart.js pour les graphiques -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
+    <style type="text/tailwindcss">
         @layer base {
             body { font-family: 'Inter', sans-serif; }
         }
         @layer components {
             .kpi-card {
                 @apply bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden;
-                /* Bordure supérieure accentuée */
                 @apply border-t-4 border-t-teal-500;
-                /* Ombre intérieure subtile */
                 box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
             }
             .kpi-value {
@@ -26,9 +27,15 @@
             .kpi-label {
                 @apply text-sm text-gray-400 font-medium uppercase tracking-wider;
             }
-            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider; }
+            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; } /* Sticky header */
             td { @apply px-4 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
             tr:last-child td { @apply border-b-0; }
+            .status-badge { @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap; } /* Ajout whitespace-nowrap */
+            .status-r1 { @apply bg-blue-600 text-blue-100; }
+            .status-r2 { @apply bg-purple-600 text-purple-100; }
+            .status-closed { @apply bg-green-600 text-green-100; }
+            .status-lost { @apply bg-red-600 text-red-100; }
+            .status-other { @apply bg-gray-600 text-gray-100; }
         }
     </style>
 </head>
@@ -42,86 +49,136 @@
             </a>
         </header>
 
-        <!-- Section Filtres de Date --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-            <h2 class="text-lg font-semibold text-gray-300 mr-4">Période :</h2>
-            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+        <!-- Filtres -->
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+            <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
+            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
                 <label for="startDate" class="text-sm font-medium text-gray-400">Du</label>
-                <input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
             </div>
-             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
                 <label for="endDate" class="text-sm font-medium text-gray-400">Au</label>
-                <input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
             </div>
             <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">
                 Appliquer
             </button>
+             <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">
+                Ce mois-ci
+            </button>
         </section>
 
-        <!-- Section KPIs --><section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <!-- KPIs -->
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             <div class="kpi-card">
                 <span id="kpiR1Count" class="kpi-value">0</span>
                 <span class="kpi-label">R1 Effectués</span>
             </div>
             <div class="kpi-card">
-                <span id="kpiR2Count" class="kpi-value">N/A</span>
-                <span class="kpi-label">R2 (Simulé*)</span>
+                <span id="kpiR2Count" class="kpi-value">0</span>
+                <span class="kpi-label">R2 Planifiés</span>
             </div>
              <div class="kpi-card">
-                <span id="kpiClosingCount" class="kpi-value">N/A</span>
-                <span class="kpi-label">Closings (Simulé*)</span>
+                <span id="kpiClosingCount" class="kpi-value">0</span>
+                <span class="kpi-label">Closings</span>
             </div>
             <div class="kpi-card">
-                <span id="kpiConversionRate" class="kpi-value">N/A</span>
-                <span class="kpi-label">Conv. R1 → Closé*</span>
+                <span id="kpiConversionRate" class="kpi-value">0%</span>
+                <span class="kpi-label">Conv. R1 → Closé</span>
             </div>
              <div class="kpi-card">
-                <span id="kpiCashTotal" class="kpi-value">N/A</span>
-                <span class="kpi-label">Cash Encaissé*</span>
+                <span id="kpiCashTotal" class="kpi-value">0€</span>
+                <span class="kpi-label">Cash Encaissé</span>
             </div>
              <div class="kpi-card">
-                <span id="kpiCashRecurring" class="kpi-value">N/A</span>
-                <span class="kpi-label">Cash Récurrent*</span>
+                <span id="kpiCashRecurring" class="kpi-value">0€</span>
+                <span class="kpi-label">Cash Récurrent</span>
             </div>
-            <p class="col-span-full text-xs text-gray-500 italic mt-2">*Données simulées basées sur le statut R1. Mise à jour de la structure Firestore nécessaire pour les vrais chiffres.</p>
         </section>
 
-        <!-- Section Graphique (Placeholder) --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+        <!-- Graphique -->
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
              <h2 class="text-xl font-semibold text-gray-300 mb-4">Progression (Placeholder)</h2>
              <div id="chartContainer" class="h-64 flex items-center justify-center text-gray-500">
-                 <!-- Le canvas pour Chart.js ou le div pour D3.js ira ici -->Graphique à venir...
+                 Graphique à venir...
             </div>
         </section>
 
-        <!-- Section Détails des R1/Closings --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 overflow-x-auto">
-             <h2 class="text-xl font-semibold text-gray-300 mb-4">Détails des R1 Enregistrés</h2>
-             <div class="min-w-full">
-                 <table class="min-w-full divide-y divide-slate-700">
-                    <thead>
+        <!-- Table Détails -->
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto"> <!-- overflow-auto pour table -->
+             <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2> <!-- Titre sticky -->
+             <div class="min-w-[800px]"> <!-- Force largeur min pour eviter compression extreme -->
+                 <table class="w-full divide-y divide-slate-700 table-fixed"> <!-- table-fixed pour largeurs egales -->
+                    <thead class="sticky top-[4.5rem] bg-slate-700 z-10"> <!-- Header sticky -->
                         <tr>
-                            <th>Date R1</th>
-                            <th>Prospect</th>
-                            <th>Statut Qualification</th>
-                            <th>Score Total</th>
-                            <!-- Ajouter colonnes: Statut Closing, Montant, etc. plus tard --></tr>
+                            <th class="w-1/12">Date R1</th>
+                            <th class="w-2/12">Prospect</th>
+                            <th class="w-2/12">Statut Qualif.</th>
+                            <th class="w-1/12 text-center">Score</th>
+                            <th class="w-2/12">Statut Vente</th>
+                            <th class="w-1/12 text-right">Encaissé</th>
+                            <th class="w-1/12 text-right">Récurrent</th>
+                            <th class="w-1/12 text-center">Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700">
-                        <tr><td colspan="4" class="text-center py-4 text-gray-400">Chargement des données...</td></tr>
+                        <!-- Lignes générées par JS -->
+                        <tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>
                     </tbody>
                 </table>
              </div>
         </section>
     </div>
 
-    <!-- Initialisation Firebase --><script type="module">
+    <!-- Modal Edition -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-md border border-slate-700 space-y-4">
+            <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
+            <input type="hidden" id="modalDocId">
+
+            <div>
+                <label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label>
+                <select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <option value="R1 Completed">R1 Effectué</option>
+                    <option value="R2 Scheduled">R2 Planifié</option>
+                    <option value="Closed">Closé</option>
+                    <option value="Lost">Perdu</option>
+                    <option value="Other">Autre</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Encaissé (€)</label>
+                <input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400">
+            </div>
+
+            <div>
+                <label for="modalRecurringAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Récurrent (€/mois)</label>
+                <input type="number" id="modalRecurringAmount" placeholder="ex: 150" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400">
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                 <button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button>
+                 <button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button>
+            </div>
+             <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> <!-- Hauteur fixe pour eviter saut -->
+        </div>
+    </div>
+
+
+    <!-- Script -->
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, startAt, endAt } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         let db, auth, appId;
+        let currentData = []; // Stockage local des donnees affichees
 
         // --- Initialisation Firebase ---
         async function initFirebase() {
              try {
+                // Remplacer par votre config Firebase
                 const firebaseConfig = {
                     apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
                     authDomain: "closing-gia.firebaseapp.com",
@@ -130,180 +187,241 @@
                     messagingSenderId: "260776101981",
                     appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
                 };
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Utilisation de __app_id si disponible
 
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
+                // Attendre la connexion (anonyme si besoin)
                 return new Promise((resolve) => {
                     onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            console.log("Firebase Auth prête (Dashboard). UserID:", user.uid);
-                            resolve(); // Resoudre la promesse une fois connecte
-                        } else {
-                            // Essayer connexion anonyme si pas connecte
-                           try {
-                               await signInAnonymously(auth);
-                               console.log("Connecté anonymement.");
-                               resolve();
-                           } catch (anonError){
-                               console.error("Erreur connexion anonyme:", anonError);
-                               // Peut-être afficher une erreur ici, mais resolve() quand même
-                               // pour tenter de charger les données publiques.
-                               resolve();
-                           }
+                        if (user) { console.log("Dashboard: Auth prête."); resolve(); }
+                        else {
+                           try { await signInAnonymously(auth); console.log("Dashboard: Connecté anonymement."); resolve(); }
+                           catch (anonError){ console.error("Err anon:", anonError); resolve(); } // Resoudre meme si echec anon pour donnees publiques
                         }
                     });
                  });
-
-
             } catch (error) {
-                console.error("Erreur initialisation Firebase (Dashboard):", error);
-                displayError("Erreur critique de connexion à la base de données.");
-                return Promise.reject(error); // Rejeter la promesse en cas d'erreur
+                console.error("Erreur init Firebase:", error);
+                displayError("Erreur connexion DB.");
+                return Promise.reject(error);
             }
         }
 
-        // --- Récupération et Affichage des Données ---
+        // --- Récupération & Affichage ---
         async function fetchDataAndDisplay(startDate, endDate) {
-            if (!db || !appId) {
-                displayError("Base de données non initialisée.");
-                return;
-            }
+            if (!db || !appId) { displayError("DB non prête."); return; }
 
-            // Réinitialiser l'affichage
             const tableBody = document.getElementById('detailsTableBody');
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Chargement...</td></tr>';
-             document.getElementById('kpiR1Count').textContent = '-';
-             document.getElementById('kpiR2Count').textContent = '-';
-             document.getElementById('kpiClosingCount').textContent = '-';
-             document.getElementById('kpiConversionRate').textContent = '-';
-             // Reset autres KPIs si besoin
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; // MAJ colspan
+            resetKPIs();
 
             try {
                 const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
                 const r1Collection = collection(db, collectionPath);
+                let q = query(r1Collection); // Requete de base
+                // Ajout des filtres de date si fournis
+                if (startDate) q = query(q, where("prospectDate", ">=", startDate));
+                if (endDate) q = query(q, where("prospectDate", "<=", endDate));
 
-                // Construire la requête avec filtre de date
-                let q = query(r1Collection); // Pas d'ordre par défaut pour éviter erreurs d'index
-                if (startDate) {
-                    q = query(q, where("prospectDate", ">=", startDate));
-                }
-                if (endDate) {
-                    q = query(q, where("prospectDate", "<=", endDate));
-                }
-
-                console.log(`[fetchData] Requête Firestore avec dates: ${startDate} - ${endDate}`);
                 const querySnapshot = await getDocs(q);
-                console.log(`[fetchData] ${querySnapshot.size} documents trouvés.`);
-
-                let r1Count = 0;
-                let r2SimulatedCount = 0;
-                let closingSimulatedCount = 0;
-                const closingsData = [];
+                currentData = []; // Vider cache local
 
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    r1Count++;
-                    closingsData.push({ // Stocker pour le tri et l'affichage
-                        id: doc.id,
-                        date: data.prospectDate || 'N/A',
-                        name: data.prospectName || 'N/A',
-                        status: data.qualificationStatus || 'N/A',
-                        score: data.scores?.total ?? 'N/A' // Utilise ?? pour valeur par défaut si scores ou total manque
-                    });
-
-                    // Simulation basée sur le statut R1 (à adapter quand la structure évoluera)
-                    if (data.qualificationStatus && data.qualificationStatus.includes("VERT")) {
-                         r2SimulatedCount++; // On suppose qu'un FEU VERT mène à un R2
-                         closingSimulatedCount++; // Pour la simulation, on suppose qu'un FEU VERT close
-                    }
+                    currentData.push({ id: doc.id, ...doc.data() }); // Stocker donnees + ID
                 });
 
-                 // Tri des données par date (la plus récente en premier) en JavaScript
-                 closingsData.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+                // Tri JS (Firestore ne trie pas sur un champ different de celui du where !=)
+                 currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || ""));
 
-
-                // --- Mettre à jour les KPIs ---
-                document.getElementById('kpiR1Count').textContent = r1Count;
-                document.getElementById('kpiR2Count').textContent = `${r2SimulatedCount}*`;
-                document.getElementById('kpiClosingCount').textContent = `${closingSimulatedCount}*`;
-
-                // Calcul Taux de Conversion (simulé)
-                const conversionRate = r1Count > 0 ? ((closingSimulatedCount / r1Count) * 100).toFixed(1) : 0;
-                document.getElementById('kpiConversionRate').textContent = `${conversionRate}%*`;
-
-                 // Mettre à jour les autres KPIs (Cash) avec N/A pour l'instant
-                 document.getElementById('kpiCashTotal').textContent = 'N/A*';
-                 document.getElementById('kpiCashRecurring').textContent = 'N/A*';
-
-
-                // --- Mettre à jour la table ---
-                if (closingsData.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Aucune donnée pour cette période.</td></tr>';
-                } else {
-                    tableBody.innerHTML = closingsData.map(item => `
-                        <tr>
-                            <td>${item.date}</td>
-                            <td>${item.name}</td>
-                            <td><span class="${item.status.includes('VERT') ? 'text-green-400' : (item.status.includes('ROUGE') ? 'text-red-400' : 'text-gray-400')}">${item.status}</span></td>
-                            <td>${item.score}</td>
-                        </tr>
-                    `).join('');
-                }
+                updateKPIs(currentData); // Mettre a jour les KPIs avec les donnees reelles
+                updateTable(currentData); // Mettre a jour la table
 
             } catch (error) {
-                console.error("Erreur lors de la récupération des données Firestore:", error);
-                displayError("Impossible de charger les données. Vérifiez la console.");
-                 tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-400">Erreur de chargement.</td></tr>';
+                console.error("Erreur fetch Firestore:", error);
+                displayError("Erreur chargement données.");
+                 tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; // MAJ colspan
             }
         }
 
-        // --- Gestion des Filtres et Initialisation ---
+        // --- Mise à jour KPIs ---
+        function updateKPIs(data) {
+            let r1Count = data.length;
+            let r2Count = 0;
+            let closingCount = 0;
+            let totalCash = 0;
+            let totalRecurring = 0;
+
+            data.forEach(item => {
+                const status = item.status || 'R1 Completed'; // Statut vente
+                if (status === 'R2 Scheduled') r2Count++;
+                if (status === 'Closed') {
+                    closingCount++;
+                    totalCash += Number(item.amountCollected) || 0;     // Somme cash
+                    totalRecurring += Number(item.recurringAmount) || 0; // Somme recurrent
+                }
+            });
+
+            const conversionRate = r1Count > 0 ? ((closingCount / r1Count) * 100).toFixed(1) : 0;
+
+            // Affichage (retrait du '*')
+            document.getElementById('kpiR1Count').textContent = r1Count;
+            document.getElementById('kpiR2Count').textContent = r2Count;
+            document.getElementById('kpiClosingCount').textContent = closingCount;
+            document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`;
+            // Formatage €
+            document.getElementById('kpiCashTotal').textContent = `${totalCash.toLocaleString('fr-FR')}€`;
+            document.getElementById('kpiCashRecurring').textContent = `${totalRecurring.toLocaleString('fr-FR')}€`;
+        }
+
+        // --- Mise à jour Table ---
+        function updateTable(data) {
+            const tableBody = document.getElementById('detailsTableBody');
+            if (data.length === 0) {
+                 tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; // MAJ colspan
+                return;
+            }
+
+            tableBody.innerHTML = data.map(item => {
+                const statusVente = item.status || 'R1 Completed';
+                const statusClass = getStatusClass(statusVente);
+                const amountCollected = Number(item.amountCollected) || 0;
+                const recurringAmount = Number(item.recurringAmount) || 0;
+                // Formater statut qualif pour affichage
+                const qualifStatusText = item.qualificationStatus ? item.qualificationStatus.replace(' (Client Rêvé)', '').trim() : 'N/A';
+                const qualifClass = item.qualificationStatus?.includes('VERT') ? 'text-green-400' : (item.qualificationStatus?.includes('ROUGE') ? 'text-red-400' : 'text-gray-400');
+
+                return `
+                    <tr>
+                        <td>${item.prospectDate || 'N/A'}</td>
+                        <td class="truncate max-w-xs">${item.prospectName || 'N/A'}</td>
+                        <td><span class="${qualifClass}">${qualifStatusText}</span></td>
+                        <td class="text-center">${item.scores?.total ?? 'N/A'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusVente.replace('Completed', 'Effectué').replace('Scheduled', 'Planifié')}</span></td>
+                         <td class="text-right">${amountCollected > 0 ? amountCollected.toLocaleString('fr-FR') + '€' : '-'}</td>
+                         <td class="text-right">${recurringAmount > 0 ? recurringAmount.toLocaleString('fr-FR') + '€' : '-'}</td>
+                         <td class="text-center">
+                            <button data-doc-id="${item.id}" class="edit-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-2 py-1 rounded hover:bg-slate-700 transition-colors">Modifier</button>
+                         </td>
+                    </tr>
+                `;
+            }).join('');
+
+            attachEditListeners(); // Rattacher les ecouteurs aux nouveaux boutons
+        }
+
+        // --- Obtenir classe CSS pour badge statut ---
+        function getStatusClass(status) {
+            switch (status) {
+                case 'R1 Completed': return 'status-r1';
+                case 'R2 Scheduled': return 'status-r2';
+                case 'Closed': return 'status-closed';
+                case 'Lost': return 'status-lost';
+                default: return 'status-other';
+            }
+        }
+
+        // --- Reset KPIs ---
+        function resetKPIs() {
+             document.getElementById('kpiR1Count').textContent = '0';
+             document.getElementById('kpiR2Count').textContent = '0';
+             document.getElementById('kpiClosingCount').textContent = '0';
+             document.getElementById('kpiConversionRate').textContent = '0%';
+             document.getElementById('kpiCashTotal').textContent = '0€';
+             document.getElementById('kpiCashRecurring').textContent = '0€';
+        }
+
+        // --- Setup Filtres & Chargement Initial ---
         function setupFiltersAndLoad() {
             const startDateInput = document.getElementById('startDate');
             const endDateInput = document.getElementById('endDate');
             const filterButton = document.getElementById('filterButton');
+            const resetButton = document.getElementById('resetFilterButton');
 
-             // Initialiser avec une période par défaut (ex: dernier mois)
-            const today = new Date();
-            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Dernier jour du mois actuel
-
-            startDateInput.value = firstDayOfMonth.toISOString().split('T')[0];
-            endDateInput.value = lastDayOfMonth.toISOString().split('T')[0];
-
-            // Charger les données initiales
+            function setThisMonth() { /* ... (comme avant) ... */
+                 const today = new Date();
+                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                 startDateInput.value = firstDay;
+                 endDateInput.value = lastDay;
+             }
+            setThisMonth();
             fetchDataAndDisplay(startDateInput.value, endDateInput.value);
-
-            // Ajouter l'écouteur pour le bouton filtrer
-            filterButton.addEventListener('click', () => {
-                fetchDataAndDisplay(startDateInput.value, endDateInput.value);
-            });
+            filterButton.addEventListener('click', () => fetchDataAndDisplay(startDateInput.value, endDateInput.value));
+            resetButton.addEventListener('click', () => { setThisMonth(); fetchDataAndDisplay(startDateInput.value, endDateInput.value); });
         }
 
-         // --- Affichage d'erreur générique ---
-         function displayError(message) {
-            let errorDiv = document.getElementById('dashboardError');
-            if (!errorDiv) {
-                errorDiv = document.createElement('div');
-                errorDiv.id = 'dashboardError';
-                errorDiv.className = 'fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-50';
-                document.body.appendChild(errorDiv);
-            }
-            errorDiv.textContent = message;
-            // Optionnel: Faire disparaître après quelques secondes
-            setTimeout(() => errorDiv.remove(), 5000);
-         }
+         // --- Affichage Erreur ---
+         function displayError(message) { /* ... (comme avant) ... */
+              let errorDiv = document.getElementById('dashboardError');
+              if (!errorDiv) {
+                  errorDiv = document.createElement('div'); errorDiv.id = 'dashboardError'; errorDiv.className = 'fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]'; /* Augmenter z-index */ document.body.appendChild(errorDiv);
+              }
+              errorDiv.textContent = message;
+              setTimeout(() => errorDiv.remove(), 5000);
+          }
 
+        // --- Gestion Modal ---
+        function openEditModal(docId) {
+            const prospectData = currentData.find(item => item.id === docId); if (!prospectData) return;
+            document.getElementById('modalProspectName').textContent = prospectData.prospectName || 'N/A';
+            document.getElementById('modalDocId').value = docId;
+            document.getElementById('modalStatus').value = prospectData.status || 'R1 Completed';
+            document.getElementById('modalAmountCollected').value = prospectData.amountCollected || '';
+            document.getElementById('modalRecurringAmount').value = prospectData.recurringAmount || '';
+            document.getElementById('modalError').textContent = '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+        async function saveModalChanges() {
+            const docId = document.getElementById('modalDocId').value;
+            const newStatus = document.getElementById('modalStatus').value;
+            const newAmountCollected = Number(document.getElementById('modalAmountCollected').value) || 0;
+            const newRecurringAmount = Number(document.getElementById('modalRecurringAmount').value) || 0;
+            const modalError = document.getElementById('modalError');
+            const saveButton = document.getElementById('modalSaveButton');
+            if (!docId || !newStatus) { modalError.textContent = "ID/Statut requis."; return; }
+            modalError.textContent = ''; saveButton.disabled = true; saveButton.textContent = 'Sauvegarde...';
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
+                const docRef = doc(db, collectionPath, docId);
+                await updateDoc(docRef, {
+                    status: newStatus,
+                    amountCollected: newAmountCollected,
+                    recurringAmount: newRecurringAmount,
+                    lastUpdatedAt: Timestamp.now()
+                });
+                closeEditModal();
+                // Recharger avec les dates actuelles du filtre
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                await fetchDataAndDisplay(startDate, endDate); // Utiliser await
+            } catch (error) { console.error("Err update:", error); modalError.textContent = "Erreur sauvegarde."; }
+            finally { saveButton.disabled = false; saveButton.textContent = 'Enregistrer'; }
+        }
+        function attachEditListeners() {
+             // Utiliser la délégation d'événement sur le tbody pour eviter de rattacher a chaque MAJ
+             document.getElementById('detailsTableBody').addEventListener('click', (e) => {
+                 if (e.target.classList.contains('edit-btn')) {
+                     const docId = e.target.dataset.docId;
+                     openEditModal(docId);
+                 }
+             });
+        }
 
         // --- Démarrage ---
         document.addEventListener('DOMContentLoaded', async () => {
-            await initFirebase(); // Attendre que Firebase soit prêt
-            setupFiltersAndLoad(); // Configurer les filtres et charger les données
+            await initFirebase();
+            setupFiltersAndLoad();
+            // Lier boutons modal (une seule fois)
+             document.getElementById('modalCancelButton').addEventListener('click', closeEditModal);
+             document.getElementById('modalSaveButton').addEventListener('click', saveModalChanges);
+             document.getElementById('editModal').addEventListener('click', (e) => { if(e.target.id === 'editModal') closeEditModal(); });
+             // Attacher les écouteurs pour les boutons Modifier (via délégation)
+             attachEditListeners();
         });
-
     </script>
 
 </body>

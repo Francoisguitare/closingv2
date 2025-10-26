@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - GIA Closing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Optionnel: Ajouter une librairie de graphiques comme Chart.js plus tard --><!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --><style type="text/tailwindcss">
+        @layer base {
+            body { font-family: 'Inter', sans-serif; }
+        }
+        @layer components {
+            .kpi-card {
+                @apply bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden;
+                /* Bordure supérieure accentuée */
+                @apply border-t-4 border-t-teal-500;
+                /* Ombre intérieure subtile */
+                box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            }
+            .kpi-value {
+                @apply text-4xl font-bold text-teal-300 block mb-1;
+            }
+            .kpi-label {
+                @apply text-sm text-gray-400 font-medium uppercase tracking-wider;
+            }
+            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider; }
+            td { @apply px-4 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
+            tr:last-child td { @apply border-b-0; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1>
+            <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                + Nouveau R1
+            </a>
+        </header>
+
+        <!-- Section Filtres de Date --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+            <h2 class="text-lg font-semibold text-gray-300 mr-4">Période :</h2>
+            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <label for="startDate" class="text-sm font-medium text-gray-400">Du</label>
+                <input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+            </div>
+             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <label for="endDate" class="text-sm font-medium text-gray-400">Au</label>
+                <input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+            </div>
+            <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">
+                Appliquer
+            </button>
+        </section>
+
+        <!-- Section KPIs --><section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            <div class="kpi-card">
+                <span id="kpiR1Count" class="kpi-value">0</span>
+                <span class="kpi-label">R1 Effectués</span>
+            </div>
+            <div class="kpi-card">
+                <span id="kpiR2Count" class="kpi-value">N/A</span>
+                <span class="kpi-label">R2 (Simulé*)</span>
+            </div>
+             <div class="kpi-card">
+                <span id="kpiClosingCount" class="kpi-value">N/A</span>
+                <span class="kpi-label">Closings (Simulé*)</span>
+            </div>
+            <div class="kpi-card">
+                <span id="kpiConversionRate" class="kpi-value">N/A</span>
+                <span class="kpi-label">Conv. R1 → Closé*</span>
+            </div>
+             <div class="kpi-card">
+                <span id="kpiCashTotal" class="kpi-value">N/A</span>
+                <span class="kpi-label">Cash Encaissé*</span>
+            </div>
+             <div class="kpi-card">
+                <span id="kpiCashRecurring" class="kpi-value">N/A</span>
+                <span class="kpi-label">Cash Récurrent*</span>
+            </div>
+            <p class="col-span-full text-xs text-gray-500 italic mt-2">*Données simulées basées sur le statut R1. Mise à jour de la structure Firestore nécessaire pour les vrais chiffres.</p>
+        </section>
+
+        <!-- Section Graphique (Placeholder) --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+             <h2 class="text-xl font-semibold text-gray-300 mb-4">Progression (Placeholder)</h2>
+             <div id="chartContainer" class="h-64 flex items-center justify-center text-gray-500">
+                 <!-- Le canvas pour Chart.js ou le div pour D3.js ira ici -->Graphique à venir...
+            </div>
+        </section>
+
+        <!-- Section Détails des R1/Closings --><section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 overflow-x-auto">
+             <h2 class="text-xl font-semibold text-gray-300 mb-4">Détails des R1 Enregistrés</h2>
+             <div class="min-w-full">
+                 <table class="min-w-full divide-y divide-slate-700">
+                    <thead>
+                        <tr>
+                            <th>Date R1</th>
+                            <th>Prospect</th>
+                            <th>Statut Qualification</th>
+                            <th>Score Total</th>
+                            <!-- Ajouter colonnes: Statut Closing, Montant, etc. plus tard --></tr>
+                    </thead>
+                    <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700">
+                        <tr><td colspan="4" class="text-center py-4 text-gray-400">Chargement des données...</td></tr>
+                    </tbody>
+                </table>
+             </div>
+        </section>
+    </div>
+
+    <!-- Initialisation Firebase --><script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, startAt, endAt } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        let db, auth, appId;
+
+        // --- Initialisation Firebase ---
+        async function initFirebase() {
+             try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
+                    authDomain: "closing-gia.firebaseapp.com",
+                    projectId: "closing-gia",
+                    storageBucket: "closing-gia.firebasestorage.app",
+                    messagingSenderId: "260776101981",
+                    appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
+                };
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                return new Promise((resolve) => {
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            console.log("Firebase Auth prête (Dashboard). UserID:", user.uid);
+                            resolve(); // Resoudre la promesse une fois connecte
+                        } else {
+                            // Essayer connexion anonyme si pas connecte
+                           try {
+                               await signInAnonymously(auth);
+                               console.log("Connecté anonymement.");
+                               resolve();
+                           } catch (anonError){
+                               console.error("Erreur connexion anonyme:", anonError);
+                               // Peut-être afficher une erreur ici, mais resolve() quand même
+                               // pour tenter de charger les données publiques.
+                               resolve();
+                           }
+                        }
+                    });
+                 });
+
+
+            } catch (error) {
+                console.error("Erreur initialisation Firebase (Dashboard):", error);
+                displayError("Erreur critique de connexion à la base de données.");
+                return Promise.reject(error); // Rejeter la promesse en cas d'erreur
+            }
+        }
+
+        // --- Récupération et Affichage des Données ---
+        async function fetchDataAndDisplay(startDate, endDate) {
+            if (!db || !appId) {
+                displayError("Base de données non initialisée.");
+                return;
+            }
+
+            // Réinitialiser l'affichage
+            const tableBody = document.getElementById('detailsTableBody');
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Chargement...</td></tr>';
+             document.getElementById('kpiR1Count').textContent = '-';
+             document.getElementById('kpiR2Count').textContent = '-';
+             document.getElementById('kpiClosingCount').textContent = '-';
+             document.getElementById('kpiConversionRate').textContent = '-';
+             // Reset autres KPIs si besoin
+
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
+                const r1Collection = collection(db, collectionPath);
+
+                // Construire la requête avec filtre de date
+                let q = query(r1Collection); // Pas d'ordre par défaut pour éviter erreurs d'index
+                if (startDate) {
+                    q = query(q, where("prospectDate", ">=", startDate));
+                }
+                if (endDate) {
+                    q = query(q, where("prospectDate", "<=", endDate));
+                }
+
+                console.log(`[fetchData] Requête Firestore avec dates: ${startDate} - ${endDate}`);
+                const querySnapshot = await getDocs(q);
+                console.log(`[fetchData] ${querySnapshot.size} documents trouvés.`);
+
+                let r1Count = 0;
+                let r2SimulatedCount = 0;
+                let closingSimulatedCount = 0;
+                const closingsData = [];
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    r1Count++;
+                    closingsData.push({ // Stocker pour le tri et l'affichage
+                        id: doc.id,
+                        date: data.prospectDate || 'N/A',
+                        name: data.prospectName || 'N/A',
+                        status: data.qualificationStatus || 'N/A',
+                        score: data.scores?.total ?? 'N/A' // Utilise ?? pour valeur par défaut si scores ou total manque
+                    });
+
+                    // Simulation basée sur le statut R1 (à adapter quand la structure évoluera)
+                    if (data.qualificationStatus && data.qualificationStatus.includes("VERT")) {
+                         r2SimulatedCount++; // On suppose qu'un FEU VERT mène à un R2
+                         closingSimulatedCount++; // Pour la simulation, on suppose qu'un FEU VERT close
+                    }
+                });
+
+                 // Tri des données par date (la plus récente en premier) en JavaScript
+                 closingsData.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+
+                // --- Mettre à jour les KPIs ---
+                document.getElementById('kpiR1Count').textContent = r1Count;
+                document.getElementById('kpiR2Count').textContent = `${r2SimulatedCount}*`;
+                document.getElementById('kpiClosingCount').textContent = `${closingSimulatedCount}*`;
+
+                // Calcul Taux de Conversion (simulé)
+                const conversionRate = r1Count > 0 ? ((closingSimulatedCount / r1Count) * 100).toFixed(1) : 0;
+                document.getElementById('kpiConversionRate').textContent = `${conversionRate}%*`;
+
+                 // Mettre à jour les autres KPIs (Cash) avec N/A pour l'instant
+                 document.getElementById('kpiCashTotal').textContent = 'N/A*';
+                 document.getElementById('kpiCashRecurring').textContent = 'N/A*';
+
+
+                // --- Mettre à jour la table ---
+                if (closingsData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Aucune donnée pour cette période.</td></tr>';
+                } else {
+                    tableBody.innerHTML = closingsData.map(item => `
+                        <tr>
+                            <td>${item.date}</td>
+                            <td>${item.name}</td>
+                            <td><span class="${item.status.includes('VERT') ? 'text-green-400' : (item.status.includes('ROUGE') ? 'text-red-400' : 'text-gray-400')}">${item.status}</span></td>
+                            <td>${item.score}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error("Erreur lors de la récupération des données Firestore:", error);
+                displayError("Impossible de charger les données. Vérifiez la console.");
+                 tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-400">Erreur de chargement.</td></tr>';
+            }
+        }
+
+        // --- Gestion des Filtres et Initialisation ---
+        function setupFiltersAndLoad() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const filterButton = document.getElementById('filterButton');
+
+             // Initialiser avec une période par défaut (ex: dernier mois)
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Dernier jour du mois actuel
+
+            startDateInput.value = firstDayOfMonth.toISOString().split('T')[0];
+            endDateInput.value = lastDayOfMonth.toISOString().split('T')[0];
+
+            // Charger les données initiales
+            fetchDataAndDisplay(startDateInput.value, endDateInput.value);
+
+            // Ajouter l'écouteur pour le bouton filtrer
+            filterButton.addEventListener('click', () => {
+                fetchDataAndDisplay(startDateInput.value, endDateInput.value);
+            });
+        }
+
+         // --- Affichage d'erreur générique ---
+         function displayError(message) {
+            let errorDiv = document.getElementById('dashboardError');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'dashboardError';
+                errorDiv.className = 'fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-50';
+                document.body.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+            // Optionnel: Faire disparaître après quelques secondes
+            setTimeout(() => errorDiv.remove(), 5000);
+         }
+
+
+        // --- Démarrage ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initFirebase(); // Attendre que Firebase soit prêt
+            setupFiltersAndLoad(); // Configurer les filtres et charger les données
+        });
+
+    </script>
+
+</body>
+</html>
+

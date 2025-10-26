@@ -12,17 +12,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- SDK Firebase (Firestore) -->
+    <!-- ======================================= -->
+    <!-- INITIALISATION FIREBASE                 -->
+    <!-- ======================================= -->
     <script type="module">
+        // Ce bloc se charge en premier et prepare Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // Configuration Firebase (globale pour ce script)
-        let db, auth, appId, userId;
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         try {
-            // NOTE: La config Firebase reste ici car cette page est la seule à en avoir besoin.
             const firebaseConfig = {
                 apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
                 authDomain: "closing-gia.firebaseapp.com",
@@ -31,26 +30,25 @@
                 messagingSenderId: "260776101981",
                 appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
             };
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
             const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
             
-            // setLogLevel('debug');
+            // setLogLevel('debug'); // Decommenter pour le debug
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    userId = user.uid;
-                    console.log("Firebase Auth prête. UserID:", userId);
+                    console.log("Firebase Auth prete. UserID:", user.uid);
                 } else {
-                    console.log("Firebase Auth: Utilisateur non connecté.");
+                    console.log("Firebase Auth: Utilisateur non connecte.");
                 }
             });
 
             await signInAnonymously(auth);
 
-            // Rendre db et auth accessibles à l'objet App
+            // Exposer les services Firebase a l'objet window pour que app.mjs puisse les utiliser
             window.firebaseServices = { db, auth, appId };
 
         } catch (error) {
@@ -60,17 +58,15 @@
             errorDiv.textContent = 'Erreur critique: Impossible de charger la base de données. L\'enregistrement sera désactivé.';
             document.body.prepend(errorDiv);
         }
-
     </script>
 
+    <!-- Styles CSS (inchange) -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
-    
-        /* Spinner pour l'export PDF */
         #pdf-spinner {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7); z-index: 9999;
@@ -88,18 +84,16 @@
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
 
     <div id="app" class="h-full">
-        <!-- Les écrans 1, 2, 3 ont été déplacés -->
 
         <!-- ======================================= -->
         <!-- ÉCRAN 4: ESPACE DE TRAVAIL              -->
-        <!-- MODIFICATION: Suppression de la classe 'hidden' et ajout de 'grid' pour affichage immédiat -->
+        <!-- Affiche par defaut (plus de 'hidden') -->
         <!-- ======================================= -->
         <div id="mainScreen" class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
             
             <!-- Colonne de Gauche : Prise de notes -->
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden"> 
                 
-                <!-- Boutons (MAJ: 'Retour' et 'Reset' sont maintenant des liens <a>) -->
                 <div class="flex justify-between items-center p-2 flex-shrink-0">
                     <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">
                         &larr; Retour Script
@@ -288,7 +282,7 @@
         </div>
 
         <!-- ======================================= -->
-        <!-- ÉCRAN 5: PITCH GIA (VISUEL EFFICACE)    -->
+        <!-- ÉCRAN 5: PITCH GIA (Masque par defaut)  -->
         <!-- ======================================= -->
         <div id="giaPitchScreen" class="h-full flex flex-col items-center justify-center p-4 hidden">
             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -338,734 +332,29 @@
                     </button>
                 </div>
             </div>
-        </div> <!-- Fin giaPitchScreen -->
+        </div>
     </div>
 
     <!-- ======================================= -->
-    <!-- JAVASCRIPT REFACTORISÉ                  -->
+    <!-- APPEL DU FICHIER JAVASCRIPT EXTERNE     -->
     <!-- ======================================= -->
     <script type="module">
-        // Import Firestore services depuis la config globale
-        const { db, auth, appId } = window.firebaseServices || {};
-        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        // Importer l'objet App depuis notre fichier externe
+        import { App } from './app.mjs';
 
-        // --- (DÉBUT) CONSTANTES DE CONFIGURATION ---
-        const allBadgeNames = [
-            // Statut (0-2)
-            "Chomage/Instable", "Actif/Libéral", "Retraité",
-            // Temps (3-6)
-            "< 3h/sem.", "3-5h/sem.", "+5h/sem.", "+8h/sem.",
-            // Age (7-10)
-            "18-35 ans", "36-50 ans", "51-65 ans", "+ 65 ans",
-            // Motivation (11-21)
-            "Plaisir", "Pas d'objectif", "Jouer des solos", "Rêve jeunesse", "Challenge perso",
-            "Technique", "Composer", "Jeu en groupe", "Liberté manche",
-            "Improviser librement", "Parcours structuré",
-            // Experience (22-25)
-            "< 1 an", "1-5 ans", "5-10 ans", "+ 10 ans",
-            // Parcours (26-29)
-            "Pas de cours", "< 1 an cours", "1-3 ans cours", "+ 3 ans cours",
-            // Style (30-33)
-            "Pop/Chanson", "Metal", "Jazz/Funk", "Blues/Rock",
-            // Matériel (34-36)
-            "Pas de matériel", "Électrique", "Home Studio",
-            // Conséquence (37-40)
-            "Aucun", "Stagnation", "Abandon", "Grosse frustration"
-        ];
-        
-        const badgeCategories = {
-            statut: [0, 1, 2], 
-            temps: [3, 4, 5, 6],
-            age: [7, 8, 9, 10], 
-            douleur: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], // "douleur" est le nom interne pour "Objectifs"
-            experience: [22, 23, 24, 25], 
-            parcours: [26, 27, 28, 29], 
-            style: [30, 31, 32, 33],
-            materiel: [34, 35, 36],
-            consequence: [37, 38, 39, 40]
-        };
-        
-        const badgeData = {
-            // Dispo, Motiv, Adéq, Capa, Comp
-            // Statut (0-2): R, G, V
-            0: [0, 0, 0, -2, 0], 1: [1, 0, 0, 2, 0], 2: [3, 0, 0, 3, 0],
-            // Temps (3-6): R, G, V, V+
-            3: [0, 0, 0, 0, 0], 4: [2, 0, 0, 0, 0], 5: [4, 0, 0, 0, 0], 6: [5, 0, 0, 0, 0],
-            // Age (7-10): O, O, G, G
-            7: [0, 0, 0, 0, 0], 8: [0, 1, 0, 0, 0], 9: [0, 2, 0, 0, 0], 10: [0, 2, 0, 0, 0],
-            // Motivation (11-21): R, RD, G, O, O, G, G, V, V, V, V
-            11: [0, -1, -2, 0, 0], 12: [0, -5, -2, 0, 0], 13: [0, 2, 0, 0, 0], 14: [0, 2, 1, 0, 0], 15: [0, 2, 2, 0, 0],
-            16: [0, 2, 0, 0, 0], 17: [0, 0, 2, 0, 0], 18: [0, 0, 3, 0, 0], 19: [0, 0, 4, 0, 0],
-            20: [0, 0, 5, 0, 0], 21: [0, 0, 5, 0, 0],
-            // Experience (22-25): O, O, G, V
-            22: [0, 0, 0, 0, 1], 23: [0, 0, 0, 0, 2], 24: [0, 0, 0, 0, 3], 25: [0, 0, 0, 0, 4],
-            // Parcours (26-29): O, G, G, V
-            26: [0, 1, 0, 0, 1], 27: [0, 1, 0, 0, 2], 28: [0, 2, 0, 0, 3], 29: [0, 3, 0, 0, 3],
-            // Style (30-33): O, O, G, V
-            30: [0, 0, 0, 0, 0], 31: [0, 0, 0, 0, 0], 32: [0, 0, 1, 0, 0], 33: [0, 0, 2, 0, 0],
-            // Matériel (34-36): RD, G, V
-            34: [0, 0, 0, -2, 0], 35: [0, 0, 0, 1, 0], 36: [0, 0, 0, 3, 0],
-            // Conséquence (37-40): R, G, G, V
-            37: [0, -3, -1, 0, 0], 38: [0, 1, 0, 0, 0], 39: [0, 2, 0, 0, 0], 40: [0, 5, 0, 0, 0]
-        }; 
-        
-        const maxScores = { dispo: 8, motiv: 18, adeq: 25, capa: 6, competence: 7 };
-        const SEUILS = { motiv: 5, capa: 2, total: 30, dispo: 3, adeq: 3, competence: 3 };
-
-        // État initial simplifié (les infos prospect viennent de l'URL)
-        const initialState = {
-            prospectFirstName: '', 
-            prospectLastName: '', 
-            prospectDate: '', 
-            customNotes: '',
-            context: { 
-                statut: '', temps: '', age: '', experience: '', parcours: '', 
-                materiel: [], douleur: [], consequence: '', style: [] 
+        // Attendre que les services Firebase (definis dans le <head>) soient prets
+        const checkFirebase = setInterval(() => {
+            if (window.firebaseServices && window.firebaseServices.db) {
+                clearInterval(checkFirebase);
+                // Une fois Firebase pret, initialiser l'application
+                App.init();
+            } else {
+                // Optionnel: Ajouter un message si Firebase prend du temps
+                // console.log("Attente de Firebase...");
             }
-        };
-
-        const badgeColorRanks = {
-            0: 'red', 1: 'green', 2: 'rainbow', 3: 'red', 4: 'green', 5: 'rainbow', 6: 'rainbow',
-            7: 'orange', 8: 'orange', 9: 'green', 10: 'green', 11: 'red', 12: 'red-dark', 13: 'green',
-            14: 'orange', 15: 'orange', 16: 'green', 17: 'green', 18: 'rainbow', 19: 'rainbow',
-            20: 'rainbow', 21: 'rainbow', 22: 'orange', 23: 'orange', 24: 'green', 25: 'rainbow',
-            26: 'orange', 27: 'green', 28: 'green', 29: 'rainbow', 30: 'orange', 31: 'orange',
-            32: 'green', 33: 'rainbow', 34: 'red-dark', 35: 'green', 36: 'rainbow', 37: 'red',
-            38: 'green', 39: 'green', 40: 'rainbow'
-        };
-
-        const colorRankOrder = { 'red-dark': 0, 'red': 1, 'orange': 2, 'green': 3, 'rainbow': 4 };
-        // --- (FIN) CONSTANTES DE CONFIGURATION ---
-
-
-        /**
-         * Module App pour encapsuler toute la logique de la grille de qualification.
-         */
-        const App = {
-            state: null,
-            elements: {},
-            tagStyles: {
-                base: "w-[140px] min-h-[44px] inline-flex items-center justify-center text-center p-1 rounded-lg text-xs font-medium transition-all duration-200 shadow-md border",
-                inactive: "bg-slate-700 text-slate-300 hover:bg-slate-600",
-                active: {
-                    'rainbow': "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg -translate-y-0.5",
-                    'green': "bg-green-600 text-white shadow-lg -translate-y-0.5",
-                    'orange': "bg-amber-600 text-white shadow-lg -translate-y-0.5",
-                    'red': "bg-red-600 text-white shadow-lg -translate-y-0.5",
-                    'red-dark': "bg-red-800 text-white shadow-lg -translate-y-0.5"
-                },
-                borders: {
-                    'rainbow': "border-purple-700", 'green': "border-green-700", 'orange': "border-amber-700",
-                    'red': "border-red-700", 'red-dark': "border-red-900"
-                }
-            },
-            gaugeLabelColors: {
-                green: "text-green-400", red: "text-red-400",
-                amber: "text-amber-300", neutral: "text-teal-300"
-            },
-            diagBorderColors: {
-                green: "border-green-400 border-2 shadow-lg",
-                red: "border-red-400 border-2 shadow-lg",
-                neutral: "border-slate-700"
-            },
-
-            init() {
-                this.state = structuredClone(initialState);
-                this.cacheElements();
-                
-                // --- NOUVELLE LOGIQUE D'INIT ---
-                const params = new URLSearchParams(window.location.search);
-                this.state.prospectFirstName = params.get('firstName') || '';
-                this.state.prospectLastName = params.get('lastName') || '';
-                this.state.prospectDate = params.get('date') || '';
-
-                // Mettre à jour l'UI avec les infos de l'URL
-                this.elements.mainProspectName.textContent = `${this.state.prospectFirstName} ${this.state.prospectLastName}`;
-                
-                // Configurer les liens de navigation (qui sont des <a>)
-                this.elements.mainBackButton.href = `script.html?${params.toString()}`;
-                this.elements.resetButton.href = 'index.html';
-                // --- FIN NOUVELLE LOGIQUE D'INIT ---
-                
-                this.bindEvents();
-                this.renderAllTags();
-                this.updateDashboard();
-                this.switchScreen('main'); // Afficher l'écran principal par défaut
-            },
-
-            cacheElements() {
-                const $ = (id) => document.getElementById(id);
-                // IDs des écrans 1, 2, 3 et leurs inputs ont été retirés
-                const ids = [
-                    'mainScreen', 'giaPitchScreen',
-                    'mainBackButton', 'resetButton', 'mainProspectName',
-                    'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer',
-                    'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer',
-                    'contextParcoursContainer', 'contextStyleContainer',
-                    'contextMaterielContainer',
-                    'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence',
-                    'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel',
-                    'totalScore', 'qualificationStatus', 'qualificationText',
-                    'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle',
-                    'questionCoachList', 'showPitchButton', 'notesTextarea',
-                    'pitchBackButton', 'pitchNextButton',
-                    'coachToggleTrigger', 'coachToggleIcon',
-                    'exportPdfButton', 'dashboardColumn', 'dashboardContent',
-                    'mainGrid', 'leftColumn', 'leftColumnContent', // Pour PDF
-                    'saveR1Button' // Pour Firestore
-                ];
-                
-                ids.forEach(id => {
-                    const el = $(id);
-                    this.elements[id] = el;
-                });
-            },
-
-            bindEvents() {
-                // Les listeners pour les écrans 1, 2, 3 ont été retirés
-                // Les listeners pour mainBackButton et resetButton ont été retirés (ce sont des <a>)
-                
-                this.elements.mainScreen.addEventListener('click', (e) => {
-                    const btn = e.target.closest('button[data-type]');
-                    if (btn) {
-                        this.handleTagClick(btn);
-                    }
-                });
-
-                this.elements.notesTextarea.addEventListener('input', (e) => this.handleNotesInput(e));
-                this.elements.showPitchButton.addEventListener('click', () => this.switchScreen('giaPitch'));
-                this.elements.pitchBackButton.addEventListener('click', () => this.switchScreen('main'));
-                
-                this.elements.pitchNextButton.addEventListener('click', () => {
-                    console.log("Événement de clôture / paiement à implémenter.");
-                });
-
-                this.elements.coachToggleTrigger.addEventListener('click', () => {
-                    this.elements.questionCoachList.classList.toggle('hidden');
-                    this.elements.coachToggleIcon.classList.toggle('-rotate-180');
-                });
-                
-                this.elements.exportPdfButton.addEventListener('click', () => this.exportToPDF());
-                this.elements.saveR1Button.addEventListener('click', () => this.saveR1ToFirestore());
-            },
-
-            // La fonction reset() est supprimée (gérée par le lien vers index.html)
-            // La fonction updateIntroButton() est supprimée
-
-            switchScreen(screenName) {
-                // Fonction simplifiée pour ne gérer que 'main' et 'giaPitch'
-                const screens = { 
-                    main: this.elements.mainScreen,
-                    giaPitch: this.elements.giaPitchScreen
-                };
-                
-                Object.values(screens).forEach(s => {
-                    if (s) {
-                        s.classList.add('hidden');
-                        s.classList.remove('grid', 'flex');
-                    }
-                });
-
-                const screen = screens[screenName];
-                if (screen) {
-                    screen.classList.remove('hidden');
-                    if (screenName === 'main') {
-                        screen.classList.add('grid');
-                    } else {
-                        screen.classList.add('flex');
-                    }
-                }
-            },
-
-            handleTagClick(btn) {
-                const { type, value } = btn.dataset;
-                
-                if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) {
-                    this.state.context[type] = (this.state.context[type] === value) ? '' : value;
-                } 
-                else {
-                    const arr = this.state.context[type];
-                    if (!arr) {
-                        console.warn(`Le type de contexte '${type}' n'existe pas dans l'état initial.`);
-                        return;
-                    }
-                    const index = arr.indexOf(value);
-                    if (index > -1) arr.splice(index, 1);
-                    else arr.push(value);
-                }
-
-                this.renderAllTags();
-                this.updateDashboard();
-            },
-
-            handleNotesInput(e) {
-                const parts = e.target.value.split("\n\n--- NOTES PERSO ---\n");
-                this.state.customNotes = parts.length > 1 ? parts.slice(1).join("\n\n--- NOTES PERSO ---\n").trim() : '';
-            },
-            
-            updateDashboard() {
-                const { context } = this.state;
-                const scores = this.calculateScores(context);
-                const isReady = context.statut && context.temps && context.douleur.length > 0 && context.consequence;
-                const qual = this.updateQualification(scores, context, isReady);
-                
-                this.updateGauges(scores);
-                this.updateFinalDiagnostic(scores, qual, isReady, context);
-                this.updateQuestionCoach(scores, context, isReady);
-                this.updateNotes();
-                
-                this.elements.totalScore.textContent = scores.total;
-            },
-            
-            calculateScores(context) {
-                const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 };
-                const addPoints = (text) => {
-                    if (!text) return;
-                    const index = allBadgeNames.indexOf(text);
-                    if (index === -1) return;
-                    const points = badgeData[index];
-                    if (points) points.forEach((p, i) => scores[Object.keys(scores)[i]] += p);
-                };
-                
-                addPoints(context.statut);
-                addPoints(context.temps);
-                addPoints(context.age);
-                addPoints(context.consequence);
-                addPoints(context.experience);
-                addPoints(context.parcours);
-                context.materiel.forEach(addPoints);
-                context.douleur.forEach(addPoints);
-                context.style.forEach(addPoints);
-
-                Object.keys(scores).forEach(key => {
-                    scores[key] = Math.max(0, Math.min(scores[key], maxScores[key]));
-                });
-                
-                scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence;
-                return scores;
-            },
-
-            updateGauges(scores) {
-                const updateGaugeUI = (gaugeEl, labelEl, percentage, score, seuilKey) => {
-                    if (!gaugeEl || !labelEl) return; 
-                    
-                    const perc = Math.max(0, Math.min(100, percentage));
-                    gaugeEl.style.width = `${perc}%`;
-                    
-                    gaugeEl.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500');
-                    Object.values(this.gaugeLabelColors).forEach(colorClass => labelEl.classList.remove(colorClass));
-
-                    let seuil = SEUILS[seuilKey];
-                    
-                    if (seuilKey === 'motiv' || seuilKey === 'capa') {
-                        labelEl.classList.add(score > seuil ? this.gaugeLabelColors.green : this.gaugeLabelColors.red);
-                    } else {
-                        labelEl.classList.add(score >= seuil ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber);
-                    }
-                    
-                    if (perc < (seuil / maxScores[seuilKey] * 100)) {
-                        gaugeEl.classList.add('bg-red-500');
-                    } else if (perc < 80) {
-                        gaugeEl.classList.add('bg-amber-500');
-                    } else {
-                        gaugeEl.classList.add('bg-green-500');
-                    }
-                };
-
-                updateGaugeUI(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, (scores.dispo / maxScores.dispo) * 100, scores.dispo, 'dispo');
-                updateGaugeUI(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, (scores.motiv / maxScores.motiv) * 100, scores.motiv, 'motiv');
-                updateGaugeUI(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, (scores.adeq / maxScores.adeq) * 100, scores.adeq, 'adeq');
-                updateGaugeUI(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, (scores.capa / maxScores.capa) * 100, scores.capa, 'capa');
-                updateGaugeUI(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, (scores.competence / maxScores.competence) * 100, scores.competence, 'competence');
-            },
-
-            updateQualification(scores, context, isReady) {
-                const isCapable = scores.capa > SEUILS.capa;
-                const isMotivated = scores.motiv > SEUILS.motiv;
-                const isTotalOK = scores.total >= SEUILS.total;
-
-                let qual = { status: "En attente...", text: "...", color: "bg-gray-500", isCapable, isMotivated, isTotalOK, isFinal: isReady };
-
-                if (!isReady) {
-                    let missing = [];
-                    if (!context.statut) missing.push("Statut");
-                    if (!context.temps) missing.push("Temps");
-                    if (context.douleur.length === 0) missing.push("Objectifs");
-                    if (!context.consequence) missing.push("Conséquence");
-                    qual.text = `Remplir: ${missing.join(', ')}.`;
-                } else {
-                    if (!isCapable || !isMotivated || !isTotalOK) {
-                        qual.status = "FEU ROUGE";
-                        qual.text = "Inqualifiable. Pas de R2.";
-                        qual.color = "bg-red-600";
-                    } else {
-                        const isIdeal = scores.total >= 30;
-                        qual.status = `FEU VERT ${isIdeal ? " (Client Rêvé)" : ""}`;
-                        qual.text = "À Closer ! Prospect qualifié pour le R2.";
-                        qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600";
-                    }
-                }
-                
-                this.elements.qualificationStatus.textContent = qual.status;
-                this.elements.qualificationText.textContent = qual.text;
-                this.elements.qualificationStatus.className = `inline-block text-lg font-bold px-5 py-2 rounded-lg text-white shadow-lg ${qual.color}`;
-                
-                this.elements.showPitchButton.classList.toggle('hidden', !qual.status.includes("VERT"));
-                
-                this.elements.saveR1Button.disabled = !isReady;
-                this.elements.saveR1Button.classList.toggle('opacity-50', !isReady);
-                this.elements.saveR1Button.classList.toggle('cursor-not-allowed', !isReady);
-
-                return qual;
-            },
-
-            updateFinalDiagnostic(scores, qual, isReady, context) {
-                const container = this.elements.finalDiagnosticContainer;
-                const { diagnosticForts: fortsEl, diagnosticVigilance: vigilanceEl, diagnosticVigilanceTitle } = this.elements;
-
-                Object.values(this.diagBorderColors).forEach(cls => {
-                    cls.split(' ').forEach(c => container.classList.remove(c));
-                });
-                
-                if (!isReady) {
-                    container.classList.add('hidden');
-                    this.diagBorderColors.neutral.split(' ').forEach(c => container.classList.add(c));
-                    return;
-                }
-                
-                container.classList.remove('hidden');
-                const { isCapable, isMotivated } = qual;
-                const isGreen = qual.status.includes("VERT");
-                const isRed = qual.status.includes("ROUGE");
-
-                if (isGreen) {
-                    this.diagBorderColors.green.split(' ').forEach(c => container.classList.add(c));
-                    diagnosticVigilanceTitle.textContent = "Tes Points d'Effort (Pour réussir)";
-                } else if (isRed) {
-                    this.diagBorderColors.red.split(' ').forEach(c => container.classList.add(c));
-                    diagnosticVigilanceTitle.textContent = "Points Bloquants (Ce qui manque)";
-                } else {
-                    this.diagBorderColors.neutral.split(' ').forEach(c => container.classList.add(c));
-                }
-
-                fortsEl.innerHTML = '';
-                vigilanceEl.innerHTML = '';
-                let forts = [];
-                let vigilance = [];
-
-                // --- POINTS FORTS ---
-                if (isMotivated) {
-                    const vision = context.douleur.includes("Improviser librement") ? "d'improviser librement" : 
-                                   (context.douleur.includes("Liberté manche") ? "de maîtriser le manche" : 
-                                   (context.douleur.includes("Jeu en groupe") ? "de jouer en groupe" : 
-                                   (context.douleur.includes("Parcours structuré") ? "de suivre un parcours structuré" : "d'atteindre ton objectif")));
-                    forts.push(`Ta motivation est claire. Ton envie ${vision} et ta frustration ('${context.consequence || 'N/A'}') sont de puissants moteurs.`);
-                }
-                if (scores.competence >= SEUILS.competence) {
-                    forts.push(`Ton expérience ('${context.experience || 'N/A'}') est un excellent point de départ. Tu as la maturité pour apprécier une méthode structurée.`);
-                }
-                if (scores.dispo >= SEUILS.dispo) {
-                        forts.push(`Ta disponibilité ('${context.temps || 'N/A'}') montre que tu es prêt à t'investir pour ce projet.`);
-                }
-                if (forts.length === 0 && !isGreen) {
-                    fortsEl.innerHTML = `<li class="text-gray-400 italic">Aucun levier majeur (Motivation, Expérience) détecté pour l'instant.</li>`;
-                }
-
-                // --- POINTS DE VIGILANCE ---
-                if (!isCapable) {
-                    vigilance.push(`Point de focus : valider ta *capacité à t'investir* pleinement. Un programme premium comme la GIA demande un *engagement total* pour garantir ton propre succès.`);
-                }
-                if (!isMotivated) {
-                    vigilance.push(`Point de focus : ton *Envie*. La GIA est une formation *intensive*. Si ton "Pourquoi" n'est pas puissant, l'abandon est probable. Il faut être sûr que c'est ta priorité N°1.`);
-                }
-                if (scores.dispo < SEUILS.dispo) {
-                    vigilance.push(`Point de focus : le *Temps*. Avec '${context.temps}', cela demandera une *discipline de fer*. C'est un effort crucial de *priorisation* et *d'engagement* de ta part.`);
-                }
-                if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) {
-                    vigilance.push(`Point de focus : la *Vision*. Ton objectif ('${context.douleur[0] || 'N/A'}') est super, mais le défi sera d'adopter la *vision* GIA (le 'cerveau' musical) plutôt que de chercher des résultats immédiats.`);
-                }
-                if (scores.competence < SEUILS.competence) {
-                    vigilance.push(`Point de focus : *l'Humilité*. Ton niveau ('${context.experience || 'N/A'}') est un point de départ. L'effort consistera à accepter de revoir des bases, même si elles semblent simples.`);
-                }
-                if (context.douleur.includes("Jouer des solos")) {
-                    vigilance.push(`Point de focus (Adéquation) : Ton objectif 'Jouer des solos' est un 'piège à tablatures'. L'effort sera *d'accepter* de te concentrer sur la *compétence* (le 'pourquoi') avant le 'comment'.`);
-                }
-                if (context.douleur.includes("Technique")) {
-                    vigilance.push(`Point de focus (Volonté) : Tu mentionnes un blocage 'Technique'. C'est souvent une 'fausse douleur'. L'effort sera *d'accepter* que le vrai blocage est dans le 'cerveau' (la compréhension) et de travailler dessus.`);
-                }
-                if (context.consequence === "Aucun") {
-                    vigilance.push(`Point de focus (Urgence) : Ta conséquence ('Aucun') montre un *manque d'urgence*. L'effort sera de trouver ta vraie raison d'agir *maintenant*, sinon l'abandon est garanti.`);
-                }
-
-                if (vigilance.length === 0 && isGreen) {
-                    vigilanceEl.innerHTML = `<li class="text-green-300 italic">Aucune réserve majeure. Ton profil est idéal, l'effort sera uniquement dans la régularité et l'engagement.</li>`;
-                }
-
-                forts.forEach(text => { fortsEl.innerHTML += `<li>${text}</li>`; });
-                vigilance.forEach(text => { vigilanceEl.innerHTML += `<li>${text}</li>`; });
-            },
-
-            updateQuestionCoach(scores, context, isReady) {
-                let questions = [];
-                const { statut, temps, douleur, consequence, experience, parcours } = context;
-
-                // --- 1. Questions proactives pour remplir les champs VIDES ---
-                if (douleur.length === 0) {
-                    questions.push(`Au fond, quel est ton *rêve* de guitariste ? (→ *Vise 'Improviser librement'*)`);
-                    questions.push(`Qu'est-ce qui te frustre le plus aujourd'hui ? (→ *Vise 'Grosse frustration'*)`);
-                }
-                if (!temps) {
-                    questions.push(`Combien d'heures par semaine serais-tu *vraiment* prêt à bloquer ? (→ *Vise '+5h'*)`);
-                }
-                if (!consequence) {
-                    questions.push(`Si on se reparle dans 6 mois et que rien n'a changé... tu te sens comment ? (→ *Vise 'Grosse frustration'*)`);
-                }
-                if (!statut) {
-                    questions.push(`Pour comprendre ton rythme, tu es actif, ou tu as plus de temps, comme les retraités ? (→ *Vise 'Retraité'*)`);
-                }
-                if (!experience || !parcours) {
-                    questions.push(`Tu joues depuis combien de temps ? As-tu déjà suivi des cours structurés ? (→ *Vise '+10 ans'*)`);
-                }
-                if (context.style.length === 0) {
-                    questions.push(`Quels styles t'ont donné envie de jouer ? (→ *Vise 'Blues/Rock'*)`);
-                }
-
-                // --- 2. Si tout est rempli, questions d'alerte ---
-                if (isReady && questions.length === 0) {
-                    if (scores.dispo < SEUILS.dispo) {
-                            questions.push(`[ALERTE TEMPS] Tu m'as dit avoir '${temps}'. La GIA demande 5h min. Où vas-tu *concrètement* trouver les 2-3h qui manquent ?`);
-                    }
-                    if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) {
-                            questions.push(`[ALERTE VISION] Tu vises '${douleur[0]}'. Es-tu prêt à passer 3 mois sur de la théorie pure avant de voir des résultats directs ?`);
-                    }
-                    if (context.consequence === "Aucun") {
-                            questions.push(`[ALERTE URGENCE] Tu ne sembles pas avoir de 'douleur' forte. Pourquoi t'inscrire *maintenant* ?`);
-                    }
-                    if (scores.capa < SEUILS.capa) {
-                            questions.push(`[ALERTE CAPA] As-tu déjà eu l'occasion d'investir plusieurs milliers d'euros dans une formation pour toi ?`);
-                    }
-                }
-                
-                const listEl = this.elements.questionCoachList;
-                if (isReady && questions.length === 0) {
-                    listEl.innerHTML = `<li class="text-green-300 italic">Excellent profil ! Tous les voyants sont au vert. Prépare le R2.</li>`;
-                } else if (questions.length === 0) {
-                    listEl.innerHTML = `<li class="text-gray-400 italic">Remplis les badges pour voir les suggestions...</li>`;
-                } else {
-                    listEl.innerHTML = questions.map(q => {
-                        let formattedQ = q.replace(/(\(→.*?\))/g, '<span class="text-amber-400/60 italic text-xs">$1</span>');
-                        if (q.startsWith("[ALERTE")) {
-                            formattedQ = `<span class="font-semibold text-red-300">${formattedQ.replace(/\[ALERTE.*?\]/g, "Alerte :")}</span>`;
-                        }
-                        return `<li class="pb-1">${formattedQ}</li>`;
-                    }).join('');
-                }
-            },
-
-            updateNotes() {
-                const { context, customNotes } = this.state;
-                const allBadges = [
-                    context.statut, context.temps, context.age, context.consequence, 
-                    context.experience, context.parcours, 
-                    ...context.materiel, ...context.douleur, ...context.style
-                ].filter(Boolean);
-                
-                let notesContent = allBadges.join('\n');
-                notesContent += `\n\n--- NOTES PERSO ---\n${customNotes}`;
-                this.elements.notesTextarea.value = notesContent;
-            },
-
-            renderAllTags() {
-                const { context } = this.state;
-                this.renderTags('contextStatutContainer', 'statut', context.statut);
-                this.renderTags('contextTempsContainer', 'temps', context.temps);
-                this.renderTags('contextAgeContainer', 'age', context.age);
-                this.renderTags('contextExperienceContainer', 'experience', context.experience);
-                this.renderTags('contextParcoursContainer', 'parcours', context.parcours);
-                this.renderTags('contextConsequenceContainer', 'consequence', context.consequence);
-                
-                this.renderTags('contextMaterielContainer', 'materiel', context.materiel, true);
-                this.renderTags('contextStyleContainer', 'style', context.style, true);
-                this.renderTags('contextDouleursContainer', 'douleur', context.douleur, true);
-            },
-
-            renderTags(containerId, type, stateValue, isMulti = false) {
-                const container = this.elements[containerId];
-                if (!container) return;
-                
-                container.innerHTML = '';
-                const badgeIndexes = badgeCategories[type];
-                if (!badgeIndexes) return; 
-
-                const sortedBadgeIndexes = [...badgeIndexes].sort((indexA, indexB) => {
-                    const colorA = badgeColorRanks[indexA] || 'orange';
-                    const colorB = badgeColorRanks[indexB] || 'orange';
-                    return colorRankOrder[colorA] - colorRankOrder[colorB];
-                });
-                
-                sortedBadgeIndexes.forEach(index => {
-                    if (!allBadgeNames[index]) return; 
-
-                    const text = allBadgeNames[index];
-                    const isSelected = isMulti ? stateValue.includes(text) : stateValue === text;
-                    const btn = document.createElement('button');
-                    btn.dataset.type = type;
-                    btn.dataset.value = text;
-                    btn._pointsData = badgeData[index];
-                    
-                    const colorKey = badgeColorRanks[index] || 'orange';
-                    const borderColor = this.tagStyles.borders[colorKey];
-                    const stateClasses = isSelected ? this.tagStyles.active[colorKey] : this.tagStyles.inactive;
-                    
-                    btn.textContent = text;
-                    btn.className = `${this.tagStyles.base} ${stateClasses} ${borderColor}`;
-                    
-                    container.appendChild(btn);
-                });
-            },
-        
-            async exportToPDF() {
-                const prospectName = `${this.state.prospectFirstName} ${this.state.prospectLastName}`;
-                const { prospectDate } = this.state;
-                const filename = `Fiche_Qualif_GIA_${prospectName.replace(/\s+/g, '_') || 'Prospect'}_${prospectDate || 'aujourdhui'}.pdf`;
-                
-                const spinner = document.createElement('div');
-                spinner.id = 'pdf-spinner';
-                spinner.innerHTML = '<span id="pdf-spinner-text">Génération du PDF en cours...</span>';
-                document.body.appendChild(spinner);
-
-                const mainGrid = this.elements.mainGrid;
-                const leftCol = this.elements.leftColumn;
-                const leftColContent = this.elements.leftColumnContent;
-                const dashboardContainer = this.elements.dashboardColumn;
-                const dashboardContent = this.elements.dashboardContent;
-
-                const originalGridTemplate = mainGrid.style.gridTemplateColumns;
-                const originalLeftOverflow = leftCol.style.overflow;
-                const originalLeftContentOverflow = leftColContent.style.overflowY;
-                const originalDashContainerOverflow = dashboardContainer.style.overflowY;
-                const originalDashContentPosition = dashboardContent.style.position;
-
-                try {
-                    mainGrid.style.gridTemplateColumns = '2fr 1fr'; 
-                    leftCol.style.overflow = 'visible';
-                    leftColContent.style.overflowY = 'visible';
-                    dashboardContainer.style.overflowY = 'visible';
-                    dashboardContent.style.position = 'relative'; 
-
-                    const { jsPDF } = window.jspdf;
-                    
-                    const canvas = await html2canvas(this.elements.mainScreen, {
-                        useCORS: true,
-                        backgroundColor: '#0f172a',
-                        scale: 1.5,
-                        logging: false
-                    });
-
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    const pdf = new jsPDF('l', 'mm', 'a4');
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    
-                    const canvasWidth = canvas.width;
-                    const canvasHeight = canvas.height;
-                    
-                    const canvasRatio = canvasWidth / canvasHeight;
-                    const pdfRatio = pdfWidth / pdfHeight;
-                    
-                    let imgWidth, imgHeight;
-
-                    if (canvasRatio > pdfRatio) {
-                        imgWidth = pdfWidth - 20;
-                        imgHeight = imgWidth / canvasRatio;
-                    } else {
-                        imgHeight = pdfHeight - 20;
-                        imgWidth = imgHeight * canvasRatio;
-                    }
-                    
-                    const x = (pdfWidth - imgWidth) / 2;
-                    const y = (pdfHeight - imgHeight) / 2;
-
-                    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-                    pdf.save(filename);
-
-                } catch (error) {
-                    console.error("Erreur lors de la génération du PDF:", error);
-                } finally {
-                    mainGrid.style.gridTemplateColumns = originalGridTemplate;
-                    leftCol.style.overflow = originalLeftOverflow;
-                    leftColContent.style.overflowY = originalLeftContentOverflow;
-                    dashboardContainer.style.overflowY = originalDashContainerOverflow;
-                    dashboardContent.style.position = originalDashContentPosition;
-                    document.body.removeChild(spinner);
-                }
-            },
-            
-            async saveR1ToFirestore() {
-                const saveBtn = this.elements.saveR1Button;
-                if (!db || !auth) {
-                    console.error("Erreur: Connexion à la base de données échouée. Impossible d'enregistrer.");
-                    return;
-                }
-
-                saveBtn.disabled = true;
-                saveBtn.querySelector('span').textContent = 'Enregistrement...';
-                
-                try {
-                    const scores = this.calculateScores(this.state.context);
-                    const qualification = this.updateQualification(scores, this.state.context, true); 
-                    
-                    const r1Data = {
-                        prospectFirstName: this.state.prospectFirstName,
-                        prospectLastName: this.state.prospectLastName,
-                        prospectName: `${this.state.prospectFirstName} ${this.state.prospectLastName}`,
-                        prospectDate: this.state.prospectDate,
-                        context: this.state.context,
-                        customNotes: this.state.customNotes,
-                        scores: scores,
-                        qualificationStatus: qualification.status,
-                        qualificationText: qualification.text,
-                        savedAt: new Date().toISOString(),
-                        closerId: auth.currentUser ? auth.currentUser.uid : 'unknown'
-                    };
-                    
-                    const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                    
-                    const docRef = await addDoc(collection(db, collectionPath), r1Data);
-                    
-                    console.log("R1 enregistré avec l'ID: ", docRef.id);
-                    
-                    saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-                    saveBtn.classList.add('bg-green-600', 'hover:bg-green-500');
-                    saveBtn.querySelector('span').textContent = 'Enregistré !';
-                    
-                    setTimeout(() => {
-                        saveBtn.disabled = false;
-                        saveBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
-                        saveBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
-                        saveBtn.querySelector('span').textContent = 'Enregistrer R1';
-                    }, 2000);
-
-                } catch (error) {
-                    console.error("Erreur lors de l'enregistrement Firestore: ", error);
-                    saveBtn.disabled = false;
-                    saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-                    saveBtn.classList.add('bg-red-600', 'hover:bg-red-500');
-                    saveBtn.querySelector('span').textContent = 'Échec';
-                }
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkFirebase = setInterval(() => {
-                if (window.firebaseServices && window.firebaseServices.db) {
-                    clearInterval(checkFirebase);
-                    App.init();
-                }
-            }, 100);
-        });
+        }, 100); // Verifier toutes les 100ms
     </script>
 
 </body>
 </html>
+

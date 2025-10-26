@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Qualification R1</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script> {/* Script Tailwind CDN */}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- SDK Firebase (inchangé) -->
+    {/* SDK Firebase (inchangé) */}
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -21,50 +21,48 @@
             const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" };
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
-            // Gerer la connexion Auth une seule fois et exposer les services
             const authPromise = new Promise((resolve) => {
                  onAuthStateChanged(auth, async (user) => {
                     if (user) { userId = user.uid; console.log("Auth prête:", userId); resolve(); }
-                    else { try { await signInAnonymously(auth); console.log("Connecté anonymement."); resolve(); } catch (e) { console.error("Err anon:", e); resolve(); /* Resoudre meme si echec */ }}
+                    else { try { await signInAnonymously(auth); console.log("Connecté anonymement."); resolve(); } catch (e) { console.error("Err anon:", e); resolve(); }}
                  });
             });
-            // Attendre que l'authentification soit terminee avant d'exposer
             authPromise.then(() => {
-                 window.firebaseServices = { db, auth, appId };
+                 window.firebaseServices = { db, auth, appId }; // Exposer les services globalement
                  console.log("Firebase services exposed.");
-                 // Declencher un evenement personnalise si necessaire pour app.mjs
-                 document.dispatchEvent(new CustomEvent('firebaseReady'));
+                 // Déclencher l'initialisation de l'App si elle est prête
+                 if (typeof initializeAppFromModule === 'function') {
+                    initializeAppFromModule();
+                 }
             });
         } catch (error) {
             console.error("Err init Firebase:", error);
-            // Afficher une erreur a l'utilisateur
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]';
-            errorDiv.textContent = 'Erreur critique: Connexion DB impossible.';
-            document.body.prepend(errorDiv);
+            const errorDiv = document.createElement('div'); errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]'; errorDiv.textContent = 'Erreur critique: Connexion DB impossible.'; document.body.prepend(errorDiv);
         }
     </script>
 
-    <style type="text/tailwindcss">
-        @layer base { body { font-family: 'Inter', sans-serif; } }
-        @layer components {
-            .custom-scrollbar { @apply scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800; }
-            #pdf-spinner { @apply fixed inset-0 bg-black/70 z-[9999] flex flex-col items-center justify-center; }
-            #pdf-spinner::after { content:''; @apply w-12 h-12 border-4 border-slate-600 border-t-sky-400 rounded-full animate-spin; }
-            #pdf-spinner-text { @apply text-white mt-4 font-medium; }
-            /* Feedback message style */
-            #appFeedback { @apply fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0; }
-            /* Helper class for labels reused in HTML comments */
-            .l { @apply block text-sm font-medium text-gray-300 mb-2; }
-        }
+     {/* Styles Simplifiés */}
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
+        #pdf-spinner { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #pdf-spinner::after { content:''; width: 50px; height: 50px; border: 4px solid #475569; border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; }
+        #pdf-spinner-text { color: white; margin-top: 1rem; font-weight: 500; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #appFeedback { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
+        #appFeedback.show { opacity: 1; pointer-events: auto; }
+        .l { display: block; font-size: 0.875rem; font-weight: 500; color: #d1d5db; margin-bottom: 0.5rem; }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
 
     <div id="app" class="h-full">
-        <!-- ÉCRAN PRINCIPAL (Grille de qualification) -->
-        <div id="mainScreen" class="hidden grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
-            {/* Colonne Gauche: Badges */}
+        {/* ÉCRAN PRINCIPAL */}
+        <div id="mainScreen" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
+            {/* Colonne Gauche */}
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
                 <div class="flex justify-between items-center p-2 flex-shrink-0">
                     <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Script</a>
@@ -83,7 +81,7 @@
                 <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
                     <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
                         <div class="space-y-6 pt-4">
-                            {/* Les fieldset et divs pour les badges */}
+                            {/* Les fieldset et divs pour les badges (HTML avec classes Tailwind directement) */}
                             <fieldset class="border border-slate-700 rounded-lg p-4"><legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend><div class="space-y-6"><div><label class="l">Expérience Totale</label><div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div></div><div><label class="l">Parcours / Cours Suivis</label><div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div></div></div></fieldset>
                             <div><label class="l">Matériel</label><div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div></div>
                             <div><label class="l">Style</label><div id="contextStyleContainer" class="flex flex-wrap gap-2"></div></div>
@@ -106,25 +104,21 @@
                     {/* Jauges */}
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
                         <h3 class="text-md font-semibold text-gray-100 text-center mb-2">Diagnostic Prospect</h3>
-                        <div><span id="gaugeDispoLabel" class="text-sm font-medium">Dispo (Temps)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
-                        <div><span id="gaugeMotivLabel" class="text-sm font-medium">Objectifs (Douleur)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeMotiv" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
-                        <div><span id="gaugeAdeqLabel" class="text-sm font-medium">Adéquation (Vision)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeAdeq" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
-                        <div><span id="gaugeCompetenceLabel" class="text-sm font-medium">Compétence (Niveau)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCompetence" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
-                        <div><span id="gaugeCapaLabel" class="text-sm font-medium">Capacité (Finances)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeDispoLabel" class="text-sm font-medium text-teal-300">Dispo (Temps)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeMotivLabel" class="text-sm font-medium text-teal-300">Objectifs (Douleur)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeMotiv" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeAdeqLabel" class="text-sm font-medium text-teal-300">Adéquation (Vision)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeAdeq" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeCompetenceLabel" class="text-sm font-medium text-teal-300">Compétence (Niveau)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCompetence" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
+                        <div><span id="gaugeCapaLabel" class="text-sm font-medium text-teal-300">Capacité (Finances)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
                         <div class="text-center pt-3 border-t border-slate-700 mt-4"><span class="text-sm font-medium text-gray-300">Score Total : </span><span id="totalScore" class="text-2xl font-bold text-teal-300">0</span></div>
                     </div>
                     {/* Statut Qualification */}
                     <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner"><span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">En attente...</span><p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">Remplir les badges...</p></div>
                     {/* Diagnostic Final */}
                     <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border"><h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-green-400">Points Forts:</h4><ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Points d'Effort:</h4><ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div></div>
-
-                    {/* Bouton pour aller au Pitch (affiché si Feu Vert) */}
-                    <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">
-                        Voir la Proposition GIA &rarr;
-                    </button>
-
+                    {/* Bouton Pitch */}
+                    <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">Voir la Proposition GIA &rarr;</button>
                     {/* Export PDF */}
-                    <div class="mt-4"><button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg><span>Exporter PDF</span></button></div>
+                    <div class="mt-4"><button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg><span>Exporter PDF</span></button></div>
                     {/* Notes */}
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner mt-4"><label for="notesTextarea" class="block text-sm font-medium text-gray-300 mb-2">Résumé & Notes Perso</label><textarea id="notesTextarea" rows="6" placeholder="Badges + notes perso..." class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2 px-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"></textarea></div>
                 </div>
@@ -134,36 +128,27 @@
         {/* ÉCRAN PITCH GIA (Modifié) */}
         <div id="giaPitchScreen" class="hidden h-full flex flex-col items-center justify-center p-4">
              <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
-                {/* Contenu Pitch (Piliers, Prix) */}
-                <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue dans la Guitare Impro Académie</h1>
-                <p class="text-md md:text-lg text-gray-200 text-center mb-6">Ce n'est pas un "cours de guitare".<br>C'est un <span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
+                {/* Contenu Pitch */}
+                <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue GIA</h1>
+                <p class="text-md md:text-lg text-gray-200 text-center mb-6">...<span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center flex-grow">
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA MÉTHODE</h3><p class="text-gray-300 text-sm">9 mois pour maîtriser la <span class="font-semibold text-white">logique</span> musique (harmonie, rythme, oreille). Fini dépendance tablatures.</p></div>
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m10.116 0a5.97 5.97 0 00-4.682-2.72m-5.438 2.72A5.97 5.97 0 016 18.72m0 0a5.97 5.97 0 01-.94-3.197m0 0c0-1.06.318-2.053.87-2.882m-1.14 0a6.062 6.062 0 01-1.636 2.882M12 12.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">L'ACCOMPAGNEMENT</h3><p class="text-gray-300 text-sm">Suivi <span class="font-semibold text-white">direct et personnel</span>. Fini frustration et solitude autodidacte.</p></div>
-                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA TRANSFORMATION</h3><p class="text-gray-300 text-sm">Promesse : guitariste <span class="font-semibold text-white">autonome</span>, improvise, joue en groupe. Fin syndrome imposteur.</p></div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA MÉTHODE</h3><p class="text-gray-300 text-sm">...</p></div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m10.116 0a5.97 5.97 0 00-4.682-2.72m-5.438 2.72A5.97 5.97 0 016 18.72m0 0a5.97 5.97 0 01-.94-3.197m0 0c0-1.06.318-2.053.87-2.882m-1.14 0a6.062 6.062 0 01-1.636 2.882M12 12.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">L'ACCOMPAGNEMENT</h3><p class="text-gray-300 text-sm">...</p></div>
+                    <div class="bg-slate-900/50 p-5 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-start"><svg class="w-10 h-10 md:w-12 md:h-12 text-teal-400 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg><h3 class="text-lg md:text-xl font-bold text-teal-400 mb-2">LA TRANSFORMATION</h3><p class="text-gray-300 text-sm">...</p></div>
                 </div>
                 <hr class="border-slate-600 my-6"/>
-                <div class="bg-slate-900/60 p-4 md:p-5 rounded-lg border border-amber-500/30 text-center"><h4 class="text-lg font-semibold text-amber-300 mb-2">Engagement intensif.</h4><p class="text-gray-200 text-base">Investissement pour programme complet entre <span class="font-bold text-white">3000€ et 3600€</span>.</p></div>
+                <div class="bg-slate-900/60 p-4 md:p-5 rounded-lg border border-amber-500/30 text-center"><h4 class="text-lg font-semibold text-amber-300 mb-2">Engagement intensif.</h4><p class="text-gray-200 text-base">Investissement entre <span class="font-bold text-white">3000€ et 3600€</span>.</p></div>
 
-                 {/* --- NOUVEAUX BOUTONS DECISION & CHAMP RAISON --- */}
+                 {/* Boutons Decision & Champ Raison */}
                  <div class="mt-6 space-y-4">
-                     {/* Champ Raison (cache par defaut) */}
                      <div id="lostReasonContainer" class="hidden space-y-2 transition-all duration-300 ease-in-out">
                          <label for="lostReasonInput" class="block text-sm font-medium text-gray-300">Raison du refus (optionnel) :</label>
-                         <input type="text" id="lostReasonInput" placeholder="Ex: Prix, Timing, Pas prêt..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                         <input type="text" id="lostReasonInput" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
                      </div>
-
-                     {/* Boutons de decision */}
                     <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4 border-t border-slate-700/50">
-                        <button id="pitchBackButton" type="button" class="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200 order-3 sm:order-1">
-                            &larr; Revoir le Diagnostic
-                        </button>
-                        <button id="rejectR2Button" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg order-2">
-                            Ne passe pas en R2
-                        </button>
-                        <button id="scheduleR2ConfirmButton" type="button" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 order-1 sm:order-3">
-                            Valider Passage en R2 &rarr;
-                        </button>
+                        <button id="pitchBackButton" type="button" class="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200 order-3 sm:order-1">&larr; Revoir Diagnostic</button>
+                        <button id="rejectR2Button" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg order-2">Ne passe pas en R2</button>
+                        <button id="scheduleR2ConfirmButton" type="button" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 order-1 sm:order-3">Valider Passage en R2 &rarr;</button>
                     </div>
                  </div>
             </div>
@@ -172,22 +157,29 @@
          <div id="appFeedback"></div>
     </div>
 
-    <!-- Appel du module JS -->
+    {/* Appel du module JS (Modification pour attendre Firebase) */}
     <script type="module">
-        import { App } from './app.mjs'; // Utilisation du chemin relatif standard
-        // Attendre l'evenement personnalise avant d'initialiser
-        document.addEventListener('firebaseReady', () => {
-            console.log("Event firebaseReady reçu, initialisation App...");
-            App.init();
-        }, { once: true });
-        // Securite: si l'event est manque ou deja parti
-        if (window.firebaseServices) {
-             console.log("Firebase déjà prêt, initialisation App...");
-             // Verifier si App n'est pas deja initiee
-             if (!App.state) { // Simple check pour eviter double init
-                App.init();
+        import { App } from './app.mjs'; // Chemin relatif standard
+
+        // Fonction globale pour initialiser l'app, appelée par le script Firebase ci-dessus
+        window.initializeAppFromModule = () => {
+             console.log("initializeAppFromModule appelé.");
+             // Vérifier si App n'est pas déjà initialisée
+             if (!App.state) {
+                 App.init();
+             } else {
+                 console.log("App déjà initialisée, skip.");
              }
+        };
+
+        // Sécurité: Si Firebase est déjà prêt au moment où ce script s'exécute
+        if (window.firebaseServices) {
+             console.log("Firebase déjà prêt (sécurité module), initialisation App...");
+             initializeAppFromModule();
+        } else {
+             console.log("Module App chargé, attente de Firebase...");
         }
+
     </script>
 
 </body>

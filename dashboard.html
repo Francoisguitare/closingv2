@@ -8,8 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Optionnel: Chart.js pour les graphiques -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
 
     <style type="text/tailwindcss">
         @layer base {
@@ -17,25 +15,23 @@
         }
         @layer components {
             .kpi-card {
-                @apply bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden;
-                @apply border-t-4 border-t-teal-500;
+                @apply bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500;
                 box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
             }
-            .kpi-value {
-                @apply text-4xl font-bold text-teal-300 block mb-1;
-            }
-            .kpi-label {
-                @apply text-sm text-gray-400 font-medium uppercase tracking-wider;
-            }
-            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; } /* Sticky header */
+            .kpi-value { @apply text-4xl font-bold text-teal-300 block mb-1; }
+            .kpi-label { @apply text-sm text-gray-400 font-medium uppercase tracking-wider; }
+            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; }
             td { @apply px-4 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
             tr:last-child td { @apply border-b-0; }
-            .status-badge { @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap; } /* Ajout whitespace-nowrap */
+            .status-badge { @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap; }
             .status-r1 { @apply bg-blue-600 text-blue-100; }
             .status-r2 { @apply bg-purple-600 text-purple-100; }
             .status-closed { @apply bg-green-600 text-green-100; }
             .status-lost { @apply bg-red-600 text-red-100; }
             .status-other { @apply bg-gray-600 text-gray-100; }
+            /* Simple modal styles */
+            .modal { @apply fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50; }
+            .modal-content { @apply bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-md border border-slate-700 space-y-4; }
         }
     </style>
 </head>
@@ -51,78 +47,44 @@
 
         <!-- Filtres -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-            <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
-            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
-                <label for="startDate" class="text-sm font-medium text-gray-400">Du</label>
-                <input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
-            </div>
-             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
-                <label for="endDate" class="text-sm font-medium text-gray-400">Au</label>
-                <input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
-            </div>
-            <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">
-                Appliquer
-            </button>
-             <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">
-                Ce mois-ci
-            </button>
+             <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
+             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="startDate" class="text-sm font-medium text-gray-400">Du</label><input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div>
+             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="endDate" class="text-sm font-medium text-gray-400">Au</label><input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div>
+             <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">Appliquer</button>
+             <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button>
         </section>
 
         <!-- KPIs -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            <div class="kpi-card">
-                <span id="kpiR1Count" class="kpi-value">0</span>
-                <span class="kpi-label">R1 Effectués</span>
-            </div>
-            <div class="kpi-card">
-                <span id="kpiR2Count" class="kpi-value">0</span>
-                <span class="kpi-label">R2 Planifiés</span>
-            </div>
-             <div class="kpi-card">
-                <span id="kpiClosingCount" class="kpi-value">0</span>
-                <span class="kpi-label">Closings</span>
-            </div>
-            <div class="kpi-card">
-                <span id="kpiConversionRate" class="kpi-value">0%</span>
-                <span class="kpi-label">Conv. R1 → Closé</span>
-            </div>
-             <div class="kpi-card">
-                <span id="kpiCashTotal" class="kpi-value">0€</span>
-                <span class="kpi-label">Cash Encaissé</span>
-            </div>
-             <div class="kpi-card">
-                <span id="kpiCashRecurring" class="kpi-value">0€</span>
-                <span class="kpi-label">Cash Récurrent</span>
-            </div>
+            <div class="kpi-card"><span id="kpiR1Count" class="kpi-value">0</span><span class="kpi-label">R1 Effectués</span></div>
+            <div class="kpi-card"><span id="kpiR2Count" class="kpi-value">0</span><span class="kpi-label">R2 Planifiés</span></div>
+            <div class="kpi-card"><span id="kpiClosingCount" class="kpi-value">0</span><span class="kpi-label">Closings</span></div>
+            <div class="kpi-card"><span id="kpiConversionRate" class="kpi-value">0%</span><span class="kpi-label">Conv. R1 → Closé</span></div>
+            <div class="kpi-card"><span id="kpiCashTotal" class="kpi-value">0€</span><span class="kpi-label">Cash Encaissé</span></div>
+            <div class="kpi-card"><span id="kpiCashRecurring" class="kpi-value">0€</span><span class="kpi-label">Cash Récurrent</span></div>
         </section>
 
         <!-- Graphique -->
-        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-             <h2 class="text-xl font-semibold text-gray-300 mb-4">Progression (Placeholder)</h2>
-             <div id="chartContainer" class="h-64 flex items-center justify-center text-gray-500">
-                 Graphique à venir...
-            </div>
-        </section>
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h2 class="text-xl font-semibold text-gray-300 mb-4">Progression (Placeholder)</h2><div id="chartContainer" class="h-64 flex items-center justify-center text-gray-500">Graphique à venir...</div></section>
 
         <!-- Table Détails -->
-        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto"> <!-- overflow-auto pour table -->
-             <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2> <!-- Titre sticky -->
-             <div class="min-w-[800px]"> <!-- Force largeur min pour eviter compression extreme -->
-                 <table class="w-full divide-y divide-slate-700 table-fixed"> <!-- table-fixed pour largeurs egales -->
-                    <thead class="sticky top-[4.5rem] bg-slate-700 z-10"> <!-- Header sticky -->
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
+             <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
+             <div class="min-w-[900px]">
+                 <table class="w-full divide-y divide-slate-700 table-fixed">
+                    <thead class="sticky top-[4.5rem] bg-slate-700 z-10">
                         <tr>
-                            <th class="w-1/12">Date R1</th>
-                            <th class="w-2/12">Prospect</th>
-                            <th class="w-2/12">Statut Qualif.</th>
-                            <th class="w-1/12 text-center">Score</th>
-                            <th class="w-2/12">Statut Vente</th>
-                            <th class="w-1/12 text-right">Encaissé</th>
-                            <th class="w-1/12 text-right">Récurrent</th>
-                            <th class="w-1/12 text-center">Actions</th>
+                            <th class="w-1/12 px-2">Date R1</th>
+                            <th class="w-2/12 px-2">Prospect</th>
+                            <th class="w-2/12 px-2">Statut Qualif.</th>
+                            <th class="w-[5%] text-center px-1">Score</th>
+                            <th class="w-[10%] px-2">Statut Vente</th>
+                            <th class="w-1/12 text-right px-2">Encaissé</th>
+                            <th class="w-1/12 text-right px-2">Récurrent</th>
+                            <th class="w-2/12 text-center px-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700">
-                        <!-- Lignes générées par JS -->
                         <tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>
                     </tbody>
                 </table>
@@ -130,9 +92,9 @@
         </section>
     </div>
 
-    <!-- Modal Edition -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-md border border-slate-700 space-y-4">
+    <!-- Modal Édition -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
             <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
             <input type="hidden" id="modalDocId">
 
@@ -147,280 +109,168 @@
                 </select>
             </div>
 
-            <div>
-                <label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Encaissé (€)</label>
-                <input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <div id="modalLostReasonContainer" class="hidden space-y-1">
+                 <label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu (optionnel)</label>
+                 <input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing, Concurrence..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
             </div>
 
-            <div>
-                <label for="modalRecurringAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Récurrent (€/mois)</label>
-                <input type="number" id="modalRecurringAmount" placeholder="ex: 150" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400">
-            </div>
+            <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Encaissé (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+            <div><label for="modalRecurringAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Récurrent (€/mois)</label><input type="number" id="modalRecurringAmount" placeholder="ex: 150" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
 
             <div class="flex justify-end space-x-3 pt-4">
                  <button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button>
                  <button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button>
             </div>
-             <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> <!-- Hauteur fixe pour eviter saut -->
+             <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
         </div>
     </div>
 
+    <!-- Modal Confirmation Suppression -->
+    <div id="deleteConfirmModal" class="modal hidden">
+         <div class="modal-content max-w-sm">
+             <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2>
+             <p class="text-gray-300 text-sm my-3">Voulez-vous vraiment supprimer le prospect "<span id="deleteProspectName" class="font-bold"></span>" ? Cette action est irréversible.</p>
+             <input type="hidden" id="deleteDocId">
+             <div class="flex justify-end space-x-3 pt-4">
+                 <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button>
+                 <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button>
+             </div>
+             <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
+         </div>
+    </div>
 
-    <!-- Script -->
+    <!-- Script (inchangé) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         let db, auth, appId;
-        let currentData = []; // Stockage local des donnees affichees
+        let currentData = [];
 
-        // --- Initialisation Firebase ---
         async function initFirebase() {
-             try {
-                // Remplacer par votre config Firebase
-                const firebaseConfig = {
-                    apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY",
-                    authDomain: "closing-gia.firebaseapp.com",
-                    projectId: "closing-gia",
-                    storageBucket: "closing-gia.firebasestorage.app",
-                    messagingSenderId: "260776101981",
-                    appId: "1:260776101981:web:30d795f1d04a44d19f65b4"
-                };
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Utilisation de __app_id si disponible
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Attendre la connexion (anonyme si besoin)
-                return new Promise((resolve) => {
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) { console.log("Dashboard: Auth prête."); resolve(); }
-                        else {
-                           try { await signInAnonymously(auth); console.log("Dashboard: Connecté anonymement."); resolve(); }
-                           catch (anonError){ console.error("Err anon:", anonError); resolve(); } // Resoudre meme si echec anon pour donnees publiques
-                        }
-                    });
-                 });
-            } catch (error) {
-                console.error("Erreur init Firebase:", error);
-                displayError("Erreur connexion DB.");
-                return Promise.reject(error);
-            }
+             try { const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); }
         }
 
-        // --- Récupération & Affichage ---
         async function fetchDataAndDisplay(startDate, endDate) {
             if (!db || !appId) { displayError("DB non prête."); return; }
-
             const tableBody = document.getElementById('detailsTableBody');
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; // MAJ colspan
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`;
             resetKPIs();
-
             try {
                 const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
                 const r1Collection = collection(db, collectionPath);
-                let q = query(r1Collection); // Requete de base
-                // Ajout des filtres de date si fournis
+                let q = query(r1Collection);
                 if (startDate) q = query(q, where("prospectDate", ">=", startDate));
                 if (endDate) q = query(q, where("prospectDate", "<=", endDate));
-
                 const querySnapshot = await getDocs(q);
-                currentData = []; // Vider cache local
-
-                querySnapshot.forEach((doc) => {
-                    currentData.push({ id: doc.id, ...doc.data() }); // Stocker donnees + ID
-                });
-
-                // Tri JS (Firestore ne trie pas sur un champ different de celui du where !=)
-                 currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || ""));
-
-                updateKPIs(currentData); // Mettre a jour les KPIs avec les donnees reelles
-                updateTable(currentData); // Mettre a jour la table
-
-            } catch (error) {
-                console.error("Erreur fetch Firestore:", error);
-                displayError("Erreur chargement données.");
-                 tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; // MAJ colspan
-            }
+                currentData = [];
+                querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
+                currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || ""));
+                updateKPIs(currentData);
+                updateTable(currentData);
+            } catch (error) { console.error("Erreur fetch Firestore:", error); displayError("Erreur chargement données."); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; }
         }
 
-        // --- Mise à jour KPIs ---
-        function updateKPIs(data) {
-            let r1Count = data.length;
-            let r2Count = 0;
-            let closingCount = 0;
-            let totalCash = 0;
-            let totalRecurring = 0;
+        function updateKPIs(data) { let r1=data.length,r2=0,cl=0,tc=0,tr=0; data.forEach(i => {const s=i.status||'R1 Completed'; if(s==='R2 Scheduled')r2++; if(s==='Closed'){cl++;tc+=Number(i.amountCollected)||0;tr+=Number(i.recurringAmount)||0;}}); const cvr=r1>0?((cl/r1)*100).toFixed(1):0; document.getElementById('kpiR1Count').textContent=r1; document.getElementById('kpiR2Count').textContent=r2; document.getElementById('kpiClosingCount').textContent=cl; document.getElementById('kpiConversionRate').textContent=`${cvr}%`; document.getElementById('kpiCashTotal').textContent=`${tc.toLocaleString('fr-FR')}€`; document.getElementById('kpiCashRecurring').textContent=`${tr.toLocaleString('fr-FR')}€`; }
 
-            data.forEach(item => {
-                const status = item.status || 'R1 Completed'; // Statut vente
-                if (status === 'R2 Scheduled') r2Count++;
-                if (status === 'Closed') {
-                    closingCount++;
-                    totalCash += Number(item.amountCollected) || 0;     // Somme cash
-                    totalRecurring += Number(item.recurringAmount) || 0; // Somme recurrent
-                }
-            });
-
-            const conversionRate = r1Count > 0 ? ((closingCount / r1Count) * 100).toFixed(1) : 0;
-
-            // Affichage (retrait du '*')
-            document.getElementById('kpiR1Count').textContent = r1Count;
-            document.getElementById('kpiR2Count').textContent = r2Count;
-            document.getElementById('kpiClosingCount').textContent = closingCount;
-            document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`;
-            // Formatage €
-            document.getElementById('kpiCashTotal').textContent = `${totalCash.toLocaleString('fr-FR')}€`;
-            document.getElementById('kpiCashRecurring').textContent = `${totalRecurring.toLocaleString('fr-FR')}€`;
-        }
-
-        // --- Mise à jour Table ---
         function updateTable(data) {
             const tableBody = document.getElementById('detailsTableBody');
-            if (data.length === 0) {
-                 tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; // MAJ colspan
-                return;
-            }
-
+            if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return; }
             tableBody.innerHTML = data.map(item => {
-                const statusVente = item.status || 'R1 Completed';
-                const statusClass = getStatusClass(statusVente);
-                const amountCollected = Number(item.amountCollected) || 0;
-                const recurringAmount = Number(item.recurringAmount) || 0;
-                // Formater statut qualif pour affichage
+                const statusVente = item.status || 'R1 Completed'; const statusClass = getStatusClass(statusVente);
+                const amountCollected = Number(item.amountCollected) || 0; const recurringAmount = Number(item.recurringAmount) || 0;
                 const qualifStatusText = item.qualificationStatus ? item.qualificationStatus.replace(' (Client Rêvé)', '').trim() : 'N/A';
                 const qualifClass = item.qualificationStatus?.includes('VERT') ? 'text-green-400' : (item.qualificationStatus?.includes('ROUGE') ? 'text-red-400' : 'text-gray-400');
+                const prospectName = item.prospectName || 'N/A';
+
+                // Correction: Assurer que prospectName est bien encodé pour l'attribut data
+                const encodedProspectName = prospectName.replace(/"/g, '&quot;'); // Encode les guillemets
 
                 return `
                     <tr>
-                        <td>${item.prospectDate || 'N/A'}</td>
-                        <td class="truncate max-w-xs">${item.prospectName || 'N/A'}</td>
-                        <td><span class="${qualifClass}">${qualifStatusText}</span></td>
-                        <td class="text-center">${item.scores?.total ?? 'N/A'}</td>
-                        <td><span class="status-badge ${statusClass}">${statusVente.replace('Completed', 'Effectué').replace('Scheduled', 'Planifié')}</span></td>
-                         <td class="text-right">${amountCollected > 0 ? amountCollected.toLocaleString('fr-FR') + '€' : '-'}</td>
-                         <td class="text-right">${recurringAmount > 0 ? recurringAmount.toLocaleString('fr-FR') + '€' : '-'}</td>
-                         <td class="text-center">
-                            <button data-doc-id="${item.id}" class="edit-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-2 py-1 rounded hover:bg-slate-700 transition-colors">Modifier</button>
+                        <td class="px-2">${item.prospectDate || 'N/A'}</td>
+                        <td class="px-2 truncate max-w-xs">${prospectName}</td>
+                        <td class="px-2"><span class="${qualifClass}">${qualifStatusText}</span></td>
+                        <td class="text-center px-1">${item.scores?.total ?? 'N/A'}</td>
+                        <td class="px-2"><span class="status-badge ${statusClass}">${statusVente.replace('Completed', 'Effectué').replace('Scheduled', 'Planifié')}</span></td>
+                        <td class="text-right px-2">${amountCollected > 0 ? amountCollected.toLocaleString('fr-FR') + '€' : '-'}</td>
+                        <td class="text-right px-2">${recurringAmount > 0 ? recurringAmount.toLocaleString('fr-FR') + '€' : '-'}</td>
+                        <td class="text-center px-2 space-x-2">
+                            <a href="main.html?docId=${item.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>
+                            <button data-doc-id="${item.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button>
+                            <button data-doc-id="${item.id}" data-prospect-name="${encodedProspectName}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button>
                          </td>
                     </tr>
                 `;
             }).join('');
-
-            attachEditListeners(); // Rattacher les ecouteurs aux nouveaux boutons
         }
 
-        // --- Obtenir classe CSS pour badge statut ---
-        function getStatusClass(status) {
-            switch (status) {
-                case 'R1 Completed': return 'status-r1';
-                case 'R2 Scheduled': return 'status-r2';
-                case 'Closed': return 'status-closed';
-                case 'Lost': return 'status-lost';
-                default: return 'status-other';
-            }
-        }
+        function getStatusClass(status) { switch(status){case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
+        function resetKPIs() { document.getElementById('kpiR1Count').textContent='0';document.getElementById('kpiR2Count').textContent='0';document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashTotal').textContent='0€';document.getElementById('kpiCashRecurring').textContent='0€'; }
+        function setupFiltersAndLoad() { const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); function setThisMonth(){const t=new Date(),fd=new Date(t.getFullYear(),t.getMonth(),1).toISOString().split('T')[0],ld=new Date(t.getFullYear(),t.getMonth()+1,0).toISOString().split('T')[0];s.value=fd;e.value=ld;} setThisMonth(); fetchDataAndDisplay(s.value,e.value); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); r.addEventListener('click',()=>{setThisMonth();fetchDataAndDisplay(s.value,e.value);}); }
+        function displayError(message) { let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
 
-        // --- Reset KPIs ---
-        function resetKPIs() {
-             document.getElementById('kpiR1Count').textContent = '0';
-             document.getElementById('kpiR2Count').textContent = '0';
-             document.getElementById('kpiClosingCount').textContent = '0';
-             document.getElementById('kpiConversionRate').textContent = '0%';
-             document.getElementById('kpiCashTotal').textContent = '0€';
-             document.getElementById('kpiCashRecurring').textContent = '0€';
-        }
+        const modalStatusSelect = document.getElementById('modalStatus');
+        const modalLostReasonContainer = document.getElementById('modalLostReasonContainer');
+        modalStatusSelect.addEventListener('change', () => { modalLostReasonContainer.classList.toggle('hidden', modalStatusSelect.value !== 'Lost'); });
 
-        // --- Setup Filtres & Chargement Initial ---
-        function setupFiltersAndLoad() {
-            const startDateInput = document.getElementById('startDate');
-            const endDateInput = document.getElementById('endDate');
-            const filterButton = document.getElementById('filterButton');
-            const resetButton = document.getElementById('resetFilterButton');
-
-            function setThisMonth() { /* ... (comme avant) ... */
-                 const today = new Date();
-                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-                 startDateInput.value = firstDay;
-                 endDateInput.value = lastDay;
-             }
-            setThisMonth();
-            fetchDataAndDisplay(startDateInput.value, endDateInput.value);
-            filterButton.addEventListener('click', () => fetchDataAndDisplay(startDateInput.value, endDateInput.value));
-            resetButton.addEventListener('click', () => { setThisMonth(); fetchDataAndDisplay(startDateInput.value, endDateInput.value); });
-        }
-
-         // --- Affichage Erreur ---
-         function displayError(message) { /* ... (comme avant) ... */
-              let errorDiv = document.getElementById('dashboardError');
-              if (!errorDiv) {
-                  errorDiv = document.createElement('div'); errorDiv.id = 'dashboardError'; errorDiv.className = 'fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]'; /* Augmenter z-index */ document.body.appendChild(errorDiv);
-              }
-              errorDiv.textContent = message;
-              setTimeout(() => errorDiv.remove(), 5000);
-          }
-
-        // --- Gestion Modal ---
         function openEditModal(docId) {
             const prospectData = currentData.find(item => item.id === docId); if (!prospectData) return;
             document.getElementById('modalProspectName').textContent = prospectData.prospectName || 'N/A';
             document.getElementById('modalDocId').value = docId;
-            document.getElementById('modalStatus').value = prospectData.status || 'R1 Completed';
+            const currentStatus = prospectData.status || 'R1 Completed';
+            modalStatusSelect.value = currentStatus;
             document.getElementById('modalAmountCollected').value = prospectData.amountCollected || '';
             document.getElementById('modalRecurringAmount').value = prospectData.recurringAmount || '';
+            document.getElementById('modalLostReason').value = prospectData.lostReason || '';
+            modalLostReasonContainer.classList.toggle('hidden', currentStatus !== 'Lost');
             document.getElementById('modalError').textContent = '';
             document.getElementById('editModal').classList.remove('hidden');
         }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         async function saveModalChanges() {
-            const docId = document.getElementById('modalDocId').value;
-            const newStatus = document.getElementById('modalStatus').value;
-            const newAmountCollected = Number(document.getElementById('modalAmountCollected').value) || 0;
-            const newRecurringAmount = Number(document.getElementById('modalRecurringAmount').value) || 0;
-            const modalError = document.getElementById('modalError');
-            const saveButton = document.getElementById('modalSaveButton');
+            const docId = document.getElementById('modalDocId').value; const newStatus = modalStatusSelect.value; const newAmountCollected = Number(document.getElementById('modalAmountCollected').value) || 0; const newRecurringAmount = Number(document.getElementById('modalRecurringAmount').value) || 0; const newLostReason = document.getElementById('modalLostReason').value.trim(); const modalError = document.getElementById('modalError'); const saveButton = document.getElementById('modalSaveButton');
             if (!docId || !newStatus) { modalError.textContent = "ID/Statut requis."; return; }
             modalError.textContent = ''; saveButton.disabled = true; saveButton.textContent = 'Sauvegarde...';
             try {
-                const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                const docRef = doc(db, collectionPath, docId);
-                await updateDoc(docRef, {
-                    status: newStatus,
-                    amountCollected: newAmountCollected,
-                    recurringAmount: newRecurringAmount,
-                    lastUpdatedAt: Timestamp.now()
-                });
-                closeEditModal();
-                // Recharger avec les dates actuelles du filtre
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                await fetchDataAndDisplay(startDate, endDate); // Utiliser await
+                const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const docRef = doc(db, collectionPath, docId); const dataToUpdate = { status: newStatus, amountCollected: newAmountCollected, recurringAmount: newRecurringAmount, lastUpdatedAt: Timestamp.now() };
+                if (newStatus === 'Lost') { dataToUpdate.lostReason = newLostReason; } else { dataToUpdate.lostReason = deleteField(); } // Utiliser deleteField pour supprimer
+                await updateDoc(docRef, dataToUpdate); closeEditModal(); const startDate = document.getElementById('startDate').value; const endDate = document.getElementById('endDate').value; await fetchDataAndDisplay(startDate, endDate);
             } catch (error) { console.error("Err update:", error); modalError.textContent = "Erreur sauvegarde."; }
             finally { saveButton.disabled = false; saveButton.textContent = 'Enregistrer'; }
         }
-        function attachEditListeners() {
-             // Utiliser la délégation d'événement sur le tbody pour eviter de rattacher a chaque MAJ
-             document.getElementById('detailsTableBody').addEventListener('click', (e) => {
-                 if (e.target.classList.contains('edit-btn')) {
-                     const docId = e.target.dataset.docId;
-                     openEditModal(docId);
-                 }
-             });
+
+        // --- Gestion Modal Suppression ---
+        function openDeleteConfirmModal(docId, prospectName) {
+            document.getElementById('deleteProspectName').textContent = prospectName; document.getElementById('deleteDocId').value = docId; document.getElementById('deleteError').textContent = ''; document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+        function closeDeleteConfirmModal() { document.getElementById('deleteConfirmModal').classList.add('hidden'); }
+        async function confirmDeletion() {
+            const docId = document.getElementById('deleteDocId').value; const deleteError = document.getElementById('deleteError'); const confirmButton = document.getElementById('deleteConfirmButton'); if (!docId) { deleteError.textContent = "ID manquant."; return; }
+            deleteError.textContent = ''; confirmButton.disabled = true; confirmButton.textContent = 'Suppression...';
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const docRef = doc(db, collectionPath, docId); await deleteDoc(docRef); closeDeleteConfirmModal(); const startDate = document.getElementById('startDate').value; const endDate = document.getElementById('endDate').value; await fetchDataAndDisplay(startDate, endDate);
+            } catch (error) { console.error(`Erreur suppression doc ${docId}:`, error); deleteError.textContent = "Erreur lors de la suppression."; }
+            finally { confirmButton.disabled = false; confirmButton.textContent = 'Supprimer'; }
+        }
+
+        // --- Attacher Listeners (Délégation) ---
+        function attachListeners() {
+            document.getElementById('detailsTableBody').addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-btn')) { openEditModal(e.target.dataset.docId); }
+                else if (e.target.classList.contains('delete-btn')) { openDeleteConfirmModal(e.target.dataset.docId, e.target.dataset.prospectName); }
+                // Pas besoin pour 'details-btn' car c'est un lien <a>
+            });
+            document.getElementById('modalCancelButton').addEventListener('click', closeEditModal); document.getElementById('modalSaveButton').addEventListener('click', saveModalChanges); document.getElementById('editModal').addEventListener('click', (e) => { if(e.target.id === 'editModal') closeEditModal(); });
+            document.getElementById('deleteCancelButton').addEventListener('click', closeDeleteConfirmModal); document.getElementById('deleteConfirmButton').addEventListener('click', confirmDeletion); document.getElementById('deleteConfirmModal').addEventListener('click', (e) => { if(e.target.id === 'deleteConfirmModal') closeDeleteConfirmModal(); });
         }
 
         // --- Démarrage ---
         document.addEventListener('DOMContentLoaded', async () => {
             await initFirebase();
             setupFiltersAndLoad();
-            // Lier boutons modal (une seule fois)
-             document.getElementById('modalCancelButton').addEventListener('click', closeEditModal);
-             document.getElementById('modalSaveButton').addEventListener('click', saveModalChanges);
-             document.getElementById('editModal').addEventListener('click', (e) => { if(e.target.id === 'editModal') closeEditModal(); });
-             // Attacher les écouteurs pour les boutons Modifier (via délégation)
-             attachEditListeners();
+            attachListeners();
         });
     </script>
 

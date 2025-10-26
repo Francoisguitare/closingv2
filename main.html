@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Qualification R1</title>
-    {/* Script Tailwind CDN - ESSENTIEL */}
+    <!-- Script Tailwind CDN - ESSENTIEL -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    {/* PDF Libs */}
+    <!-- PDF Libs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    {/* SDK Firebase */}
+    <!-- SDK Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -35,13 +35,8 @@
             authPromise.then(() => {
                 window.firebaseServices = { db, auth, appId };
                 console.log("Firebase services exposed.");
-                // Déclencher l'initialisation de l'App si la fonction existe déjà
-                if (typeof initializeAppFromModule === 'function') {
-                    initializeAppFromModule();
-                } else {
-                    // Sinon, définir un drapeau pour que le module sache que Firebase est prêt
-                    window.firebaseIsReady = true;
-                }
+                // Déclencher un événement personnalisé pour signaler que Firebase est prêt
+                document.dispatchEvent(new CustomEvent('firebaseReady'));
             });
         } catch (error) {
             console.error("Err init Firebase:", error);
@@ -50,23 +45,39 @@
         }
     </script>
 
-    {/* SUPPRESSION de la balise <style> ici */}
+    <!-- Styles CSS de base (compatibles CDN) -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; /* slate-500 / slate-800 */}
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
+
+        #pdf-spinner { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #pdf-spinner::after { content:''; width: 50px; height: 50px; border: 4px solid #475569; border-top-color: #38bdf8; /* sky-400 */ border-radius: 50%; animation: spin 1s linear infinite; }
+        #pdf-spinner-text { color: white; margin-top: 1rem; font-weight: 500; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #appFeedback { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
+        #appFeedback.show { opacity: 1; pointer-events: auto; }
+
+        .l { display: block; font-size: 0.875rem; font-weight: 500; color: #d1d5db; /* gray-300 */ margin-bottom: 0.5rem; }
+    </style>
 
 </head>
-{/* Ajout des classes de base directement sur body */}
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden font-[Inter,sans-serif]">
 
     <div id="app" class="h-full">
-        {/* ÉCRAN PRINCIPAL (avec classes Tailwind) */}
+        <!-- ÉCRAN PRINCIPAL -->
         <div id="mainScreen" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
-            {/* Colonne Gauche */}
+            <!-- Colonne Gauche -->
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
                 <div class="flex justify-between items-center p-2 flex-shrink-0">
                     <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Script</a>
                     <h2 class="text-lg font-semibold text-gray-300">Prospect: <span id="mainProspectName" class="text-white font-bold"></span></h2>
                     <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">Reset</a>
                 </div>
-                {/* Coach Questions */}
+                <!-- Coach Questions -->
                 <div id="questionCoachContainer" class="bg-slate-900/50 rounded-xl border border-amber-500/50 shadow-lg flex-shrink-0">
                     <button id="coachToggleTrigger" class="flex items-center justify-between w-full text-lg font-semibold text-amber-300 p-4">
                         <span class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>Coach Questions</span>
@@ -74,11 +85,11 @@
                     </button>
                     <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden"></ul>
                 </div>
-                {/* Conteneur Badges (Ajout scrollbar via classe) */}
-                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
+                <!-- Conteneur Badges -->
+                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar"> <!-- Classe scrollbar Tailwind standard -->
                     <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
                         <div class="space-y-6 pt-4">
-                            {/* Les fieldset et divs pour les badges */}
+                            <!-- Badges HTML -->
                             <fieldset class="border border-slate-700 rounded-lg p-4"><legend class="text-lg font-semibold text-teal-300 px-2">Compétence</legend><div class="space-y-6"><div><label class="block text-sm font-medium text-gray-300 mb-2">Expérience Totale</label><div id="contextExperienceContainer" class="flex flex-wrap gap-2"></div></div><div><label class="block text-sm font-medium text-gray-300 mb-2">Parcours / Cours Suivis</label><div id="contextParcoursContainer" class="flex flex-wrap gap-2"></div></div></div></fieldset>
                             <div><label class="block text-sm font-medium text-gray-300 mb-2">Matériel</label><div id="contextMaterielContainer" class="flex flex-wrap gap-2"></div></div>
                             <div><label class="block text-sm font-medium text-gray-300 mb-2">Style</label><div id="contextStyleContainer" class="flex flex-wrap gap-2"></div></div>
@@ -91,14 +102,14 @@
                         </div>
                     </div>
                 </div>
-                 {/* Feedback Element (sera stylisé par JS) */}
-                 <div id="appFeedback" class="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+                 <!-- Feedback Element -->
+                 <div id="appFeedback"></div> <!-- Cet ID est utilisé par showFeedback dans app.mjs -->
             </div>
 
-            {/* Colonne Droite (Ajout scrollbar via classe) */}
-            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
+            {/* Colonne Droite */}
+            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto custom-scrollbar"> <!-- Classe scrollbar Tailwind standard -->
                 <div id="dashboardContent" class="sticky top-0 space-y-5 bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-2xl">
-                    {/* Jauges */}
+                    <!-- Jauges -->
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
                         <h3 class="text-md font-semibold text-gray-100 text-center mb-2">Diagnostic Prospect</h3>
                         <div><span id="gaugeDispoLabel" class="text-sm font-medium text-teal-300">Dispo (Temps)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeDispo" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
@@ -108,9 +119,9 @@
                         <div><span id="gaugeCapaLabel" class="text-sm font-medium text-teal-300">Capacité (Finances)</span><div class="w-full bg-slate-700 rounded-full h-3 mt-1"><div id="gaugeCapa" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div></div></div>
                         <div class="text-center pt-3 border-t border-slate-700 mt-4"><span class="text-sm font-medium text-gray-300">Score Total : </span><span id="totalScore" class="text-2xl font-bold text-teal-300">0</span></div>
                     </div>
-                    {/* Statut Qualification */}
+                    {/* Statut Qualif */}
                     <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner"><span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">En attente...</span><p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">Remplir les badges...</p></div>
-                    {/* Diagnostic Final */}
+                    {/* Diagnostic */}
                     <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border"><h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-green-400">Points Forts:</h4><ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Points d'Effort:</h4><ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div></div>
                     {/* Bouton Pitch */}
                     <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">Voir la Proposition GIA &rarr;</button>
@@ -122,9 +133,9 @@
             </aside>
         </div>
 
-        {/* ÉCRAN PITCH GIA (Modifié) */}
+        {/* ÉCRAN PITCH GIA */}
         <div id="giaPitchScreen" class="hidden h-full flex flex-col items-center justify-center p-4">
-             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800">
+             <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-teal-500/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar"> {/* Ajout scrollbar */}
                 {/* Contenu Pitch */}
                 <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2 text-center">Bienvenue GIA</h1>
                 <p class="text-md md:text-lg text-gray-200 text-center mb-6">...<span class="font-bold text-amber-300">système complet d'autonomie</span>.</p>
@@ -150,34 +161,49 @@
                  </div>
             </div>
         </div>
-         {/* Feedback Element (pas dans le HTML initial, ajouté par JS si besoin) */}
-         {/* <div id="appFeedback"></div> */}
+         {/* Feedback Element (pas besoin ici, déjà dans #leftColumn) */}
     </div>
 
-    {/* Appel du module JS (Inchangé) */}
+    {/* Appel du module JS */}
     <script type="module">
-        import { App } from './app.mjs'; // Chemin relatif standard
+        // Correction: Utilisation de l'import dynamique pour s'assurer que le DOM est prêt
+        // ET que Firebase est potentiellement prêt.
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Chargé. Attente de Firebase...");
 
-        // Fonction globale pour initialiser l'app
-        window.initializeAppFromModule = () => {
-             console.log("initializeAppFromModule appelé.");
-             if (!App.state) { // Eviter double init
-                 App.init();
-             } else {
-                 console.log("App déjà initialisée, skip.");
-             }
-        };
+            const initializeApp = () => {
+                import('./app.mjs') // Chemin relatif standard
+                    .then(({ App }) => {
+                        console.log("Module App chargé.");
+                        if (!App.state) { // Eviter double init
+                           App.init();
+                        } else {
+                           console.log("App déjà initialisée (sécurité import).");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erreur lors de l'importation du module app.mjs:", error);
+                        // Afficher une erreur plus visible à l'utilisateur
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]';
+                        errorDiv.textContent = 'Erreur critique: Impossible de charger le module principal de l\'application.';
+                        document.body.prepend(errorDiv);
+                    });
+            };
 
-        // Si Firebase est prêt immédiatement (improbable mais securite)
-        if (window.firebaseServices) {
-             console.log("Firebase déjà prêt (sécurité module), initialisation App...");
-             initializeAppFromModule();
-        } else {
-             // Definir window.firebaseIsReady = true ne sert a rien ici,
-             // car le module App attend l'appel de initializeAppFromModule
-             // qui est declenche par le script Firebase plus haut.
-             console.log("Module App chargé, attente de Firebase...");
-        }
+            // Vérifier si Firebase est déjà prêt (via le flag ou l'objet)
+            if (window.firebaseServices || window.firebaseIsReady) {
+                console.log("Firebase déjà prêt au chargement du DOM.");
+                initializeApp();
+            } else {
+                // Sinon, écouter l'événement personnalisé 'firebaseReady'
+                console.log("Attente de l'événement firebaseReady...");
+                document.addEventListener('firebaseReady', () => {
+                    console.log("Événement firebaseReady reçu.");
+                    initializeApp();
+                }, { once: true }); // S'assurer que l'event listener ne s'exécute qu'une fois
+            }
+        });
     </script>
 
 </body>

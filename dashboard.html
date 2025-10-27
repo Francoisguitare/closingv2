@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - GIA Closing</title>
-    <!-- Script Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Styles CSS de base -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .status-scheduled { background-color: #fbbf24; color: #78350f; } /* amber-400 / amber-900 */
@@ -44,7 +42,7 @@
             <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button>
         </section>
 
-        <!-- KPIs (Ajout R1 Planifiés) -->
+        <!-- KPIs (Modifiés pour R1 Planifiés/Effectués) -->
         <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-6">
              <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-amber-500" style="box-shadow: ...;"><span id="kpiR1Scheduled" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
              <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-blue-500" style="box-shadow: ...;"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
@@ -61,18 +59,18 @@
         <!-- Table Détails -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
              <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
-             <div class="min-w-[900px]">
+             <div class="min-w-[950px]"> <!-- Largeur minimum augmentée -->
                  <table class="w-full divide-y divide-slate-700 table-fixed">
                     <thead class="sticky top-[4.5rem] z-10">
                         <tr>
-                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date R1</th>
-                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prospect</th>
-                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Qualif.</th>
-                            <th class="w-[5%] px-4 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
-                            <th class="w-[10%] px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Vente</th>
-                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Montant Total</th>
-                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Échéance</th>
-                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            <th class="w-[12%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date & Heure R1</th> <!-- Colonne modifiée -->
+                            <th class="w-[18%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prospect</th>
+                            <th class="w-[15%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Qualif.</th>
+                            <th class="w-[5%] px-1 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                            <th class="w-[10%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Vente</th>
+                            <th class="w-[10%] px-2 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Montant Total</th>
+                            <th class="w-[10%] px-2 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Échéance</th>
+                            <th class="w-[20%] px-2 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th> <!-- Largeur ajustée -->
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700"></tbody>
@@ -81,7 +79,7 @@
         </section>
     </div>
 
-    <!-- Modals (Édition & Suppression - inchangés) -->
+    <!-- Modals (Édition & Suppression) -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option> <option value="R2 Scheduled">R2 Planifié</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
 
@@ -94,14 +92,11 @@
         let db, auth, appId;
         let currentData = [];
 
-        // --- Fonctions Utilitaires Date ---
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
         function parseDateString(dateString) { if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null; const parts = dateString.split('-'); return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))); }
 
-        // --- Initialisation Firebase ---
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
 
-        // --- Récupération & Affichage ---
         async function fetchDataAndDisplay(startDateStr, endDateStr) {
              if (!db || !appId) { displayError("DB non prête."); return; }
              const tableBody = document.getElementById('detailsTableBody'); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; resetKPIs();
@@ -111,109 +106,64 @@
              try {
                  const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const r1Collection = collection(db, collectionPath); const querySnapshot = await getDocs(query(r1Collection)); currentData = [];
                  querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
-                 currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || ""));
+                 // Tri par date ET heure (plus récent en premier)
+                 currentData.sort((a, b) => {
+                     const dateTimeA = `${a.prospectDate || '0000-00-00'}T${a.prospectTime || '00:00'}`;
+                     const dateTimeB = `${b.prospectDate || '0000-00-00'}T${b.prospectTime || '00:00'}`;
+                     return dateTimeB.localeCompare(dateTimeA); // Tri descendant
+                 });
                  updateKPIs(currentData, filterStartDate, filterEndDate); updateTable(currentData);
              } catch (error) { console.error("Erreur fetch Firestore:", error); displayError("Erreur chargement données."); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; }
          }
 
-        // --- Mise à jour KPIs (Logique R2 & R1 effectuée modifiée) ---
         function updateKPIs(data, filterStart, filterEnd) {
-            let r1ScheduledCount = 0; // Compte R1 Scheduled UNIQUEMENT DANS LA PERIODE
-            let r1CompletedCount = 0; // Compte R1 Completed OU PLUS DANS LA PERIODE
-            let r2Count = 0;          // Compte R2 Scheduled, Closed, Lost DANS LA PERIODE
-            let closingCount = 0;
-            let cashCollectedInPeriod = 0;
-            let cashFutureRecurring = 0;
-
+            let r1ScheduledCount = 0; let r1CompletedCount = 0; let r2Count = 0; let closingCount = 0;
+            let cashCollectedInPeriod = 0; let cashFutureRecurring = 0;
             const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other'];
             const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost'];
 
             data.forEach(item => {
-                const status = item.status || 'R1 Scheduled'; // Statut vente, defaut a scheduled
+                const status = item.status || 'R1 Scheduled';
                 const itemR1Date = parseDateString(item.prospectDate);
 
-                // Filtrer par date R1 pour les compteurs R1 et R2
+                // Compter les statuts basés sur la date R1 DANS la période
                 if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) {
-                    if (status === 'R1 Scheduled') {
-                        r1ScheduledCount++;
-                    }
-                    // Si le statut est dans la liste des "complétés" (ou plus avancé)
-                    if (consideredStatusesForCompleted.includes(status)) {
-                         r1CompletedCount++;
-                    }
-                    // Si le statut est dans la liste des "R2 et plus"
-                    if (consideredStatusesForR2.includes(status)) {
-                        r2Count++;
-                    }
-                    if (status === 'Closed') {
-                        closingCount++;
-                    }
+                    if (status === 'R1 Scheduled') r1ScheduledCount++;
+                    if (consideredStatusesForCompleted.includes(status)) r1CompletedCount++;
+                    if (consideredStatusesForR2.includes(status)) r2Count++;
+                    if (status === 'Closed') closingCount++;
                 }
 
-                // Calculer le cash pour les clients Closé (basé sur échéances, peu importe date R1)
-                if (status === 'Closed') {
-                    const paymentType = item.paymentType || 'unique';
-                    const totalAmount = Number(item.amountCollected) || 0;
-                    if (paymentType === 'unique') {
-                         // On considère le paiement unique comme encaissé si la date R1 est DANS la période
-                         // (Approximation, idéalement il faudrait une date de closing/paiement)
-                         if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) {
-                             cashCollectedInPeriod += totalAmount;
-                         }
-                    } else if (paymentType === 'installments') {
-                         const installmentAmount = Number(item.installmentAmount) || 0;
-                         const numInstallments = parseInt(item.numberOfInstallments) || 0;
-                         const firstPaymentDate = parseDateString(item.startDateOfPayment);
-                         if (installmentAmount > 0 && numInstallments > 0 && firstPaymentDate) {
-                             for (let i = 0; i < numInstallments; i++) {
-                                 const paymentDate = addMonths(firstPaymentDate, i);
-                                 if (paymentDate >= filterStart && paymentDate <= filterEnd) {
-                                     cashCollectedInPeriod += installmentAmount;
-                                 } else if (paymentDate > filterEnd) {
-                                     cashFutureRecurring += installmentAmount;
-                                 }
-                             }
-                         }
-                    }
-                }
+                // Calculer le cash pour les 'Closed' (basé sur échéances, peu importe date R1)
+                if (status === 'Closed') { /* ... logique inchangée ... */ const pT=item.paymentType||'unique'; const tA=Number(item.amountCollected)||0; if(pT==='unique'){ if(itemR1Date&&itemR1Date>=filterStart&&itemR1Date<=filterEnd){cashCollectedInPeriod+=tA;}} else if(pT==='installments'){const iA=Number(item.installmentAmount)||0; const nI=parseInt(item.numberOfInstallments)||0; const fPD=parseDateString(item.startDateOfPayment); if(iA>0&&nI>0&&fPD){ for(let i=0;i<nI;i++){ const pD=addMonths(fPD,i); if(pD>=filterStart&&pD<=filterEnd){cashCollectedInPeriod+=iA;} else if(pD>filterEnd){cashFutureRecurring+=iA;}}}}}
             });
 
-            // Taux de conversion basé sur R1 EFFECTUES
             const conversionRate = r1CompletedCount > 0 ? ((closingCount / r1CompletedCount) * 100).toFixed(1) : 0;
-
-            document.getElementById('kpiR1Scheduled').textContent = r1ScheduledCount; // Nouveau KPI
-            document.getElementById('kpiR1Completed').textContent = r1CompletedCount; // KPI modifié
-            document.getElementById('kpiR2Count').textContent = r2Count;
-            document.getElementById('kpiClosingCount').textContent = closingCount;
-            document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`;
-            document.getElementById('kpiCashCollected').textContent = `${cashCollectedInPeriod.toLocaleString('fr-FR')}€`;
-            document.getElementById('kpiCashFutureRecurring').textContent = `${cashFutureRecurring.toLocaleString('fr-FR')}€`;
+            document.getElementById('kpiR1Scheduled').textContent = r1ScheduledCount; // Affichage R1 Planifiés
+            document.getElementById('kpiR1Completed').textContent = r1CompletedCount; // Affichage R1 Effectués
+            document.getElementById('kpiR2Count').textContent = r2Count; document.getElementById('kpiClosingCount').textContent = closingCount; document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`; document.getElementById('kpiCashCollected').textContent = `${cashCollectedInPeriod.toLocaleString('fr-FR')}€`; document.getElementById('kpiCashFutureRecurring').textContent = `${cashFutureRecurring.toLocaleString('fr-FR')}€`;
         }
 
-        // --- Mise à jour Table (Affichage bouton Démarrer R1 / Détails) ---
         function updateTable(data) {
-             const tableBody = document.getElementById('detailsTableBody');
-             if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;}
+             const tableBody = document.getElementById('detailsTableBody'); if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;}
              tableBody.innerHTML = data.map(item => {
-                 const statusVente = item.status || 'R1 Scheduled'; // Defaut a Scheduled
-                 const statusClass = getStatusClass(statusVente);
-                 const totalAmount = Number(item.amountCollected) || 0;
-                 let instTxt='-'; if(item.paymentType==='installments'&&item.installmentAmount&&item.numberOfInstallments){instTxt=`${item.numberOfInstallments}x ${item.installmentAmount.toLocaleString('fr-FR')}€`;}
-                 const qST=item.qualificationStatus?item.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A';
-                 const qC=item.qualificationStatus?.includes('VERT')?'text-green-400':(item.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');
+                 const statusVente = item.status || 'R1 Scheduled'; const statusClass = getStatusClass(statusVente);
+                 const totalAmount = Number(item.amountCollected) || 0; let instTxt='-'; if(item.paymentType==='installments'&&item.installmentAmount&&item.numberOfInstallments){instTxt=`${item.numberOfInstallments}x ${item.installmentAmount.toLocaleString('fr-FR')}€`;}
+                 const qST=item.qualificationStatus?item.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A'; const qC=item.qualificationStatus?.includes('VERT')?'text-green-400':(item.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');
                  const pN=item.prospectName||'N/A'; const ePn=pN.replace(/"/g,'&quot;');
+                 const dateTimeDisplay = `${item.prospectDate || 'N/A'} ${item.prospectTime ? `<span class="text-xs text-gray-400">${item.prospectTime}</span>` : ''}`; // Affichage date + heure
 
-                 // Déterminer quel bouton afficher dans Actions
+                 // Bouton Action: Démarrer R1 ou Détails
                  let actionButton;
                  if (statusVente === 'R1 Scheduled') {
-                     actionButton = `<a href="main.html?docId=${item.id}" target="_blank" class="start-r1-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Démarrer R1</a>`;
+                     actionButton = `<a href="script.html?docId=${item.id}" target="_blank" class="start-r1-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</a>`;
                  } else {
                      actionButton = `<a href="main.html?docId=${item.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;
                  }
 
                  return `
                      <tr>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${item.prospectDate||'N/A'}</td>
+                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dateTimeDisplay}</td>
                          <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td>
                          <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td>
                          <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${item.scores?.total??'N/A'}</td>
@@ -230,28 +180,20 @@
              }).join('');
          }
 
-        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} } // Ajout status-scheduled
+        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
         function resetKPIs() { /* ... */ document.getElementById('kpiR1Scheduled').textContent='0'; document.getElementById('kpiR1Completed').textContent='0'; document.getElementById('kpiR2Count').textContent='0';document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashCollected').textContent='0€';document.getElementById('kpiCashFutureRecurring').textContent='0€'; }
         function setupFiltersAndLoad() { /* ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); function setThisMonth(){const t=new Date(),fd=new Date(t.getFullYear(),t.getMonth(),1).toISOString().split('T')[0],ld=new Date(t.getFullYear(),t.getMonth()+1,0).toISOString().split('T')[0];s.value=fd;e.value=ld;} function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',validateDates); e.addEventListener('input',validateDates); setThisMonth(); validateDates(); fetchDataAndDisplay(s.value,e.value); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); r.addEventListener('click',()=>{setThisMonth(); validateDates(); fetchDataAndDisplay(s.value,e.value);}); }
         function displayError(message) { /* ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
-
-        // --- Gestion Modal Édition ---
         const modalStatusSelect = document.getElementById('modalStatus'); const modalLostReasonContainer = document.getElementById('modalLostReasonContainer'); const modalPaymentTypeSelect = document.getElementById('modalPaymentType'); const installmentsFieldsDiv = document.getElementById('installmentsFields'); const modalAmountCollectedInput = document.getElementById('modalAmountCollected'); const modalInstallmentAmountInput = document.getElementById('modalInstallmentAmount'); const modalNumberOfInstallmentsInput = document.getElementById('modalNumberOfInstallments');
         function calculateTotalAmount() { if (modalPaymentTypeSelect.value === 'installments') { const i = Number(modalInstallmentAmountInput.value) || 0; const n = parseInt(modalNumberOfInstallmentsInput.value) || 0; if (i > 0 && n > 0) { modalAmountCollectedInput.value = i * n; } } }
         modalInstallmentAmountInput.addEventListener('input', calculateTotalAmount); modalNumberOfInstallmentsInput.addEventListener('input', calculateTotalAmount); modalPaymentTypeSelect.addEventListener('change', () => { installmentsFieldsDiv.classList.toggle('hidden', modalPaymentTypeSelect.value !== 'installments'); if (modalPaymentTypeSelect.value === 'installments') { calculateTotalAmount(); } }); modalStatusSelect.addEventListener('change', () => { modalLostReasonContainer.classList.toggle('hidden', modalStatusSelect.value !== 'Lost'); });
-        function openEditModal(docId) { /* ... */ const pD=currentData.find(i=>i.id===docId); if(!pD)return; document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A'; document.getElementById('modalDocId').value=docId; const cS=pD.status||'R1 Scheduled'; /* Defaut Scheduled */ modalStatusSelect.value=cS; document.getElementById('modalLostReason').value=pD.lostReason||''; modalLostReasonContainer.classList.toggle('hidden',cS!=='Lost'); const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden'); }
+        function openEditModal(docId) { /* ... */ const pD=currentData.find(i=>i.id===docId); if(!pD)return; document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A'; document.getElementById('modalDocId').value=docId; const cS=pD.status||'R1 Scheduled'; modalStatusSelect.value=cS; document.getElementById('modalLostReason').value=pD.lostReason||''; modalLostReasonContainer.classList.toggle('hidden',cS!=='Lost'); const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden'); }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         async function saveModalChanges() { /* ... */ const dId=document.getElementById('modalDocId').value; const nS=modalStatusSelect.value; const nPT=modalPaymentTypeSelect.value; const nTA=Number(document.getElementById('modalAmountCollected').value)||0; const nIA=Number(document.getElementById('modalInstallmentAmount').value)||0; const nNI=parseInt(document.getElementById('modalNumberOfInstallments').value)||0; const nSD=document.getElementById('modalStartDateOfPayment').value||null; const nLR=document.getElementById('modalLostReason').value.trim(); const mE=document.getElementById('modalError'); const sB=document.getElementById('modalSaveButton'); if(!dId||!nS){mE.textContent="ID/Statut requis.";return;} mE.textContent='';sB.disabled=true;sB.textContent='Sauvegarde...'; try { const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId); const dTU={status:nS,lastUpdatedAt:Timestamp.now()}; if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){if(!nIA||!nNI||!nSD){throw new Error("Détails échelonnement manquants.");} dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();} if(nS==='Lost'){dTU.lostReason=nLR;} else {dTU.lostReason=deleteField();} await updateDoc(dR,dTU); closeEditModal(); const s=document.getElementById('startDate').value; const e=document.getElementById('endDate').value; await fetchDataAndDisplay(s,e); } catch(error){ console.error("Err update:",error); mE.textContent=error.message || "Erreur sauvegarde."; } finally { sB.disabled=false; sB.textContent='Enregistrer'; } }
-
-        // --- Gestion Modal Suppression ---
         function openDeleteConfirmModal(docId, prospectName) { /* ... */ document.getElementById('deleteProspectName').textContent=prospectName;document.getElementById('deleteDocId').value=docId;document.getElementById('deleteError').textContent='';document.getElementById('deleteConfirmModal').classList.remove('hidden'); }
         function closeDeleteConfirmModal() { /* ... */ document.getElementById('deleteConfirmModal').classList.add('hidden'); }
         async function confirmDeletion() { /* ... */ const dId=document.getElementById('deleteDocId').value;const dE=document.getElementById('deleteError');const cB=document.getElementById('deleteConfirmButton');if(!dId){dE.textContent="ID manquant.";return;} dE.textContent='';cB.disabled=true;cB.textContent='Suppression...';try{const cP=`artifacts/${appId}/public/data/r1_closings`;const dR=doc(db,cP,dId);await deleteDoc(dR);closeDeleteConfirmModal();const s=document.getElementById('startDate').value;const e=document.getElementById('endDate').value;await fetchDataAndDisplay(s,e);}catch(error){console.error(`Err suppression ${dId}:`,error);dE.textContent="Erreur suppression.";}finally{cB.disabled=false;cB.textContent='Supprimer';} }
-
-        // --- Attacher Listeners ---
         function attachListeners() { /* ... */ document.getElementById('detailsTableBody').addEventListener('click',(e)=>{if(e.target.classList.contains('edit-btn')){openEditModal(e.target.dataset.docId);}else if(e.target.classList.contains('delete-btn')){openDeleteConfirmModal(e.target.dataset.docId,e.target.dataset.prospectName);}}); document.getElementById('modalCancelButton').addEventListener('click',closeEditModal);document.getElementById('modalSaveButton').addEventListener('click',saveModalChanges);document.getElementById('editModal').addEventListener('click',(e)=>{if(e.target.id==='editModal')closeEditModal();}); document.getElementById('deleteCancelButton').addEventListener('click',closeDeleteConfirmModal);document.getElementById('deleteConfirmButton').addEventListener('click',confirmDeletion);document.getElementById('deleteConfirmModal').addEventListener('click',(e)=>{if(e.target.id==='deleteConfirmModal')closeDeleteConfirmModal();}); }
-
-        // --- Démarrage ---
         document.addEventListener('DOMContentLoaded', async () => { await initFirebase(); setupFiltersAndLoad(); attachListeners(); });
     </script>
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grille de Qualification R1</title>
-    <!-- Script Tailwind CDN - ESSENTIEL -->
+    <!-- Script Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,11 +16,14 @@
     <!-- SDK Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firestore.js";
+        // --- CORRECTION ICI ---
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Chemin corrigé
+        // --- FIN CORRECTION ---
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        window.firebaseIsReady = false;
         let db, auth, appId, userId;
         try {
-            // Remplacez par votre configuration Firebase
             const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" };
             appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const app = initializeApp(firebaseConfig);
@@ -34,18 +37,31 @@
             });
             authPromise.then(() => {
                 window.firebaseServices = { db, auth, appId };
-                console.log("Firebase services exposed.");
-                // Déclencher un événement personnalisé pour signaler que Firebase est prêt
+                window.firebaseIsReady = true;
+                console.log("Firebase services exposed and ready flag set.");
                 document.dispatchEvent(new CustomEvent('firebaseReady'));
             });
         } catch (error) {
             console.error("Err init Firebase:", error);
-            // Affichage erreur UI
             const errorDiv = document.createElement('div'); errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]'; errorDiv.textContent = 'Erreur critique: Connexion DB impossible.'; document.body.prepend(errorDiv);
         }
     </script>
 
-    <!-- Suppression de la balise <style> pour simplifier -->
+    <!-- Styles CSS -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
+        #pdf-spinner { position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #pdf-spinner::after { content:''; width: 50px; height: 50px; border: 4px solid #475569; border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; }
+        #pdf-spinner-text { color: white; margin-top: 1rem; font-weight: 500; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #appFeedback { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
+        #appFeedback.show { opacity: 1; pointer-events: auto; }
+        .l { display: block; font-size: 0.875rem; font-weight: 500; color: #d1d5db; margin-bottom: 0.5rem; }
+    </style>
 
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden font-[Inter,sans-serif]">
@@ -69,7 +85,7 @@
                     <ul id="questionCoachList" class="text-xs text-gray-200 space-y-1 p-4 pt-0 border-t border-amber-500/30 hidden"></ul>
                 </div>
                 <!-- Conteneur Badges -->
-                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800"> <!-- Scrollbar via classes Tailwind -->
+                <div id="leftColumnContent" class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
                     <div class="bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-lg space-y-5 mb-6">
                         <div class="space-y-6 pt-4">
                             <!-- Badges HTML -->
@@ -86,11 +102,11 @@
                     </div>
                 </div>
                  <!-- Feedback Element -->
-                 <div id="appFeedback" class="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+                 <div id="appFeedback"></div>
             </div>
 
             <!-- Colonne Droite -->
-            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-800"> <!-- Scrollbar via classes Tailwind -->
+            <aside id="dashboardColumn" class="md:col-span-1 h-full overflow-y-auto custom-scrollbar">
                 <div id="dashboardContent" class="sticky top-0 space-y-5 bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-5 rounded-xl shadow-2xl">
                     <!-- Jauges -->
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 shadow-inner space-y-3">
@@ -144,46 +160,50 @@
                  </div>
             </div>
         </div>
-         <!-- Feedback Element (défini mais caché) -->
-         <div id="appFeedback" class="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+         <!-- Feedback Element -->
+         <div id="appFeedback"></div>
     </div>
 
     <!-- Appel du module JS -->
     <script type="module">
-        // Import dynamique pour attendre DOM et potentiellement Firebase
+        // Attendre que le DOM soit prêt ET que Firebase soit prêt
+        let appInitialized = false;
+
+        function attemptInitApp() {
+            if (appInitialized || !window.firebaseServices) { return; }
+            console.log("AttemptInitApp: Initialisation...");
+            appInitialized = true;
+
+            import('./app.mjs') // Chemin relatif standard
+                .then(({ App }) => {
+                    console.log("Module App chargé.");
+                    if (App && typeof App.init === 'function') { App.init(); }
+                    else { console.error("Objet App ou App.init non trouvé !"); }
+                })
+                .catch(error => {
+                    console.error("Erreur import app.mjs:", error);
+                    const errorDiv = document.createElement('div'); errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]'; errorDiv.textContent = 'Erreur critique: Module principal.'; document.body.prepend(errorDiv);
+                });
+        }
+
+        // 1. Écouter DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM Chargé. Attente de Firebase...");
-
-            const initializeApp = () => {
-                import('./app.mjs') // Chemin relatif standard
-                    .then(({ App }) => {
-                        console.log("Module App chargé.");
-                        if (!App.state) { App.init(); }
-                        else { console.log("App déjà initialisée (sécurité import)."); }
-                    })
-                    .catch(error => {
-                        console.error("Erreur import app.mjs:", error);
-                        // Afficher erreur UI
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center z-[100]';
-                        errorDiv.textContent = 'Erreur critique: Impossible de charger le module principal.';
-                        document.body.prepend(errorDiv);
-                    });
-            };
-
-            // Vérifier si Firebase est déjà prêt
-            if (window.firebaseServices || window.firebaseIsReady) {
-                console.log("Firebase déjà prêt au DOMContentLoaded.");
-                initializeApp();
+            console.log("DOM Chargé.");
+            // Essayer d'initialiser SI Firebase est déjà prêt (cas rapide)
+            if (window.firebaseIsReady || window.firebaseServices) {
+                 console.log("Firebase déjà prêt au DOMContentLoaded.");
+                 attemptInitApp();
             } else {
-                // Sinon, écouter l'événement personnalisé
-                console.log("Attente de l'événement firebaseReady...");
-                document.addEventListener('firebaseReady', () => {
-                    console.log("Événement firebaseReady reçu.");
-                    initializeApp();
-                }, { once: true });
+                 console.log("DOM prêt, attente de Firebase via event...");
             }
         });
+
+        // 2. Écouter l'événement Firebase prêt
+        document.addEventListener('firebaseReady', () => {
+            console.log("Événement firebaseReady reçu.");
+            attemptInitApp();
+        }, { once: true }); // Écouter une seule fois
+
     </script>
 
 </body>

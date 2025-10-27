@@ -1,7 +1,7 @@
 // =======================================
-// FICHIER MODULE JAVASCRIPT: app.mjs (Ajout Champs Paiement)
+// FICHIER MODULE JAVASCRIPT: app.mjs (Statut R1 Auto + Retour Dashboard)
 // =======================================
-import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Ajout deleteField
+import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- CONSTANTES (inchangées, version courte) ---
 export const allBadgeNames=["Chomage/Instable","Actif/Libéral","Retraité","< 3h/sem.","3-5h/sem.","+5h/sem.","+8h/sem.","18-35 ans","36-50 ans","51-65 ans","+ 65 ans","Plaisir","Pas d'objectif","Jouer des solos","Rêve jeunesse","Challenge perso","Technique","Composer","Jeu en groupe","Liberté manche","Improviser librement","Parcours structuré","< 1 an","1-5 ans","5-10 ans","+ 10 ans","Pas de cours","< 1 an cours","1-3 ans cours","+ 3 ans cours","Pop/Chanson","Metal","Jazz/Funk","Blues/Rock","Pas de matériel","Électrique","Home Studio","Aucun","Stagnation","Abandon","Grosse frustration"];
@@ -9,7 +9,7 @@ export const badgeCategories={statut:[0,1,2],temps:[3,4,5,6],age:[7,8,9,10],doul
 export const badgeData={0:[0,0,0,-2,0],1:[1,0,0,2,0],2:[3,0,0,3,0],3:[0,0,0,0,0],4:[2,0,0,0,0],5:[4,0,0,0,0],6:[5,0,0,0,0],7:[0,0,0,0,0],8:[0,1,0,0,0],9:[0,2,0,0,0],10:[0,2,0,0,0],11:[0,-1,-2,0,0],12:[0,-5,-2,0,0],13:[0,2,0,0,0],14:[0,2,1,0,0],15:[0,2,2,0,0],16:[0,2,0,0,0],17:[0,0,2,0,0],18:[0,0,3,0,0],19:[0,0,4,0,0],20:[0,0,5,0,0],21:[0,0,5,0,0],22:[0,0,0,0,1],23:[0,0,0,0,2],24:[0,0,0,0,3],25:[0,0,0,0,4],26:[0,1,0,0,1],27:[0,1,0,0,2],28:[0,2,0,0,3],29:[0,3,0,0,3],30:[0,0,0,0,0],31:[0,0,0,0,0],32:[0,0,1,0,0],33:[0,0,2,0,0],34:[0,0,0,-2,0],35:[0,0,0,1,0],36:[0,0,0,3,0],37:[0,-3,-1,0,0],38:[0,1,0,0,0],39:[0,2,0,0,0],40:[0,5,0,0,0]};
 export const maxScores={dispo:8,motiv:18,adeq:25,capa:6,competence:7};
 export const SEUILS={motiv:5,capa:2,total:30,dispo:3,adeq:3,competence:3};
-export const initialState={prospectFirstName:'',prospectLastName:'',prospectDate:'',customNotes:'',currentDocId: null, isViewingMode: false, context:{statut:'',temps:'',age:'',experience:'',parcours:'',materiel:[],douleur:[],consequence:'',style:[]}};
+export const initialState={prospectFirstName:'',prospectLastName:'',prospectDate:'',customNotes:'',currentDocId: null, isViewingMode: false, currentStatus: null, context:{statut:'',temps:'',age:'',experience:'',parcours:'',materiel:[],douleur:[],consequence:'',style:[]}}; // Ajout currentStatus
 export const badgeColorRanks={0:'red',1:'green',2:'rainbow',3:'red',4:'green',5:'rainbow',6:'rainbow',7:'orange',8:'orange',9:'green',10:'green',11:'red',12:'red-dark',13:'green',14:'orange',15:'orange',16:'green',17:'green',18:'rainbow',19:'rainbow',20:'rainbow',21:'rainbow',22:'orange',23:'orange',24:'green',25:'rainbow',26:'orange',27:'green',28:'green',29:'rainbow',30:'orange',31:'orange',32:'green',33:'rainbow',34:'red-dark',35:'green',36:'rainbow',37:'red',38:'green',39:'green',40:'rainbow'};
 export const colorRankOrder={'red-dark':0,'red':1,'orange':2,'green':3,'rainbow':4};
 export const tagStyles={base:"w-[140px] min-h-[44px] inline-flex items-center justify-center text-center p-1 rounded-lg text-xs font-medium transition-all duration-200 shadow-md border",inactive:"bg-slate-700 text-slate-300 hover:bg-slate-600",active:{'rainbow':"bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg -translate-y-0.5",'green':"bg-green-600 text-white shadow-lg -translate-y-0.5",'orange':"bg-amber-600 text-white shadow-lg -translate-y-0.5",'red':"bg-red-600 text-white shadow-lg -translate-y-0.5",'red-dark':"bg-red-800 text-white shadow-lg -translate-y-0.5"},borders:{'rainbow':"border-purple-700",'green':"border-green-700",'orange':"border-amber-700",'red':"border-red-700",'red-dark':"border-red-900"}};
@@ -24,20 +24,49 @@ export const App = {
     gaugeLabelColors: gaugeLabelColors,
     diagBorderColors: diagBorderColors,
 
-    async init() { /* ... comme avant ... */
+    async init() {
         this.state = structuredClone(initialState);
         this.cacheElements();
         const params = new URLSearchParams(window.location.search);
         const docIdParam = params.get('docId');
-        if (docIdParam) { this.state.isViewingMode = true; await this.loadProspectData(docIdParam); }
-        else { this.state.isViewingMode = false; this.state.prospectFirstName = params.get('firstName') || ''; this.state.prospectLastName = params.get('lastName') || ''; this.state.prospectDate = params.get('date') || ''; if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; } if (this.state.prospectFirstName && this.state.prospectDate) { await this.findOrCreateProspectDoc(); } else { this.showFeedback("Erreur: Infos Prospect Manquantes!", true); } }
-        if (this.elements.mainBackButton) { this.elements.mainBackButton.href = `script.html?${params.toString()}`; } if (this.elements.resetButton) { this.elements.resetButton.href = 'index.html'; } this.renderAllTags(); this.bindEvents(); this.updateDashboard(); this.switchScreen('main');
+
+        if (docIdParam) {
+            // Mode Consultation/Modification
+            this.state.isViewingMode = true;
+            await this.loadProspectData(docIdParam); // Charge data + currentStatus
+
+            // Si le statut actuel est R1 Planifié, le mettre a jour a R1 Effectué
+            if (this.state.currentStatus === 'R1 Scheduled') {
+                await this.updateProspectStatusOnly('R1 Completed', null, false); // Mettre a jour discretement
+                this.state.currentStatus = 'R1 Completed'; // Mettre a jour l'etat local aussi
+                console.log(`Statut automatiquement mis à jour: R1 Completed pour ${this.state.currentDocId}`);
+            }
+
+        } else {
+            // Mode Nouveau R1 (normalement plus utilise si creation sur index.html)
+            this.state.isViewingMode = false;
+            // ... (logique precedente si necessaire, mais peut etre retiree)
+            this.showFeedback("Erreur: Aucun ID de prospect fourni.", true);
+            // Idealement rediriger vers dashboard ou index
+             window.location.href = 'index.html'; // Rediriger si pas d'ID
+             return; // Arreter l'init ici
+        }
+
+        // Configurer les liens de navigation
+        if (this.elements.mainBackButton) { this.elements.mainBackButton.href = `dashboard.html`; } // Retour au Dashboard
+        if (this.elements.resetButton) { this.elements.resetButton.href = 'index.html'; }
+
+        this.renderAllTags();
+        this.bindEvents();
+        this.updateDashboard();
+        this.switchScreen('main');
     },
+
     cacheElements() { /* ... comme avant ... */ const $ = (id) => document.getElementById(id); const ids = ['mainScreen', 'giaPitchScreen', 'mainBackButton', 'resetButton', 'mainProspectName', 'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer', 'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer', 'contextParcoursContainer', 'contextStyleContainer', 'contextMaterielContainer', 'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence', 'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel', 'totalScore', 'qualificationStatus', 'qualificationText', 'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle', 'questionCoachList', 'showPitchButton', 'notesTextarea', 'pitchBackButton', 'scheduleR2ConfirmButton', 'rejectR2Button', 'lostReasonInput', 'lostReasonContainer', 'coachToggleTrigger', 'coachToggleIcon', 'exportPdfButton', 'dashboardColumn', 'dashboardContent', 'mainGrid', 'leftColumn', 'leftColumnContent']; ids.forEach(id => { const el = $(id); if (el) { this.elements[id] = el; } }); },
     bindEvents() { /* ... comme avant ... */ this.elements.mainScreen?.addEventListener('click', (event) => { const b = event.target.closest('button[data-type]'); if (b) { this.handleTagClick(b); } }); this.elements.notesTextarea?.addEventListener('input', (e) => this.handleNotesInput(e)); this.elements.coachToggleTrigger?.addEventListener('click', () => { this.elements.questionCoachList?.classList.toggle('hidden'); this.elements.coachToggleIcon?.classList.toggle('-rotate-180'); }); this.elements.exportPdfButton?.addEventListener('click', () => this.exportToPDF()); this.elements.showPitchButton?.addEventListener('click', () => this.switchScreen('giaPitch')); this.elements.pitchBackButton?.addEventListener('click', () => this.switchScreen('main')); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => this.confirmR2Schedule()); this.elements.rejectR2Button?.addEventListener('click', () => this.confirmR2Rejection()); this.elements.rejectR2Button?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.remove('hidden'); }); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.add('hidden'); }); },
     switchScreen(screenName) { /* ... comme avant ... */ const s = { main: this.elements.mainScreen, giaPitch: this.elements.giaPitchScreen }; if (!s.main || !s.giaPitch) return; s.main.classList.add('hidden'); s.main.classList.remove('grid'); s.giaPitch.classList.add('hidden'); s.giaPitch.classList.remove('flex'); if (screenName === 'main') { s.main.classList.remove('hidden'); s.main.classList.add('grid'); } else if (screenName === 'giaPitch') { s.giaPitch.classList.remove('hidden'); s.giaPitch.classList.add('flex'); } },
-    handleTagClick(btn) { /* ... comme avant + update ... */ const { type, value } = btn.dataset; if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) { this.state.context[type] = (this.state.context[type] === value) ? '' : value; } else { const arr = this.state.context[type]; if (!arr) return; const index = arr.indexOf(value); if (index > -1) { arr.splice(index, 1); } else { arr.push(value); } } this.renderAllTags(); this.updateDashboard(); this.updateProspectDoc(); },
-    handleNotesInput(event) { /* ... comme avant + update ... */ const parts = event.target.value.split("\n\n--- NOTES PERSO ---\n"); this.state.customNotes = parts.length > 1 ? parts.slice(1).join("\n\n--- NOTES PERSO ---\n").trim() : ''; this.updateProspectDoc(); },
+    handleTagClick(btn) { /* ... comme avant ... */ const { type, value } = btn.dataset; if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) { this.state.context[type] = (this.state.context[type] === value) ? '' : value; } else { const arr = this.state.context[type]; if (!arr) return; const index = arr.indexOf(value); if (index > -1) { arr.splice(index, 1); } else { arr.push(value); } } this.renderAllTags(); this.updateDashboard(); this.updateProspectDoc(); },
+    handleNotesInput(event) { /* ... comme avant ... */ const parts = event.target.value.split("\n\n--- NOTES PERSO ---\n"); this.state.customNotes = parts.length > 1 ? parts.slice(1).join("\n\n--- NOTES PERSO ---\n").trim() : ''; this.updateProspectDoc(); },
     updateDashboard() { /* ... comme avant ... */ const { context } = this.state; const sc = this.calculateScores(context); const iR = context.statut && context.temps && context.douleur.length > 0 && context.consequence; const ql = this.updateQualification(sc, context, iR); this.updateGauges(sc); this.updateFinalDiagnostic(sc, ql, iR, context); this.updateQuestionCoach(sc, context, iR); this.updateNotes(); if (this.elements.totalScore) { this.elements.totalScore.textContent = sc.total; } },
     calculateScores(context) { /* ... comme avant ... */ const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 }; const addPoints = (bt) => { if (!bt) return; const idx = allBadgeNames.indexOf(bt); if (idx === -1) return; const pts = badgeData[idx]; if (pts) { pts.forEach((p, i) => { scores[Object.keys(scores)[i]] += p; }); } }; addPoints(context.statut); addPoints(context.temps); addPoints(context.age); addPoints(context.consequence); addPoints(context.experience); addPoints(context.parcours); context.materiel.forEach(addPoints); context.douleur.forEach(addPoints); context.style.forEach(addPoints); Object.keys(scores).forEach(key => { scores[key] = Math.max(0, Math.min(scores[key], maxScores[key])); }); scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence; return scores; },
     updateGauges(scores) { /* ... comme avant ... */ const uG = (g, l, s, m, t, tk) => { if (!g || !l) return; const p = (s / m) * 100, pc = Math.max(0, Math.min(100, p)); g.style.width = `${pc}%`; g.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500'); Object.values(this.gaugeLabelColors).forEach(cc => l.classList.remove(cc)); if (tk === 'motiv' || tk === 'capa') { l.classList.add(s > t ? this.gaugeLabelColors.green : this.gaugeLabelColors.red); } else { l.classList.add(s >= t ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber); } if (pc < (t / m * 100)) { g.classList.add('bg-red-500'); } else if (pc < 80) { g.classList.add('bg-amber-500'); } else { g.classList.add('bg-green-500'); } }; uG(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, scores.dispo, maxScores.dispo, SEUILS.dispo, 'dispo'); uG(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, scores.motiv, maxScores.motiv, SEUILS.motiv, 'motiv'); uG(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, scores.adeq, maxScores.adeq, SEUILS.adeq, 'adeq'); uG(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, scores.capa, maxScores.capa, SEUILS.capa, 'capa'); uG(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, scores.competence, maxScores.competence, SEUILS.competence, 'competence'); },
@@ -50,28 +79,68 @@ export const App = {
     async exportToPDF() { /* ... comme avant ... */ const pN=`${this.state.prospectFirstName} ${this.state.prospectLastName}`;const {prospectDate:pD}=this.state;const fn=`Fiche_Qualif_GIA_${pN.replace(/\s+/g,'_')||'Prospect'}_${pD||'date'}.pdf`;const sp=document.createElement('div');sp.id='pdf-spinner';sp.innerHTML='<span>Génération PDF...</span>';document.body.appendChild(sp);const mg=this.elements.mainGrid,lc=this.elements.leftColumn,lcc=this.elements.leftColumnContent,dc=this.elements.dashboardColumn,dco=this.elements.dashboardContent;const oS={gtc:mg?.style.gridTemplateColumns,lo:lc?.style.overflow,lco:lcc?.style.overflowY,dco:dc?.style.overflowY,dcp:dco?.style.position};try{if(mg)mg.style.gridTemplateColumns='2fr 1fr';if(lc)lc.style.overflow='visible';if(lcc)lcc.style.overflowY='visible';if(dc)dc.style.overflowY='visible';if(dco)dco.style.position='relative';await new Promise(r=>setTimeout(r,100));const {jsPDF}=window.jspdf;if(!jsPDF||!window.html2canvas)throw new Error("Libs PDF manquantes!");const cv=await window.html2canvas(this.elements.mainScreen,{useCORS:true,backgroundColor:'#0f172a',scale:1.5,logging:false});const iD=cv.toDataURL('image/png');const pdf=new jsPDF('l','mm','a4');const pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight();const cW=cv.width,cH=cv.height;const cR=cW/cH,pR=pW/pH;let iFW,iFH;if(cR>pR){iFW=pW-20;iFH=iFW/cR;}else{iFH=pH-20;iFW=iFH*cR;}const x=(pW-iFW)/2,y=(pH-iFH)/2;pdf.addImage(iD,'PNG',x,y,iFW,iFH);pdf.save(fn);}catch(e){console.error("Err PDF:",e);}finally{if(mg)mg.style.gridTemplateColumns=oS.gtc;if(lc)lc.style.overflow=oS.lo;if(lcc)lcc.style.overflowY=oS.lco;if(dc)dc.style.overflowY=oS.dco;if(dco)dco.style.position=oS.dcp;sp.remove();} },
 
     // --- MISE A JOUR DOC EXISTANT ---
-    async updateProspectDoc() { /* ... comme avant ... */ const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId; if (!db || !docId) return; try { const { appId } = window.firebaseServices; const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const docRef = doc(db, collectionPath, docId); const scores = this.calculateScores(this.state.context); const qualification = this.updateQualification(scores, this.state.context, true); const dataToUpdate = { context: this.state.context, customNotes: this.state.customNotes, scores: scores, qualificationStatus: qualification.status, qualificationText: qualification.text, lastUpdatedAt: Timestamp.now() }; await updateDoc(docRef, dataToUpdate); } catch (error) { console.error(`Err MAJ doc ${docId}:`, error); this.showFeedback("Erreur sauvegarde auto!", true); } },
-
-    // --- Chercher ou creer le doc prospect (avec nouveaux champs paiement) ---
-    async findOrCreateProspectDoc() {
-        const { db, auth, appId } = window.firebaseServices || {}; if (!db || !appId || !this.state.prospectFirstName || !this.state.prospectDate) { this.showFeedback("Erreur: Sauvegarde R1 impossible", true); return; } const cP = `artifacts/${appId}/public/data/r1_closings`; const pN = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; const pD = this.state.prospectDate; try { const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", pD)); const qS = await getDocs(q); if (!qS.empty) { const eD = qS.docs[0]; this.state.currentDocId = eD.id; this.showFeedback("Prospect R1 déjà enregistré.", false); } else { const sc = this.calculateScores(this.state.context); const qu = this.updateQualification(sc, this.state.context, false);
-            // --- MODIFICATION ICI: Ajout des champs paiement initialisés ---
-            const nD = { prospectFirstName: this.state.prospectFirstName, prospectLastName: this.state.prospectLastName, prospectName: pN, prospectDate: pD, context: this.state.context, customNotes: '', scores: sc, qualificationStatus: qu.status, qualificationText: qu.text, savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Completed', amountCollected: 0, recurringAmount: 0,
-                         paymentType: null, // 'unique' ou 'installments'
-                         startDateOfPayment: null, // Timestamp ou string YYYY-MM-DD
-                         installmentAmount: 0,
-                         numberOfInstallments: 0,
-                         lostReason: "" // Initialiser la raison de perte
-                       };
-            // --- FIN MODIFICATION ---
-            const dR = await addDoc(collection(db, cP), nD); this.state.currentDocId = dR.id; this.showFeedback("Prospect R1 enregistré.", false); } } catch (e) { console.error("Err findOrCreate:", e); this.state.currentDocId = null; this.showFeedback("Erreur sauvegarde R1!", true); }
+    async updateProspectDoc() {
+        const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId;
+        // MAJ uniquement si on a un ID (donc pas en creation initiale)
+        if (!db || !docId) { return; }
+        try {
+            const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId);
+            const scores = this.calculateScores(this.state.context); const qual = this.updateQualification(scores, this.state.context, true);
+            const dTU = { context: this.state.context, customNotes: this.state.customNotes, scores: scores, qualificationStatus: qual.status, qualificationText: qual.text, lastUpdatedAt: Timestamp.now() };
+            await updateDoc(dR, dTU);
+            // console.log(`Doc ${docId} MAJ auto.`); // Commenté pour moins de logs
+        } catch (error) { console.error(`Err MAJ auto doc ${docId}:`, error); this.showFeedback("Erreur sauvegarde auto!", true); }
     },
 
-    // --- Mettre a jour le STATUT VENTE et raison ---
-    async updateProspectStatus(newStatus, reason = "") { /* ... comme avant (avec lostReason) ... */ const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId; const button = (newStatus === 'Lost') ? this.elements.rejectR2Button : this.elements.scheduleR2ConfirmButton; if (!db || !docId || !button) { console.error("Err MAJ statut: prerequis manquants."); this.showFeedback("Erreur MAJ statut!", true, button); return; } button.disabled = true; button.textContent = 'Enregistrement...'; button.classList.add('opacity-70','cursor-not-allowed'); try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dTU = { status: newStatus, lastUpdatedAt: Timestamp.now() }; if (newStatus === 'Lost') { dTU.lostReason = reason || ""; } else { dTU.lostReason = deleteField(); } /* Supprimer la raison si pas Lost */ await updateDoc(dR, dTU); const sM = (newStatus === 'Lost') ? "Prospect marqué 'Perdu'" : "Passage en R2 enregistré!"; this.showFeedback(sM, false, button, "Fait ✓"); setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500); } catch (e) { console.error(`Err MAJ statut (${newStatus}) pour ${docId}:`, e); this.showFeedback("Erreur MAJ statut!", true, button); button.disabled = false; button.textContent = (newStatus === 'Lost') ? "Ne passe pas en R2" : "Valider Passage en R2"; button.classList.remove('opacity-70','cursor-not-allowed'); } },
-    confirmR2Schedule() { this.updateProspectStatus('R2 Scheduled'); },
-    confirmR2Rejection() { const reason = this.elements.lostReasonInput?.value.trim() || ""; this.updateProspectStatus('Lost', reason); },
-    async loadProspectData(docId) { /* ... comme avant ... */ const { db } = window.firebaseServices || {}; if (!db) { this.showFeedback("Erreur: DB non prête", true); return; } try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dS = await getDoc(dR); if (dS.exists()) { const data = dS.data(); this.state.currentDocId = docId; this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || ''; this.state.prospectDate = data.prospectDate || ''; this.state.context = { ...initialState.context, ...(data.context || {}) }; this.state.context.materiel = Array.isArray(this.state.context.materiel) ? this.state.context.materiel : []; this.state.context.douleur = Array.isArray(this.state.context.douleur) ? this.state.context.douleur : []; this.state.context.style = Array.isArray(this.state.context.style) ? this.state.context.style : []; this.state.customNotes = data.customNotes || ''; if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = data.prospectName || 'Inconnu'; } this.showFeedback("Fiche prospect chargée.", false); } else { console.error(`Doc ${docId} non trouvé!`); this.showFeedback("Erreur: Fiche non trouvée!", true); this.state.currentDocId = null; } } catch (error) { console.error(`Err chargement doc ${docId}:`, error); this.showFeedback("Erreur chargement fiche!", true); this.state.currentDocId = null; } },
-    showFeedback(message, isError = false, buttonElement = null, successText = null) { /* ... comme avant ... */ let fE=document.getElementById('appFeedback'); if(!fE){fE=document.createElement('div'); fE.id='appFeedback'; fE.className='fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none'; document.body.appendChild(fE);} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0'); fE.classList.add(isError?'bg-red-600':'bg-green-600','opacity-100','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); }
+    // --- Chercher ou creer le doc prospect (Initialisation R1 Planifié) ---
+    async findOrCreateProspectDoc() { // Modifié pour initialiser status à R1 Scheduled
+        const { db, auth, appId } = window.firebaseServices || {}; if (!db || !appId || !this.state.prospectFirstName || !this.state.prospectDate) { this.showFeedback("Erreur: Sauvegarde R1 impossible", true); return; } const cP = `artifacts/${appId}/public/data/r1_closings`; const pN = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; const pD = this.state.prospectDate; try { const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", pD)); const qS = await getDocs(q); if (!qS.empty) { const eD = qS.docs[0]; this.state.currentDocId = eD.id; this.state.currentStatus = eD.data().status || 'R1 Scheduled'; /* Stocker le statut existant */ this.showFeedback("Prospect R1 déjà existant.", false); } else { const sc = {}; const qu = {status:'N/A', text:''}; const nD = { prospectFirstName: this.state.prospectFirstName, prospectLastName: this.state.prospectLastName, prospectName: pN, prospectDate: pD, context: {}, customNotes: '', scores: sc, qualificationStatus: qu.status, qualificationText: qu.text, savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Scheduled', /* Initialisation ici */ amountCollected: 0, recurringAmount: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: "" }; const dR = await addDoc(collection(db, cP), nD); this.state.currentDocId = dR.id; this.state.currentStatus = 'R1 Scheduled'; this.showFeedback("Prospect R1 enregistré comme 'Planifié'.", false); } } catch (e) { console.error("Err findOrCreate:", e); this.state.currentDocId = null; this.showFeedback("Erreur sauvegarde R1!", true); }
+    },
+
+     // --- Mettre a jour UNIQUEMENT le statut vente et raison ---
+     // 'button' est optionnel, showFeedback aussi
+    async updateProspectStatusOnly(newStatus, reason = "", showFeedbackMsg = true) {
+        const { db } = window.firebaseServices || {};
+        const docId = this.state.currentDocId;
+        if (!db || !docId) { console.error("Impossible MAJ statut: ID/DB manquants."); if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; }
+        try {
+            const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId);
+            const dTU = { status: newStatus, lastUpdatedAt: Timestamp.now() };
+            if (newStatus === 'Lost') { dTU.lostReason = reason || ""; }
+            else { dTU.lostReason = deleteField(); } // Supprimer la raison si pas Lost
+            await updateDoc(dR, dTU);
+            console.log(`Statut doc ${docId} MAJ: ${newStatus}`);
+            this.state.currentStatus = newStatus; // Mettre a jour l'etat local
+             if(showFeedbackMsg) this.showFeedback(`Statut mis à jour: ${newStatus.replace('Scheduled', 'Planifié').replace('Completed', 'Effectué')}`, false);
+             return true; // Succes
+        } catch (e) { console.error(`Err MAJ statut (${newStatus}) pour ${docId}:`, e); if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; } // Echec
+    },
+
+    // --- Handlers pour boutons Pitch ---
+    async confirmR2Schedule() {
+        const success = await this.updateProspectStatusOnly('R2 Scheduled');
+        if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); }
+        // Gerer feedback visuel sur bouton ici si besoin
+    },
+    async confirmR2Rejection() {
+        const reason = this.elements.lostReasonInput?.value.trim() || "";
+        const success = await this.updateProspectStatusOnly('Lost', reason);
+        if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); }
+        // Gerer feedback visuel sur bouton ici si besoin
+    },
+
+     // --- Charger donnees prospect via docId ---
+    async loadProspectData(docId) {
+        const { db } = window.firebaseServices || {}; if (!db) { this.showFeedback("Erreur DB", true); return; } try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dS = await getDoc(dR); if (dS.exists()) { const data = dS.data(); this.state.currentDocId = docId; this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || ''; this.state.prospectDate = data.prospectDate || ''; this.state.context = { ...initialState.context, ...(data.context || {}) }; this.state.context.materiel = Array.isArray(this.state.context.materiel) ? this.state.context.materiel : []; this.state.context.douleur = Array.isArray(this.state.context.douleur) ? this.state.context.douleur : []; this.state.context.style = Array.isArray(this.state.context.style) ? this.state.context.style : []; this.state.customNotes = data.customNotes || ''; this.state.currentStatus = data.status || 'R1 Scheduled'; /* Stocker statut courant */ if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = data.prospectName || 'Inconnu'; } this.showFeedback("Fiche prospect chargée.", false); } else { console.error(`Doc ${docId} non trouvé!`); this.showFeedback("Erreur: Fiche non trouvée!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; } } catch (error) { console.error(`Err chargement doc ${docId}:`, error); this.showFeedback("Erreur chargement fiche!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; }
+    },
+
+    showFeedback(message, isError = false, buttonElement = null, successText = null) {
+        let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;}
+        fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); // Reset propre
+        fE.classList.add(isError?'bg-red-600':'bg-green-600','show');
+        if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;}
+        // Re-cacher apres delai
+        setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000);
+     }
 };
 

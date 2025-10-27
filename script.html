@@ -56,19 +56,21 @@
             <h1 class="text-2xl md:text-3xl font-bold text-amber-300 mb-2">Point Important Avant de Commencer</h1>
             <!-- Contenu du script de cadrage -->
             <div class="space-y-4 text-gray-200 md:text-lg text-base overflow-y-auto custom-scrollbar flex-grow pr-2">
+                <!-- Script Complet Restauré -->
                 <p>Alors, juste un point très important avant de commencer. Comme je l'explique dans la vidéo de présentation, la Guitare Impro Académie est une formation <span class="font-semibold text-white">accélérée et intensive</span> qui demande beaucoup d'engagement, de la part de l'apprenti et du mien.</p>
                 <p>L'objectif est de te rendre <span class="font-semibold text-white">totalement autonome en 9 mois</span> et t'assurer un niveau assez solide pour maîtriser ton instrument, que tu veuilles jouer en groupe ou simplement pour ton plaisir personnel.</p>
                 <p class="font-semibold text-amber-300">Déjà, avant d'aller plus loin, est-ce que tu avais bien compris les objectifs de cette formation ? (9 mois, maîtrise de l'instrument, potentiellement jeu en groupe...)</p>
                 <p class="text-sm text-gray-400 italic">[Attendre la réponse positive du prospect]</p>
                 <p>Parfait. Cet appel est un <span class="font-semibold text-white">appel de qualification</span>, c'est à dire que je vais te poser plusieurs questions et les réponses vont me permettre de renseigner un outil qui tranchera si ce programme est réellement la bonne solution pour toi, ou s'il est préférable de te diriger vers des cours de guitare standard comme une école de musique ou un professeur particulier.</p>
                 <p class="font-semibold text-amber-300">Ça te va, on y va pour les questions ?</p>
-                 <!-- Ajoutez ici d'autres lignes de votre script si nécessaire -->
+                <!-- Fin Script Complet -->
             </div>
             <!-- Boutons de navigation -->
             <div class="flex justify-between items-center pt-4 mt-auto border-t border-slate-700/50">
                 <button id="cadrageBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
                     &larr; Retour
                 </button>
+                <!-- Ce bouton va maintenant déclencher la MAJ Firestore PUIS rediriger -->
                 <button id="cadrageContinueButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 disabled:opacity-50 disabled:cursor-wait">
                     Continuer vers Qualification &rarr;
                 </button>

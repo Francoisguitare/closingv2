@@ -4,66 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - GIA Closing</title>
+    <!-- Script Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <style type="text/tailwindcss">
-        @layer base { body { font-family: 'Inter', sans-serif; } }
-        @layer components {
-            .kpi-card { @apply bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500; box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
-            .kpi-value { @apply text-4xl font-bold text-teal-300 block mb-1; }
-            .kpi-label { @apply text-sm text-gray-400 font-medium uppercase tracking-wider; }
-            th { @apply px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; }
-            td { @apply px-4 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
-            tr:last-child td { @apply border-b-0; }
-            .status-badge { @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap; }
-            .status-r1 { @apply bg-blue-600 text-blue-100; } .status-r2 { @apply bg-purple-600 text-purple-100; } .status-closed { @apply bg-green-600 text-green-100; } .status-lost { @apply bg-red-600 text-red-100; } .status-other { @apply bg-gray-600 text-gray-100; }
-            .modal { @apply fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50; }
-            .modal-content { @apply bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4; } /* Augmenté max-w-lg */
-            /* Cacher/Afficher les champs paiement échelonné */
-            .installments-fields.hidden { @apply !hidden; }
-        }
+    <!-- Styles CSS de base (NON-Tailwind ou styles simples) -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Couleurs pour les badges de statut (sans @apply) */
+        .status-r1 { background-color: #2563eb; color: #dbeafe; } /* blue-600 / blue-100 */
+        .status-r2 { background-color: #9333ea; color: #f3e8ff; } /* purple-600 / purple-100 */
+        .status-closed { background-color: #16a34a; color: #dcfce7; } /* green-600 / green-100 */
+        .status-lost { background-color: #dc2626; color: #fee2e2; } /* red-600 / red-100 */
+        .status-other { background-color: #4b5563; color: #f3f4f6; } /* gray-600 / gray-100 */
+        /* Cacher/Afficher les champs paiement échelonné */
+        .installments-fields.hidden { display: none; }
+        /* Style minimal pour le modal (Tailwind fera le reste) */
+        .modal.hidden { display: none; }
     </style>
 </head>
+{/* Ajout des classes de base directement sur body */}
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white min-h-screen p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto space-y-8">
-        <!-- Header, Filtres, KPIs, Graphique (inchangés) -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8"> <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1> <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40"> + Nouveau R1 </a> </header>
-        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4"> <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2> <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="startDate" class="text-sm font-medium text-gray-400">Du</label><input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div> <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="endDate" class="text-sm font-medium text-gray-400">Au</label><input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div> <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">Appliquer</button> <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button> </section>
-        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6"> <div class="kpi-card"><span id="kpiR1Count" class="kpi-value">0</span><span class="kpi-label">R1 Effectués</span></div> <div class="kpi-card"><span id="kpiR2Count" class="kpi-value">0</span><span class="kpi-label">R2 Planifiés</span></div> <div class="kpi-card"><span id="kpiClosingCount" class="kpi-value">0</span><span class="kpi-label">Closings</span></div> <div class="kpi-card"><span id="kpiConversionRate" class="kpi-value">0%</span><span class="kpi-label">Conv. R1 → Closé</span></div> <div class="kpi-card"><span id="kpiCashTotal" class="kpi-value">0€</span><span class="kpi-label">Cash Encaissé</span></div> <div class="kpi-card"><span id="kpiCashRecurring" class="kpi-value">0€</span><span class="kpi-label">Cash Récurrent</span></div> </section>
+        {/* Header */}
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1>
+            <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                + Nouveau R1
+            </a>
+        </header>
+
+        {/* Filtres */}
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+            <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
+            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
+                <label for="startDate" class="text-sm font-medium text-gray-400">Du</label>
+                <input type="date" id="startDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
+            </div>
+            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
+                <label for="endDate" class="text-sm font-medium text-gray-400">Au</label>
+                <input type="date" id="endDate" class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto">
+            </div>
+            <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto">Appliquer</button>
+            <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button>
+        </section>
+
+        {/* KPIs (Classes appliquées directement) */}
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            {/* KPI Card Structure : div avec toutes les classes Tailwind */}
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiR1Count" class="text-4xl font-bold text-teal-300 block mb-1">0</span>
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span>
+            </div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiR2Count" class="text-4xl font-bold text-teal-300 block mb-1">0</span>
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Planifiés</span>
+            </div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiClosingCount" class="text-4xl font-bold text-teal-300 block mb-1">0</span>
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span>
+            </div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiConversionRate" class="text-4xl font-bold text-teal-300 block mb-1">0%</span>
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 → Closé</span>
+            </div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiCashTotal" class="text-4xl font-bold text-teal-300 block mb-1">0€</span>
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Encaissé</span>
+            </div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
+                <span id="kpiCashRecurring" class="text-4xl font-bold text-teal-300 block mb-1">N/A</span> <!-- Reste N/A pour l'instant -->
+                <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent</span>
+            </div>
+        </section>
+
+        <!-- Graphique -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700"><h2 class="text-xl font-semibold text-gray-300 mb-4">Progression (Placeholder)</h2><div id="chartContainer" class="h-64 flex items-center justify-center text-gray-500">Graphique à venir...</div></section>
 
-        <!-- Table Détails (inchangée pour l'instant) -->
+        <!-- Table Détails -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
              <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
              <div class="min-w-[900px]">
+                 {/* Table avec th/td stylisés via classes Tailwind */}
                  <table class="w-full divide-y divide-slate-700 table-fixed">
-                    <thead class="sticky top-[4.5rem] bg-slate-700 z-10">
+                    <thead class="sticky top-[4.5rem] z-10">
                         <tr>
-                            <th class="w-1/12 px-2">Date R1</th>
-                            <th class="w-2/12 px-2">Prospect</th>
-                            <th class="w-2/12 px-2">Statut Qualif.</th>
-                            <th class="w-[5%] text-center px-1">Score</th>
-                            <th class="w-[10%] px-2">Statut Vente</th>
-                            <th class="w-1/12 text-right px-2">Encaissé</th>
-                            <th class="w-1/12 text-right px-2">Récurrent</th>
-                            <th class="w-2/12 text-center px-2">Actions</th>
+                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date R1</th>
+                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prospect</th>
+                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Qualif.</th>
+                            <th class="w-[5%] px-4 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                            <th class="w-[10%] px-4 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Vente</th>
+                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Encaissé</th>
+                            <th class="w-1/12 px-4 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Récurrent</th>
+                            <th class="w-2/12 px-4 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700">
-                        <tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-gray-400 px-4 whitespace-nowrap text-sm border-b border-slate-700">Chargement...</td></tr>
                     </tbody>
                 </table>
              </div>
         </section>
     </div>
 
-    <!-- Modal Édition (modifié pour paiement) -->
-    <div id="editModal" class="modal hidden">
-        <div class="modal-content">
+    <!-- Modal Édition (Classes appliquées directement) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4">
             <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
             <input type="hidden" id="modalDocId">
 
@@ -71,11 +120,7 @@
                 <div>
                     <label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label>
                     <select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                        <option value="R1 Completed">R1 Effectué</option>
-                        <option value="R2 Scheduled">R2 Planifié</option>
-                        <option value="Closed">Closé</option>
-                        <option value="Lost">Perdu</option>
-                        <option value="Other">Autre</option>
+                        <option value="R1 Completed">R1 Effectué</option> <option value="R2 Scheduled">R2 Planifié</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option>
                     </select>
                 </div>
                 <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1">
@@ -83,42 +128,18 @@
                      <input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
                 </div>
             </div>
-
             <hr class="border-slate-600 my-4"/>
-
             <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div>
-                    <label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label>
-                    <select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                        <option value="unique">Unique</option>
-                        <option value="installments">Échelonné</option>
-                    </select>
-                 </div>
-                 <div>
-                    <label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total (€)</label>
-                    <input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
+                 <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div>
+                 <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
             </div>
-
-            {/* Champs spécifiques paiement échelonné */}
+            {/* Champs paiement échelonné */}
             <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                 <div>
-                    <label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label>
-                    <input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
-                 <div>
-                    <label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label>
-                    <input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
-                 <div>
-                    <label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label>
-                    <input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
+                 <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                 <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                 <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
             </div>
-             {/* Note: Le Montant Récurrent sera calculé plus tard, ici on saisit le montant total du contrat */}
-
-
             <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6">
                  <button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button>
                  <button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button>
@@ -127,194 +148,47 @@
         </div>
     </div>
 
-    {/* Modal Confirmation Suppression (inchangé) */}
-    <div id="deleteConfirmModal" class="modal hidden"> <div class="modal-content max-w-sm"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Voulez-vous vraiment supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    {/* Modal Confirmation Suppression */}
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+         <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4">
+             <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2>
+             <p class="text-gray-300 text-sm my-3">Voulez-vous vraiment supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p>
+             <input type="hidden" id="deleteDocId">
+             <div class="flex justify-end space-x-3 pt-4">
+                 <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button>
+                 <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button>
+             </div>
+             <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
+         </div>
+    </div>
 
-    {/* Script (modifié pour gérer les nouveaux champs du modal) */}
+    {/* Script (inchangé) */}
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Ajout deleteField
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         let db, auth, appId;
         let currentData = [];
 
-        // --- Initialisation Firebase (inchangée) ---
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
-
-        // --- Récupération & Affichage (légèrement modifié pour passer docId) ---
-        async function fetchDataAndDisplay(startDate, endDate) {
-             if (!db || !appId) { displayError("DB non prête."); return; }
-             const tableBody = document.getElementById('detailsTableBody');
-             tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`;
-             resetKPIs();
-             try {
-                 const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                 const r1Collection = collection(db, collectionPath);
-                 let q = query(r1Collection);
-                 if (startDate) q = query(q, where("prospectDate", ">=", startDate));
-                 if (endDate) q = query(q, where("prospectDate", "<=", endDate));
-                 const querySnapshot = await getDocs(q);
-                 currentData = [];
-                 querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
-                 currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || ""));
-                 updateKPIs(currentData); // Appel initial pour KPIs
-                 updateTable(currentData);
-             } catch (error) { console.error("Erreur fetch Firestore:", error); displayError("Erreur chargement données."); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; }
-         }
-
-        // --- Mise à jour KPIs (Logique à venir pour échelonnement) ---
-        function updateKPIs(data) {
-            let r1Count = data.length;
-            let r2Count = 0;
-            let closingCount = 0;
-            let totalCash = 0;
-            // let totalRecurring = 0; // Calcul deviendra complexe
-
-            data.forEach(item => {
-                const status = item.status || 'R1 Completed';
-                if (status === 'R2 Scheduled') r2Count++;
-                if (status === 'Closed') {
-                    closingCount++;
-                    // Pour l'instant, on somme le montant total enregistré
-                    totalCash += Number(item.amountCollected) || 0;
-                    // Le récurrent sera calculé différemment plus tard
-                }
-            });
-
-            const conversionRate = r1Count > 0 ? ((closingCount / r1Count) * 100).toFixed(1) : 0;
-            document.getElementById('kpiR1Count').textContent = r1Count;
-            document.getElementById('kpiR2Count').textContent = r2Count;
-            document.getElementById('kpiClosingCount').textContent = closingCount;
-            document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`;
-            document.getElementById('kpiCashTotal').textContent = `${totalCash.toLocaleString('fr-FR')}€`;
-            // Afficher N/A pour le récurrent en attendant la nouvelle logique
-            document.getElementById('kpiCashRecurring').textContent = `N/A`;
-        }
-
-        // --- Mise à jour Table (inchangée) ---
-        function updateTable(data) { /* ... comme avant ... */ const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Completed';const sC=getStatusClass(sV);const aC=Number(i.amountCollected)||0;const rA=Number(i.recurringAmount)||0;const qST=i.qualificationStatus?i.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A';const qC=i.qualificationStatus?.includes('VERT')?'text-green-400':(i.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); return `<tr><td class="px-2">${i.prospectDate||'N/A'}</td><td class="px-2 truncate max-w-xs">${pN}</td><td class="px-2"><span class="${qC}">${qST}</span></td><td class="text-center px-1">${i.scores?.total??'N/A'}</td><td class="px-2"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié')}</span></td><td class="text-right px-2">${aC>0?aC.toLocaleString('fr-FR')+'€':'-'}</td><td class="text-right px-2">${rA>0?rA.toLocaleString('fr-FR')+'€':'-'}</td><td class="text-center px-2 space-x-2"><a href="main.html?docId=${i.id}" target="_blank" class="details-btn ...">Détails</a><button data-doc-id="${i.id}" class="edit-btn ...">Modifier</button><button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn ...">Suppr.</button></td></tr>`;}).join(''); }
-        function getStatusClass(status) { /* ... comme avant ... */ switch(status){case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
-        function resetKPIs() { /* ... comme avant ... */ document.getElementById('kpiR1Count').textContent='0';document.getElementById('kpiR2Count').textContent='0';document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashTotal').textContent='0€';document.getElementById('kpiCashRecurring').textContent='N/A'; }
-        function setupFiltersAndLoad() { /* ... comme avant ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); function setThisMonth(){const t=new Date(),fd=new Date(t.getFullYear(),t.getMonth(),1).toISOString().split('T')[0],ld=new Date(t.getFullYear(),t.getMonth()+1,0).toISOString().split('T')[0];s.value=fd;e.value=ld;} setThisMonth(); fetchDataAndDisplay(s.value,e.value); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); r.addEventListener('click',()=>{setThisMonth();fetchDataAndDisplay(s.value,e.value);}); }
-        function displayError(message) { /* ... comme avant ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
-
-        // --- Gestion Modal Édition (modifiée pour paiement) ---
-        const modalStatusSelect = document.getElementById('modalStatus');
-        const modalLostReasonContainer = document.getElementById('modalLostReasonContainer');
-        const modalPaymentTypeSelect = document.getElementById('modalPaymentType');
-        const installmentsFieldsDiv = document.getElementById('installmentsFields');
-
-        // Afficher/Cacher champ raison si "Perdu"
-        modalStatusSelect.addEventListener('change', () => {
-            modalLostReasonContainer.classList.toggle('hidden', modalStatusSelect.value !== 'Lost');
-        });
-        // Afficher/Cacher champs échelonnement si "Échelonné"
-        modalPaymentTypeSelect.addEventListener('change', () => {
-             installmentsFieldsDiv.classList.toggle('hidden', modalPaymentTypeSelect.value !== 'installments');
-        });
-
-        function openEditModal(docId) {
-            const prospectData = currentData.find(item => item.id === docId); if (!prospectData) return;
-            document.getElementById('modalProspectName').textContent = prospectData.prospectName || 'N/A';
-            document.getElementById('modalDocId').value = docId;
-            const currentStatus = prospectData.status || 'R1 Completed';
-            modalStatusSelect.value = currentStatus;
-            document.getElementById('modalLostReason').value = prospectData.lostReason || '';
-            modalLostReasonContainer.classList.toggle('hidden', currentStatus !== 'Lost'); // Etat initial
-
-            // Charger les details de paiement
-            const paymentType = prospectData.paymentType || 'unique'; // Defaut unique
-            modalPaymentTypeSelect.value = paymentType;
-            document.getElementById('modalAmountCollected').value = prospectData.amountCollected || ''; // Montant TOTAL
-            document.getElementById('modalInstallmentAmount').value = prospectData.installmentAmount || '';
-            document.getElementById('modalNumberOfInstallments').value = prospectData.numberOfInstallments || '';
-            document.getElementById('modalStartDateOfPayment').value = prospectData.startDateOfPayment || '';
-            installmentsFieldsDiv.classList.toggle('hidden', paymentType !== 'installments'); // Etat initial
-
-            document.getElementById('modalError').textContent = '';
-            document.getElementById('editModal').classList.remove('hidden');
-        }
+        async function fetchDataAndDisplay(startDate, endDate) { if (!db || !appId) { displayError("DB non prête."); return; } const tB = document.getElementById('detailsTableBody'); tB.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; resetKPIs(); try { const cP = `artifacts/${appId}/public/data/r1_closings`; const rC = collection(db, cP); let q = query(rC); if (startDate) q = query(q, where("prospectDate", ">=", startDate)); if (endDate) q = query(q, where("prospectDate", "<=", endDate)); const qS = await getDocs(q); currentData = []; qS.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); }); currentData.sort((a, b) => (b.prospectDate || "").localeCompare(a.prospectDate || "")); updateKPIs(currentData); updateTable(currentData); } catch (e) { console.error("Erreur fetch Firestore:", e); displayError("Erreur chargement données."); tB.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; } }
+        function updateKPIs(data) { let r1=data.length,r2=0,cl=0,tc=0; data.forEach(i => {const s=i.status||'R1 Completed'; if(s==='R2 Scheduled')r2++; if(s==='Closed'){cl++;tc+=Number(i.amountCollected)||0;}}); const cvr=r1>0?((cl/r1)*100).toFixed(1):0; document.getElementById('kpiR1Count').textContent=r1; document.getElementById('kpiR2Count').textContent=r2; document.getElementById('kpiClosingCount').textContent=cl; document.getElementById('kpiConversionRate').textContent=`${cvr}%`; document.getElementById('kpiCashTotal').textContent=`${tc.toLocaleString('fr-FR')}€`; document.getElementById('kpiCashRecurring').textContent=`N/A`; }
+        function updateTable(data) { const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Completed';const sC=getStatusClass(sV);const aC=Number(i.amountCollected)||0;const rA=Number(i.recurringAmount)||0;const qST=i.qualificationStatus?i.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A';const qC=i.qualificationStatus?.includes('VERT')?'text-green-400':(i.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); return `<tr><td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${i.prospectDate||'N/A'}</td><td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td><td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td><td class="px-1 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td><td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié')}</span></td><td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${aC>0?aC.toLocaleString('fr-FR')+'€':'-'}</td><td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${rA>0?rA.toLocaleString('fr-FR')+'€':'-'}</td><td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"><a href="main.html?docId=${i.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a><button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button><button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button></td></tr>`;}).join(''); }
+        function getStatusClass(status) { switch(status){case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
+        function resetKPIs() { document.getElementById('kpiR1Count').textContent='0';document.getElementById('kpiR2Count').textContent='0';document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashTotal').textContent='0€';document.getElementById('kpiCashRecurring').textContent='N/A'; }
+        function setupFiltersAndLoad() { const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); function setThisMonth(){const t=new Date(),fd=new Date(t.getFullYear(),t.getMonth(),1).toISOString().split('T')[0],ld=new Date(t.getFullYear(),t.getMonth()+1,0).toISOString().split('T')[0];s.value=fd;e.value=ld;} setThisMonth(); fetchDataAndDisplay(s.value,e.value); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); r.addEventListener('click',()=>{setThisMonth();fetchDataAndDisplay(s.value,e.value);}); }
+        function displayError(message) { let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
+        const modalStatusSelect = document.getElementById('modalStatus'); const modalLostReasonContainer = document.getElementById('modalLostReasonContainer'); const modalPaymentTypeSelect = document.getElementById('modalPaymentType'); const installmentsFieldsDiv = document.getElementById('installmentsFields');
+        modalStatusSelect.addEventListener('change', () => { modalLostReasonContainer.classList.toggle('hidden', modalStatusSelect.value !== 'Lost'); }); modalPaymentTypeSelect.addEventListener('change', () => { installmentsFieldsDiv.classList.toggle('hidden', modalPaymentTypeSelect.value !== 'installments'); });
+        function openEditModal(docId) { const pD=currentData.find(i=>i.id===docId); if(!pD)return; document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A'; document.getElementById('modalDocId').value=docId; const cS=pD.status||'R1 Completed'; modalStatusSelect.value=cS; document.getElementById('modalLostReason').value=pD.lostReason||''; modalLostReasonContainer.classList.toggle('hidden',cS!=='Lost'); const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden'); }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-
-        async function saveModalChanges() {
-            const docId = document.getElementById('modalDocId').value;
-            const newStatus = modalStatusSelect.value;
-            const newPaymentType = modalPaymentTypeSelect.value;
-            const newTotalAmount = Number(document.getElementById('modalAmountCollected').value) || 0; // Renomme pour clarte
-            const newInstallmentAmount = Number(document.getElementById('modalInstallmentAmount').value) || 0;
-            const newNumberOfInstallments = parseInt(document.getElementById('modalNumberOfInstallments').value) || 0;
-            const newStartDateOfPayment = document.getElementById('modalStartDateOfPayment').value || null; // Garder null si vide
-            const newLostReason = document.getElementById('modalLostReason').value.trim();
-            const modalError = document.getElementById('modalError');
-            const saveButton = document.getElementById('modalSaveButton');
-
-            if (!docId || !newStatus) { modalError.textContent = "ID/Statut requis."; return; }
-            modalError.textContent = ''; saveButton.disabled = true; saveButton.textContent = 'Sauvegarde...';
-            try {
-                const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                const docRef = doc(db, collectionPath, docId);
-                const dataToUpdate = {
-                    status: newStatus,
-                    lastUpdatedAt: Timestamp.now()
-                };
-
-                // Ajouter les details si le statut est 'Closed'
-                if (newStatus === 'Closed') {
-                    dataToUpdate.paymentType = newPaymentType;
-                    dataToUpdate.amountCollected = newTotalAmount; // Montant total
-                    if (newPaymentType === 'installments') {
-                         dataToUpdate.installmentAmount = newInstallmentAmount;
-                         dataToUpdate.numberOfInstallments = newNumberOfInstallments;
-                         dataToUpdate.startDateOfPayment = newStartDateOfPayment;
-                         // Effacer le champ 'recurringAmount' car il sera calcule
-                         dataToUpdate.recurringAmount = deleteField();
-                    } else {
-                         // Effacer les champs d'echelonnement si paiement unique
-                         dataToUpdate.installmentAmount = deleteField();
-                         dataToUpdate.numberOfInstallments = deleteField();
-                         dataToUpdate.startDateOfPayment = deleteField();
-                         dataToUpdate.recurringAmount = deleteField(); // Effacer aussi le 'recurring' legacy
-                    }
-                } else {
-                     // Effacer tous les champs paiement si pas 'Closed'
-                     dataToUpdate.paymentType = deleteField();
-                     dataToUpdate.amountCollected = deleteField();
-                     dataToUpdate.installmentAmount = deleteField();
-                     dataToUpdate.numberOfInstallments = deleteField();
-                     dataToUpdate.startDateOfPayment = deleteField();
-                     dataToUpdate.recurringAmount = deleteField();
-                }
-
-                // Ajouter la raison seulement si le statut est 'Lost'
-                if (newStatus === 'Lost') {
-                    dataToUpdate.lostReason = newLostReason;
-                } else {
-                     dataToUpdate.lostReason = deleteField(); // Supprimer la raison si pas 'Lost'
-                }
-
-                await updateDoc(docRef, dataToUpdate);
-                closeEditModal();
-                const startDate = document.getElementById('startDate').value; const endDate = document.getElementById('endDate').value;
-                await fetchDataAndDisplay(startDate, endDate); // Recharger
-            } catch (error) { console.error("Err update:", error); modalError.textContent = "Erreur sauvegarde."; }
-            finally { saveButton.disabled = false; saveButton.textContent = 'Enregistrer'; }
-        }
-
-        // --- Gestion Modal Suppression (inchangée) ---
-        function openDeleteConfirmModal(docId, prospectName) { /* ... comme avant ... */ document.getElementById('deleteProspectName').textContent=prospectName;document.getElementById('deleteDocId').value=docId;document.getElementById('deleteError').textContent='';document.getElementById('deleteConfirmModal').classList.remove('hidden'); }
+        async function saveModalChanges() { const dId=document.getElementById('modalDocId').value; const nS=modalStatusSelect.value; const nPT=modalPaymentTypeSelect.value; const nTA=Number(document.getElementById('modalAmountCollected').value)||0; const nIA=Number(document.getElementById('modalInstallmentAmount').value)||0; const nNI=parseInt(document.getElementById('modalNumberOfInstallments').value)||0; const nSD=document.getElementById('modalStartDateOfPayment').value||null; const nLR=document.getElementById('modalLostReason').value.trim(); const mE=document.getElementById('modalError'); const sB=document.getElementById('modalSaveButton'); if(!dId||!nS){mE.textContent="ID/Statut requis.";return;} mE.textContent='';sB.disabled=true;sB.textContent='Sauvegarde...'; try { const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId); const dTU={status:nS,lastUpdatedAt:Timestamp.now()}; if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();} if(nS==='Lost'){dTU.lostReason=nLR;} else {dTU.lostReason=deleteField();} await updateDoc(dR,dTU); closeEditModal(); const s=document.getElementById('startDate').value; const e=document.getElementById('endDate').value; await fetchDataAndDisplay(s,e); } catch(error){console.error("Err update:",error);mE.textContent="Erreur sauvegarde.";} finally {sB.disabled=false;sB.textContent='Enregistrer';} }
+        function openDeleteConfirmModal(docId, prospectName) { document.getElementById('deleteProspectName').textContent=prospectName;document.getElementById('deleteDocId').value=docId;document.getElementById('deleteError').textContent='';document.getElementById('deleteConfirmModal').classList.remove('hidden'); }
         function closeDeleteConfirmModal() { document.getElementById('deleteConfirmModal').classList.add('hidden'); }
-        async function confirmDeletion() { /* ... comme avant ... */ const docId=document.getElementById('deleteDocId').value;const dE=document.getElementById('deleteError');const cB=document.getElementById('deleteConfirmButton');if(!docId){dE.textContent="ID manquant.";return;} dE.textContent='';cB.disabled=true;cB.textContent='Suppression...';try{const cP=`artifacts/${appId}/public/data/r1_closings`;const dR=doc(db,cP,docId);await deleteDoc(dR);closeDeleteConfirmModal();const s=document.getElementById('startDate').value;const e=document.getElementById('endDate').value;await fetchDataAndDisplay(s,e);}catch(error){console.error(`Err suppression ${docId}:`,error);dE.textContent="Erreur suppression.";}finally{cB.disabled=false;cB.textContent='Supprimer';} }
-
-        // --- Attacher Listeners (inchangée) ---
-        function attachListeners() { /* ... comme avant (délégation) ... */ document.getElementById('detailsTableBody').addEventListener('click',(e)=>{if(e.target.classList.contains('edit-btn')){openEditModal(e.target.dataset.docId);}else if(e.target.classList.contains('delete-btn')){openDeleteConfirmModal(e.target.dataset.docId,e.target.dataset.prospectName);}}); document.getElementById('modalCancelButton').addEventListener('click',closeEditModal);document.getElementById('modalSaveButton').addEventListener('click',saveModalChanges);document.getElementById('editModal').addEventListener('click',(e)=>{if(e.target.id==='editModal')closeEditModal();}); document.getElementById('deleteCancelButton').addEventListener('click',closeDeleteConfirmModal);document.getElementById('deleteConfirmButton').addEventListener('click',confirmDeletion);document.getElementById('deleteConfirmModal').addEventListener('click',(e)=>{if(e.target.id==='deleteConfirmModal')closeDeleteConfirmModal();}); }
-
-        // --- Démarrage ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initFirebase();
-            setupFiltersAndLoad();
-            attachListeners();
-        });
+        async function confirmDeletion() { const dId=document.getElementById('deleteDocId').value;const dE=document.getElementById('deleteError');const cB=document.getElementById('deleteConfirmButton');if(!dId){dE.textContent="ID manquant.";return;} dE.textContent='';cB.disabled=true;cB.textContent='Suppression...';try{const cP=`artifacts/${appId}/public/data/r1_closings`;const dR=doc(db,cP,dId);await deleteDoc(dR);closeDeleteConfirmModal();const s=document.getElementById('startDate').value;const e=document.getElementById('endDate').value;await fetchDataAndDisplay(s,e);}catch(error){console.error(`Err suppression ${dId}:`,error);dE.textContent="Erreur suppression.";}finally{cB.disabled=false;cB.textContent='Supprimer';} }
+        function attachListeners() { document.getElementById('detailsTableBody').addEventListener('click',(e)=>{if(e.target.classList.contains('edit-btn')){openEditModal(e.target.dataset.docId);}else if(e.target.classList.contains('delete-btn')){openDeleteConfirmModal(e.target.dataset.docId,e.target.dataset.prospectName);}}); document.getElementById('modalCancelButton').addEventListener('click',closeEditModal);document.getElementById('modalSaveButton').addEventListener('click',saveModalChanges);document.getElementById('editModal').addEventListener('click',(e)=>{if(e.target.id==='editModal')closeEditModal();}); document.getElementById('deleteCancelButton').addEventListener('click',closeDeleteConfirmModal);document.getElementById('deleteConfirmButton').addEventListener('click',confirmDeletion);document.getElementById('deleteConfirmModal').addEventListener('click',(e)=>{if(e.target.id==='deleteConfirmModal')closeDeleteConfirmModal();}); }
+        document.addEventListener('DOMContentLoaded', async () => { await initFirebase(); setupFiltersAndLoad(); attachListeners(); });
     </script>
 
 </body>

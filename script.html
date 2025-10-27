@@ -8,156 +8,114 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } .custom-scrollbar { /* ... */ } </style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #475569 #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
+        /* Style Feedback */
+        #feedbackMessage { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
+        #feedbackMessage.show { opacity: 1; pointer-events: auto; }
+    </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full flex items-center justify-center p-4">
 
     <div id="app" class="h-full w-full max-w-4xl flex flex-col items-center justify-center">
-         <div class="w-full flex justify-end mb-4 px-2"> <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap"> Tableau de Bord </a> </div>
+         <!-- Header commun avec lien Dashboard -->
+         <div class="w-full flex justify-end mb-4 px-2">
+            <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap">
+                Tableau de Bord
+            </a>
+         </div>
 
         <!-- ÉCRAN SCRIPT -->
         <div id="scriptScreen" class="w-full bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-auto max-h-[90vh]">
             <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2">Début du R1</h1>
+            <!-- Contenu du script de vente -->
             <div class="space-y-4 text-gray-200 md:text-lg text-base overflow-y-auto custom-scrollbar flex-grow pr-2">
-                <p>Bonjour <span id="scriptProspectName" class="font-bold text-white">[Prénom]</span>, c'est François...</p>
+                <p>Bonjour <span id="scriptProspectName" class="font-bold text-white">[Prénom]</span>, c'est François de la Guitare Impro Académie.</p>
                 <p>On est bon pour notre créneau ?</p>
-                <p class="font-semibold text-amber-300"><span id="scriptProspectName2" class="font-bold text-amber-300">[Prénom]</span>, on se tutoie ?</p>
-                <p class="text-sm text-gray-400 italic">[Attendre réponse]</p>
+                <p class="font-semibold text-amber-300"><span id="scriptProspectName2" class="font-bold text-amber-300">[Prénom]</span>, est-ce que ça te va si on se tutoie ? Ce sera plus sympa comme ça ?</p>
+                <p class="text-sm text-gray-400 italic">[Attendre la réponse positive du prospect]</p>
+                <!-- Ajoutez ici d'autres lignes de votre script si nécessaire -->
             </div>
+            <!-- Boutons de navigation -->
             <div class="flex justify-between items-center pt-4 mt-auto border-t border-slate-700/50">
-                <a href="dashboard.html" id="scriptBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200"> &larr; Dashboard </a>
-                <button id="scriptNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40"> Suivant &rarr; </button>
+                <a href="dashboard.html" id="scriptBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
+                    &larr; Dashboard
+                </a>
+                <button id="scriptNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                    Suivant &rarr;
+                </button>
             </div>
         </div>
 
-        <!-- ÉCRAN CADRAGE -->
+        <!-- ÉCRAN CADRAGE (initialement cache) -->
         <div id="cadrageScreen" class="w-full bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex-col h-auto max-h-[90vh] hidden">
-            <h1 class="text-2xl md:text-3xl font-bold text-amber-300 mb-2">Point Important...</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-amber-300 mb-2">Point Important Avant de Commencer</h1>
+            <!-- Contenu du script de cadrage -->
             <div class="space-y-4 text-gray-200 md:text-lg text-base overflow-y-auto custom-scrollbar flex-grow pr-2">
-                 <p>...formation <span class="font-semibold text-white">accélérée et intensive</span>...</p>
-                 <p>...<span class="font-semibold text-white">totalement autonome en 9 mois</span>...</p>
-                 <p class="font-semibold text-amber-300">...compris les objectifs ?</p>
-                 <p class="text-sm text-gray-400 italic">[Attendre réponse]</p>
-                 <p>...<span class="font-semibold text-white">appel de qualification</span>...</p>
-                 <p class="font-semibold text-amber-300">Ça te va, on y va ?</p>
+                <p>Alors, juste un point très important avant de commencer. Comme je l'explique dans la vidéo de présentation, la Guitare Impro Académie est une formation <span class="font-semibold text-white">accélérée et intensive</span> qui demande beaucoup d'engagement, de la part de l'apprenti et du mien.</p>
+                <p>L'objectif est de te rendre <span class="font-semibold text-white">totalement autonome en 9 mois</span> et t'assurer un niveau assez solide pour maîtriser ton instrument, que tu veuilles jouer en groupe ou simplement pour ton plaisir personnel.</p>
+                <p class="font-semibold text-amber-300">Déjà, avant d'aller plus loin, est-ce que tu avais bien compris les objectifs de cette formation ? (9 mois, maîtrise de l'instrument, potentiellement jeu en groupe...)</p>
+                <p class="text-sm text-gray-400 italic">[Attendre la réponse positive du prospect]</p>
+                <p>Parfait. Cet appel est un <span class="font-semibold text-white">appel de qualification</span>, c'est à dire que je vais te poser plusieurs questions et les réponses vont me permettre de renseigner un outil qui tranchera si ce programme est réellement la bonne solution pour toi, ou s'il est préférable de te diriger vers des cours de guitare standard comme une école de musique ou un professeur particulier.</p>
+                <p class="font-semibold text-amber-300">Ça te va, on y va pour les questions ?</p>
+                 <!-- Ajoutez ici d'autres lignes de votre script si nécessaire -->
             </div>
+            <!-- Boutons de navigation -->
             <div class="flex justify-between items-center pt-4 mt-auto border-t border-slate-700/50">
-                <button id="cadrageBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200"> &larr; Retour </button>
-                {/* Ce bouton va maintenant déclencher la MAJ Firestore PUIS rediriger */}
-                <button id="cadrageContinueButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 disabled:opacity-50 disabled:cursor-wait"> Continuer vers Qualification &rarr; </button>
+                <button id="cadrageBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
+                    &larr; Retour
+                </button>
+                <button id="cadrageContinueButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40 disabled:opacity-50 disabled:cursor-wait">
+                    Continuer vers Qualification &rarr;
+                </button>
             </div>
              <p id="scriptError" class="text-red-400 text-sm mt-2 text-center h-4"></p> <!-- Pour erreurs -->
         </div>
     </div>
 
      <!-- Feedback Element (partagé) -->
-     <div id="feedbackMessage" class="fixed bottom-4 left-1/2 -translate-x-1/2 p-3 rounded-lg shadow-xl text-white font-semibold text-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+     <div id="feedbackMessage"></div>
 
     <!-- Firebase + Logique -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Ajout updateDoc, doc, Timestamp
+        import { getFirestore, doc, updateDoc, Timestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        let db, auth, appId, currentDocId; // Stocker l'ID ici
+        let db, auth, appId, currentDocId;
 
-        // --- Initialisation Firebase ---
-        async function initFirebase() {
-             try {
-                 const firebaseConfig = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" };
-                 appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                 const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
-                 await new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) resolve(); else { try { await signInAnonymously(auth); resolve(); } catch(e){ resolve();}} }); });
-                 console.log("Firebase prêt (script.html)"); return true;
-             } catch (error) { console.error("Err init Firebase:", error); showFeedback("Erreur DB", true); return false; }
-         }
+        async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); await new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) resolve(); else { try { await signInAnonymously(auth); resolve(); } catch(e){ resolve();}} }); }); console.log("Firebase prêt (script.html)"); return true; } catch (e) { console.error("Err init Firebase:", e); showFeedback("Erreur DB", true); return false; } }
+        async function updateStatusToCompleted(docId) { if (!db || !docId) { showFeedback("Erreur: DB/ID manquant", true); return false; } try { const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); await updateDoc(dR, { status: 'R1 Completed', lastUpdatedAt: Timestamp.now() }); console.log(`Statut MAJ: R1 Completed pour ${docId}`); return true; } catch (e) { console.error(`Err MAJ statut ${docId}:`, e); showFeedback("Erreur MAJ statut R1", true); return false; } }
+        function showFeedback(message, isError = false) { let fE=document.getElementById('feedbackMessage'); if(!fE)return; fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); setTimeout(()=>{fE.classList.remove('show');fE.classList.add('opacity-0');},3000); }
 
-         // --- MAJ Statut Firestore ---
-         async function updateStatusToCompleted(docId) {
-             if (!db || !docId) { showFeedback("Erreur: DB/ID manquant pour MAJ", true); return false; }
-             try {
-                 const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                 const docRef = doc(db, collectionPath, docId);
-                 await updateDoc(docRef, {
-                     status: 'R1 Completed', // Mettre a jour le statut
-                     lastUpdatedAt: Timestamp.now()
-                 });
-                 console.log(`Statut mis à jour: R1 Completed pour ${docId}`);
-                 return true;
-             } catch (error) {
-                 console.error(`Erreur MAJ statut pour ${docId}:`, error);
-                 showFeedback("Erreur MAJ statut R1", true);
-                 return false;
-             }
-         }
-
-         // --- Affichage Feedback ---
-         function showFeedback(message, isError = false) { let fE=document.getElementById('feedbackMessage'); if(!fE)return; fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); setTimeout(()=>{fE.classList.remove('show');fE.classList.add('opacity-0');},3000); }
-
-        // --- Logique de la page ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const scriptScreen = document.getElementById('scriptScreen');
-            const cadrageScreen = document.getElementById('cadrageScreen');
-            const scriptNextButton = document.getElementById('scriptNextButton');
-            const cadrageBackButton = document.getElementById('cadrageBackButton');
-            const cadrageContinueButton = document.getElementById('cadrageContinueButton');
-            const scriptProspectName = document.getElementById('scriptProspectName');
-            const scriptProspectName2 = document.getElementById('scriptProspectName2');
-            const scriptError = document.getElementById('scriptError');
+            const scriptScreen = document.getElementById('scriptScreen'); const cadrageScreen = document.getElementById('cadrageScreen'); const scriptNextButton = document.getElementById('scriptNextButton'); const cadrageBackButton = document.getElementById('cadrageBackButton'); const cadrageContinueButton = document.getElementById('cadrageContinueButton'); const scriptProspectName = document.getElementById('scriptProspectName'); const scriptProspectName2 = document.getElementById('scriptProspectName2'); const scriptError = document.getElementById('scriptError');
+            const params = new URLSearchParams(window.location.search); currentDocId = params.get('docId');
 
-            // Récupérer docId et autres params de l'URL
-            const params = new URLSearchParams(window.location.search);
-            currentDocId = params.get('docId'); // Stocker l'ID du document
-            const firstName = params.get('firstName') || '[Prénom]'; // Recuperer prenom si besoin (il est deja dans le doc)
+            if (!currentDocId) { scriptError.textContent = "Erreur: ID Prospect manquant."; if(scriptNextButton) scriptNextButton.disabled = true; if(cadrageContinueButton) cadrageContinueButton.disabled = true; return; }
 
-            if (!currentDocId) {
-                 scriptError.textContent = "Erreur: ID du prospect manquant.";
-                 // Masquer les boutons de navigation ?
-                 if(scriptNextButton) scriptNextButton.disabled = true;
-                 if(cadrageContinueButton) cadrageContinueButton.disabled = true;
-                 return; // Bloquer si pas d'ID
-            }
-
-            // Attendre Firebase
             const firebaseReady = await initFirebase();
-             if (!firebaseReady) {
-                 scriptError.textContent = "Erreur: Connexion base de données échouée.";
-                 if(scriptNextButton) scriptNextButton.disabled = true;
-                 if(cadrageContinueButton) cadrageContinueButton.disabled = true;
-                 return;
-             }
+            if (!firebaseReady) { scriptError.textContent = "Erreur DB."; if(scriptNextButton) scriptNextButton.disabled = true; if(cadrageContinueButton) cadrageContinueButton.disabled = true; return; }
 
-            // Afficher le prénom (on pourrait le lire depuis Firestore si on voulait etre sur)
-            if (scriptProspectName) scriptProspectName.textContent = firstName;
-            if (scriptProspectName2) scriptProspectName2.textContent = firstName;
+            // Lire le prenom depuis Firestore
+            try {
+                 const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
+                 const docRef = doc(db, collectionPath, currentDocId);
+                 const docSnap = await getDoc(docRef);
+                 if (docSnap.exists()) {
+                     const firstName = docSnap.data().prospectFirstName || '[Prénom]';
+                     if (scriptProspectName) scriptProspectName.textContent = firstName;
+                     if (scriptProspectName2) scriptProspectName2.textContent = firstName;
+                 } else { scriptError.textContent = "Prospect non trouvé."; }
+            } catch (e) { console.error("Erreur lecture prénom:", e); scriptError.textContent = "Erreur lecture données."; }
 
-            // Navigation Script -> Cadrage
-            scriptNextButton?.addEventListener('click', () => {
-                scriptScreen.classList.add('hidden'); scriptScreen.classList.remove('flex');
-                cadrageScreen.classList.remove('hidden'); cadrageScreen.classList.add('flex');
-            });
-            // Navigation Cadrage -> Script
-            cadrageBackButton?.addEventListener('click', () => {
-                cadrageScreen.classList.add('hidden'); cadrageScreen.classList.remove('flex');
-                scriptScreen.classList.remove('hidden'); scriptScreen.classList.add('flex');
-            });
-            // Action Cadrage -> Qualification (MAJ + Redirect)
-            cadrageContinueButton?.addEventListener('click', async () => {
-                 cadrageContinueButton.disabled = true; // Desactiver pendant MAJ
-                 cadrageContinueButton.textContent = "Chargement...";
-                 scriptError.textContent = ''; // Vider erreur precedente
-
-                 const success = await updateStatusToCompleted(currentDocId);
-
-                 if (success) {
-                      // Rediriger vers main.html en passant l'ID
-                      window.location.href = `main.html?docId=${currentDocId}`;
-                 } else {
-                      cadrageContinueButton.disabled = false; // Reactiver si echec
-                      cadrageContinueButton.textContent = "Continuer vers Qualification →";
-                      scriptError.textContent = "Erreur lors de la mise à jour du statut.";
-                 }
-            });
+            scriptNextButton?.addEventListener('click', () => { scriptScreen.classList.add('hidden'); scriptScreen.classList.remove('flex'); cadrageScreen.classList.remove('hidden'); cadrageScreen.classList.add('flex'); });
+            cadrageBackButton?.addEventListener('click', () => { cadrageScreen.classList.add('hidden'); cadrageScreen.classList.remove('flex'); scriptScreen.classList.remove('hidden'); scriptScreen.classList.add('flex'); });
+            cadrageContinueButton?.addEventListener('click', async () => { cadrageContinueButton.disabled = true; cadrageContinueButton.textContent = "Chargement..."; scriptError.textContent = ''; const success = await updateStatusToCompleted(currentDocId); if (success) { window.location.href = `main.html?docId=${currentDocId}`; } else { cadrageContinueButton.disabled = false; cadrageContinueButton.textContent = "Continuer vers Qualification →"; scriptError.textContent = "Erreur MAJ statut."; } });
         });
     </script>
 

@@ -11,46 +11,49 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .status-scheduled { background-color: #fbbf24; color: #78350f; } /* amber-400 / amber-900 */
+        .status-scheduled { background-color: #fbbf24; color: #78350f; } /* amber-400 */
+        .status-noshow { background-color: #f87171; color: #7f1d1d; } /* red-400 */
         .status-r1 { background-color: #2563eb; color: #dbeafe; }
         .status-r2 { background-color: #9333ea; color: #f3e8ff; }
         .status-closed { background-color: #16a34a; color: #dcfce7; }
         .status-lost { background-color: #dc2626; color: #fee2e2; }
         .status-other { background-color: #4b5563; color: #f3f4f6; }
-        .installments-fields.hidden { display: none; }
-        .modal.hidden { display: none; }
+        .installments-fields.hidden, .modal.hidden { display: none; }
         input[type="date"]:invalid { border-color: #f87171; }
+        /* Style pour valeur secondaire dans KPI */
+        .kpi-secondary-value {
+             font-size: 1rem; /* text-base */
+             font-weight: 600; /* font-semibold */
+             color: #f87171; /* red-400 */
+             margin-left: 0.5rem; /* ml-2 */
+         }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white min-h-screen p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto space-y-8">
         <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1>
-            <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
-                + Planifier R1
-            </a>
-        </header>
-
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8"> <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1> <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40"> + Planifier R1 </a> </header>
         <!-- Filtres -->
-        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-            <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
-            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="startDate" class="text-sm font-medium text-gray-400">Du</label><input type="date" id="startDate" required class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div>
-            <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="endDate" class="text-sm font-medium text-gray-400">Au</label><input type="date" id="endDate" required class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div>
-            <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed" disabled>Appliquer</button>
-            <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button>
-        </section>
+        <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4"> <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2> <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="startDate" class="text-sm font-medium text-gray-400">Du</label><input type="date" id="startDate" required class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div> <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto"><label for="endDate" class="text-sm font-medium text-gray-400">Au</label><input type="date" id="endDate" required class="bg-slate-700 border border-slate-600 rounded-lg py-1.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400 w-full sm:w-auto"></div> <button id="filterButton" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed" disabled>Appliquer</button> <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button> </section>
 
-        <!-- KPIs (Modifiés pour R1 Planifiés/Effectués) -->
+        <!-- KPIs (8 colonnes -> 7 colonnes, NoShow combiné) -->
         <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-6">
-             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-amber-500" style="box-shadow: ...;"><span id="kpiR1Scheduled" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
-             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-blue-500" style="box-shadow: ...;"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
-            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-purple-500" style="box-shadow: ...;"><span id="kpiR2Count" class="text-4xl font-bold text-purple-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Effectués/Planifiés</span></div>
-            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-green-500" style="box-shadow: ...;"><span id="kpiClosingCount" class="text-4xl font-bold text-green-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span></div>
-            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: ...;"><span id="kpiConversionRate" class="text-4xl font-bold text-teal-300 block mb-1">0%</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 Effec → Closé</span></div>
-            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: ...;"><span id="kpiCashCollected" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Période</span></div>
-            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: ...;"><span id="kpiCashFutureRecurring" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent Futur</span></div>
+             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-amber-500"><span id="kpiR1Scheduled" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
+             <!-- KPI No Show Combiné -->
+             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-red-500">
+                 <div class="flex items-center justify-center">
+                    <span id="kpiR1NoShowCount" class="text-4xl font-bold text-red-400 block">0</span> <!-- ID Correct -->
+                    <span id="kpiR1NoShowRate" class="kpi-secondary-value block">(0%)</span> <!-- ID Correct -->
+                 </div>
+                 <span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">No Show R1</span>
+            </div>
+             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-blue-500"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-purple-500"><span id="kpiR2Count" class="text-4xl font-bold text-purple-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Effec/Planif</span></div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-green-500"><span id="kpiClosingCount" class="text-4xl font-bold text-green-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span></div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500"><span id="kpiConversionRate" class="text-4xl font-bold text-teal-300 block mb-1">0%</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 Eff → Closé</span></div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500"><span id="kpiCashCollected" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Période</span></div>
+            <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500"><span id="kpiCashFutureRecurring" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent Futur</span></div>
         </section>
 
         <!-- Graphique -->
@@ -59,18 +62,18 @@
         <!-- Table Détails -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
              <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
-             <div class="min-w-[950px]"> <!-- Largeur minimum augmentée -->
+             <div class="min-w-[950px]">
                  <table class="w-full divide-y divide-slate-700 table-fixed">
                     <thead class="sticky top-[4.5rem] z-10">
                         <tr>
-                            <th class="w-[12%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date & Heure R1</th> <!-- Colonne modifiée -->
+                            <th class="w-[12%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date & Heure R1</th>
                             <th class="w-[18%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prospect</th>
                             <th class="w-[15%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Qualif.</th>
                             <th class="w-[5%] px-1 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
                             <th class="w-[10%] px-2 py-2 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Statut Vente</th>
                             <th class="w-[10%] px-2 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Montant Total</th>
                             <th class="w-[10%] px-2 py-2 bg-slate-700 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Échéance</th>
-                            <th class="w-[20%] px-2 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th> <!-- Largeur ajustée -->
+                            <th class="w-[20%] px-2 py-2 bg-slate-700 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700"></tbody>
@@ -79,9 +82,10 @@
         </section>
     </div>
 
-    <!-- Modals (Édition & Suppression) -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option> <option value="R2 Scheduled">R2 Planifié</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <!-- Modals (Édition & Suppression & Start/NoShow) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <div id="startR1ConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-teal-300">Démarrer R1</h2> <p class="text-gray-300 text-sm my-3">Le prospect "<span id="startR1ProspectName" class="font-bold"></span>" est-il présent ?</p> <input type="hidden" id="startR1DocId"> <div class="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3 pt-4"> <button id="noShowButton" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Absent (No Show)</button> <button id="startR1ConfirmButton" type="button" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Présent (Démarrer)</button> </div> <div class="flex justify-center pt-2"> <button id="startR1CancelButton" type="button" class="text-gray-400 hover:text-gray-300 text-sm">Annuler</button> </div> <p id="startR1Error" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
 
     <!-- Script -->
     <script type="module">
@@ -94,7 +98,6 @@
 
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
         function parseDateString(dateString) { if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null; const parts = dateString.split('-'); return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))); }
-
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
 
         async function fetchDataAndDisplay(startDateStr, endDateStr) {
@@ -106,82 +109,52 @@
              try {
                  const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const r1Collection = collection(db, collectionPath); const querySnapshot = await getDocs(query(r1Collection)); currentData = [];
                  querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
-                 // Tri par date ET heure (plus récent en premier)
-                 currentData.sort((a, b) => {
-                     const dateTimeA = `${a.prospectDate || '0000-00-00'}T${a.prospectTime || '00:00'}`;
-                     const dateTimeB = `${b.prospectDate || '0000-00-00'}T${b.prospectTime || '00:00'}`;
-                     return dateTimeB.localeCompare(dateTimeA); // Tri descendant
-                 });
+                 currentData.sort((a, b) => { const dtA = `${a.prospectDate||'0'}T${a.prospectTime||'0'}`; const dtB = `${b.prospectDate||'0'}T${b.prospectTime||'0'}`; return dtB.localeCompare(dtA); });
                  updateKPIs(currentData, filterStartDate, filterEndDate); updateTable(currentData);
              } catch (error) { console.error("Erreur fetch Firestore:", error); displayError("Erreur chargement données."); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; }
          }
 
         function updateKPIs(data, filterStart, filterEnd) {
-            let r1ScheduledCount = 0; let r1CompletedCount = 0; let r2Count = 0; let closingCount = 0;
+            let totalInPeriod = 0; let r1ScheduledCount = 0; let r1CompletedCount = 0; let r1NoShowCount = 0; let r2Count = 0; let closingCount = 0;
             let cashCollectedInPeriod = 0; let cashFutureRecurring = 0;
             const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other'];
             const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost'];
 
             data.forEach(item => {
-                const status = item.status || 'R1 Scheduled';
-                const itemR1Date = parseDateString(item.prospectDate);
-
-                // Compter les statuts basés sur la date R1 DANS la période
-                if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) {
-                    if (status === 'R1 Scheduled') r1ScheduledCount++;
-                    if (consideredStatusesForCompleted.includes(status)) r1CompletedCount++;
-                    if (consideredStatusesForR2.includes(status)) r2Count++;
-                    if (status === 'Closed') closingCount++;
-                }
-
-                // Calculer le cash pour les 'Closed' (basé sur échéances, peu importe date R1)
-                if (status === 'Closed') { /* ... logique inchangée ... */ const pT=item.paymentType||'unique'; const tA=Number(item.amountCollected)||0; if(pT==='unique'){ if(itemR1Date&&itemR1Date>=filterStart&&itemR1Date<=filterEnd){cashCollectedInPeriod+=tA;}} else if(pT==='installments'){const iA=Number(item.installmentAmount)||0; const nI=parseInt(item.numberOfInstallments)||0; const fPD=parseDateString(item.startDateOfPayment); if(iA>0&&nI>0&&fPD){ for(let i=0;i<nI;i++){ const pD=addMonths(fPD,i); if(pD>=filterStart&&pD<=filterEnd){cashCollectedInPeriod+=iA;} else if(pD>filterEnd){cashFutureRecurring+=iA;}}}}}
+                const status = item.status || 'R1 Scheduled'; const itemR1Date = parseDateString(item.prospectDate);
+                if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) { totalInPeriod++; if (status === 'R1 Scheduled') r1ScheduledCount++; if (status === 'No Show R1') r1NoShowCount++; if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') r1CompletedCount++; if (consideredStatusesForR2.includes(status)) r2Count++; if (status === 'Closed') closingCount++; }
+                if (status === 'Closed') { const pT=item.paymentType||'unique'; const tA=Number(item.amountCollected)||0; if(pT==='unique'){ if(itemR1Date&&itemR1Date>=filterStart&&itemR1Date<=filterEnd){cashCollectedInPeriod+=tA;}} else if(pT==='installments'){const iA=Number(item.installmentAmount)||0; const nI=parseInt(item.numberOfInstallments)||0; const fPD=parseDateString(item.startDateOfPayment); if(iA>0&&nI>0&&fPD){ for(let i=0;i<nI;i++){ const pD=addMonths(fPD,i); if(pD>=filterStart&&pD<=filterEnd){cashCollectedInPeriod+=iA;} else if(pD>filterEnd){cashFutureRecurring+=iA;}}}}}
             });
 
             const conversionRate = r1CompletedCount > 0 ? ((closingCount / r1CompletedCount) * 100).toFixed(1) : 0;
-            document.getElementById('kpiR1Scheduled').textContent = r1ScheduledCount; // Affichage R1 Planifiés
-            document.getElementById('kpiR1Completed').textContent = r1CompletedCount; // Affichage R1 Effectués
-            document.getElementById('kpiR2Count').textContent = r2Count; document.getElementById('kpiClosingCount').textContent = closingCount; document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`; document.getElementById('kpiCashCollected').textContent = `${cashCollectedInPeriod.toLocaleString('fr-FR')}€`; document.getElementById('kpiCashFutureRecurring').textContent = `${cashFutureRecurring.toLocaleString('fr-FR')}€`;
+            const noShowRate = totalInPeriod > 0 ? ((r1NoShowCount / totalInPeriod) * 100).toFixed(1) : 0;
+
+            // --- CORRECTION: Utiliser les bons IDs pour NoShow ---
+            document.getElementById('kpiR1Scheduled').textContent = r1ScheduledCount;
+            document.getElementById('kpiR1NoShowCount').textContent = r1NoShowCount; // ID correct
+            document.getElementById('kpiR1NoShowRate').textContent = `(${noShowRate}%)`; // ID correct
+            document.getElementById('kpiR1Completed').textContent = r1CompletedCount;
+            document.getElementById('kpiR2Count').textContent = r2Count;
+            document.getElementById('kpiClosingCount').textContent = closingCount;
+            document.getElementById('kpiConversionRate').textContent = `${conversionRate}%`;
+            document.getElementById('kpiCashCollected').textContent = `${cashCollectedInPeriod.toLocaleString('fr-FR')}€`;
+            document.getElementById('kpiCashFutureRecurring').textContent = `${cashFutureRecurring.toLocaleString('fr-FR')}€`;
         }
 
-        function updateTable(data) {
-             const tableBody = document.getElementById('detailsTableBody'); if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;}
-             tableBody.innerHTML = data.map(item => {
-                 const statusVente = item.status || 'R1 Scheduled'; const statusClass = getStatusClass(statusVente);
-                 const totalAmount = Number(item.amountCollected) || 0; let instTxt='-'; if(item.paymentType==='installments'&&item.installmentAmount&&item.numberOfInstallments){instTxt=`${item.numberOfInstallments}x ${item.installmentAmount.toLocaleString('fr-FR')}€`;}
-                 const qST=item.qualificationStatus?item.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A'; const qC=item.qualificationStatus?.includes('VERT')?'text-green-400':(item.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');
-                 const pN=item.prospectName||'N/A'; const ePn=pN.replace(/"/g,'&quot;');
-                 const dateTimeDisplay = `${item.prospectDate || 'N/A'} ${item.prospectTime ? `<span class="text-xs text-gray-400">${item.prospectTime}</span>` : ''}`; // Affichage date + heure
-
-                 // Bouton Action: Démarrer R1 ou Détails
-                 let actionButton;
-                 if (statusVente === 'R1 Scheduled') {
-                     actionButton = `<a href="script.html?docId=${item.id}" target="_blank" class="start-r1-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</a>`;
-                 } else {
-                     actionButton = `<a href="main.html?docId=${item.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;
-                 }
-
-                 return `
-                     <tr>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dateTimeDisplay}</td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td>
-                         <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${item.scores?.total??'N/A'}</td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${statusClass}">${statusVente.replace('Completed','Effectué').replace('Scheduled','Planifié')}</span></td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${totalAmount > 0 ? totalAmount.toLocaleString('fr-FR') + '€' : '-'}</td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${instTxt}</td>
-                         <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2">
-                             ${actionButton}
-                             <button data-doc-id="${item.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button>
-                             <button data-doc-id="${item.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button>
-                         </td>
-                     </tr>
-                 `;
-             }).join('');
-         }
-
-        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
-        function resetKPIs() { /* ... */ document.getElementById('kpiR1Scheduled').textContent='0'; document.getElementById('kpiR1Completed').textContent='0'; document.getElementById('kpiR2Count').textContent='0';document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashCollected').textContent='0€';document.getElementById('kpiCashFutureRecurring').textContent='0€'; }
+        function updateTable(data) { const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Scheduled';const sC=getStatusClass(sV);const tA=Number(i.amountCollected)||0; let instTxt='-'; if(i.paymentType==='installments'&&i.installmentAmount&&i.numberOfInstallments){instTxt=`${i.numberOfInstallments}x ${i.installmentAmount.toLocaleString('fr-FR')}€`;} const qST=i.qualificationStatus?i.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A';const qC=i.qualificationStatus?.includes('VERT')?'text-green-400':(i.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); const dTD=`${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`; let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;} return `<tr> <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td> <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td> <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td> <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td> <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('No Show R1','Absent R1')}</span></td> <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td> <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${instTxt}</td> <td class="px-2 py-2 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td> </tr>`;}).join(''); }
+        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'No Show R1': return 'status-noshow'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
+        function resetKPIs() {
+            // --- CORRECTION: Utiliser les bons IDs pour NoShow ---
+            document.getElementById('kpiR1Scheduled').textContent='0';
+            document.getElementById('kpiR1NoShowCount').textContent='0'; // ID correct
+            document.getElementById('kpiR1NoShowRate').textContent='(0%)'; // ID correct
+            document.getElementById('kpiR1Completed').textContent='0';
+            document.getElementById('kpiR2Count').textContent='0';
+            document.getElementById('kpiClosingCount').textContent='0';
+            document.getElementById('kpiConversionRate').textContent='0%';
+            document.getElementById('kpiCashCollected').textContent='0€';
+            document.getElementById('kpiCashFutureRecurring').textContent='0€';
+        }
         function setupFiltersAndLoad() { /* ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); function setThisMonth(){const t=new Date(),fd=new Date(t.getFullYear(),t.getMonth(),1).toISOString().split('T')[0],ld=new Date(t.getFullYear(),t.getMonth()+1,0).toISOString().split('T')[0];s.value=fd;e.value=ld;} function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',validateDates); e.addEventListener('input',validateDates); setThisMonth(); validateDates(); fetchDataAndDisplay(s.value,e.value); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); r.addEventListener('click',()=>{setThisMonth(); validateDates(); fetchDataAndDisplay(s.value,e.value);}); }
         function displayError(message) { /* ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
         const modalStatusSelect = document.getElementById('modalStatus'); const modalLostReasonContainer = document.getElementById('modalLostReasonContainer'); const modalPaymentTypeSelect = document.getElementById('modalPaymentType'); const installmentsFieldsDiv = document.getElementById('installmentsFields'); const modalAmountCollectedInput = document.getElementById('modalAmountCollected'); const modalInstallmentAmountInput = document.getElementById('modalInstallmentAmount'); const modalNumberOfInstallmentsInput = document.getElementById('modalNumberOfInstallments');
@@ -193,7 +166,11 @@
         function openDeleteConfirmModal(docId, prospectName) { /* ... */ document.getElementById('deleteProspectName').textContent=prospectName;document.getElementById('deleteDocId').value=docId;document.getElementById('deleteError').textContent='';document.getElementById('deleteConfirmModal').classList.remove('hidden'); }
         function closeDeleteConfirmModal() { /* ... */ document.getElementById('deleteConfirmModal').classList.add('hidden'); }
         async function confirmDeletion() { /* ... */ const dId=document.getElementById('deleteDocId').value;const dE=document.getElementById('deleteError');const cB=document.getElementById('deleteConfirmButton');if(!dId){dE.textContent="ID manquant.";return;} dE.textContent='';cB.disabled=true;cB.textContent='Suppression...';try{const cP=`artifacts/${appId}/public/data/r1_closings`;const dR=doc(db,cP,dId);await deleteDoc(dR);closeDeleteConfirmModal();const s=document.getElementById('startDate').value;const e=document.getElementById('endDate').value;await fetchDataAndDisplay(s,e);}catch(error){console.error(`Err suppression ${dId}:`,error);dE.textContent="Erreur suppression.";}finally{cB.disabled=false;cB.textContent='Supprimer';} }
-        function attachListeners() { /* ... */ document.getElementById('detailsTableBody').addEventListener('click',(e)=>{if(e.target.classList.contains('edit-btn')){openEditModal(e.target.dataset.docId);}else if(e.target.classList.contains('delete-btn')){openDeleteConfirmModal(e.target.dataset.docId,e.target.dataset.prospectName);}}); document.getElementById('modalCancelButton').addEventListener('click',closeEditModal);document.getElementById('modalSaveButton').addEventListener('click',saveModalChanges);document.getElementById('editModal').addEventListener('click',(e)=>{if(e.target.id==='editModal')closeEditModal();}); document.getElementById('deleteCancelButton').addEventListener('click',closeDeleteConfirmModal);document.getElementById('deleteConfirmButton').addEventListener('click',confirmDeletion);document.getElementById('deleteConfirmModal').addEventListener('click',(e)=>{if(e.target.id==='deleteConfirmModal')closeDeleteConfirmModal();}); }
+        function openStartR1ConfirmModal(docId, prospectName) { document.getElementById('startR1ProspectName').textContent = prospectName; document.getElementById('startR1DocId').value = docId; document.getElementById('startR1Error').textContent = ''; document.getElementById('startR1ConfirmModal').classList.remove('hidden'); }
+        function closeStartR1ConfirmModal() { document.getElementById('startR1ConfirmModal').classList.add('hidden'); }
+        async function handleNoShow() { const docId = document.getElementById('startR1DocId').value; const errorP = document.getElementById('startR1Error'); const noShowButton = document.getElementById('noShowButton'); if (!docId || !db) { errorP.textContent = 'Erreur ID/DB'; return; } errorP.textContent = ''; noShowButton.disabled = true; noShowButton.textContent = 'Enregistrement...'; try { const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const docRef = doc(db, collectionPath, docId); await updateDoc(docRef, { status: 'No Show R1', lastUpdatedAt: Timestamp.now() }); closeStartR1ConfirmModal(); const s=document.getElementById('startDate').value; const e=document.getElementById('endDate').value; await fetchDataAndDisplay(s,e); } catch (error) { console.error(`Erreur No Show ${docId}:`, error); errorP.textContent = 'Erreur sauvegarde No Show.'; } finally { noShowButton.disabled = false; noShowButton.textContent = 'Absent (No Show)'; } }
+        function handleStartR1Confirm() { const docId = document.getElementById('startR1DocId').value; if (docId) { window.open(`script.html?docId=${docId}`, '_blank'); closeStartR1ConfirmModal(); } else { document.getElementById('startR1Error').textContent = 'Erreur ID manquant.'; } }
+        function attachListeners() { document.getElementById('detailsTableBody').addEventListener('click',(e)=>{ if(e.target.classList.contains('edit-btn')){ openEditModal(e.target.dataset.docId); } else if(e.target.classList.contains('delete-btn')){ openDeleteConfirmModal(e.target.dataset.docId, e.target.dataset.prospectName); } else if(e.target.classList.contains('start-r1-prompt-btn')) { openStartR1ConfirmModal(e.target.dataset.docId, e.target.dataset.prospectName); } }); document.getElementById('modalCancelButton').addEventListener('click',closeEditModal);document.getElementById('modalSaveButton').addEventListener('click',saveModalChanges);document.getElementById('editModal').addEventListener('click',(e)=>{if(e.target.id==='editModal')closeEditModal();}); document.getElementById('deleteCancelButton').addEventListener('click',closeDeleteConfirmModal);document.getElementById('deleteConfirmButton').addEventListener('click',confirmDeletion);document.getElementById('deleteConfirmModal').addEventListener('click',(e)=>{if(e.target.id==='deleteConfirmModal')closeDeleteConfirmModal();}); document.getElementById('startR1CancelButton').addEventListener('click', closeStartR1ConfirmModal); document.getElementById('noShowButton').addEventListener('click', handleNoShow); document.getElementById('startR1ConfirmButton').addEventListener('click', handleStartR1Confirm); document.getElementById('startR1ConfirmModal').addEventListener('click', (e) => { if (e.target.id === 'startR1ConfirmModal') closeStartR1ConfirmModal(); }); }
         document.addEventListener('DOMContentLoaded', async () => { await initFirebase(); setupFiltersAndLoad(); attachListeners(); });
     </script>
 

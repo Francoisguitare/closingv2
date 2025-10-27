@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Étape 2: Script R1</title>
+    <title>GIA - Script R1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,123 +16,98 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; border: 2px solid #1f2937; }
     </style>
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full overflow-hidden">
+<body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full flex items-center justify-center p-4">
 
-    <div id="app" class="h-full">
+    <div id="app" class="h-full w-full max-w-4xl flex flex-col items-center justify-center">
 
-        <!-- ======================================= -->
-        <!-- ÉCRAN 2: ACCUEIL & TUTEUR               -->
-        <!-- ======================================= -->
-        <div id="scriptScreen" class="h-full flex flex-col items-center justify-center p-4">
-            <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
-                
-                <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2">Début du R1</h1>
-                
-                <div class="space-y-4 text-gray-200 md:text-lg text-base">
-                    <p>
-                        Bonjour <span id="scriptProspectName" class="font-bold text-white">[Prospect]</span>, c'est François de la Guitare Impro Académie.
-                    </p>
-                    <p>
-                        On est bon pour notre créneau ?
-                    </p>
-                    <p class="font-semibold text-amber-300">
-                        <span id="scriptProspectName2" class="font-bold text-amber-300">[Prospect]</span>, est-ce que ça te va si on se tutoie ? Ce sera plus sympa comme ça ?
-                    </p>
-                    <p class="text-sm text-gray-400 italic">
-                        [Attendre la réponse positive du prospect]
-                    </p>
-                </div>
+        <!-- Header commun avec lien Dashboard -->
+         <div class="w-full flex justify-end mb-4 px-2">
+            <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap">
+                Tableau de Bord
+            </a>
+         </div>
 
-                <!-- Boutons de navigation -->
-                <div class="flex justify-between items-center pt-4 mt-auto">
-                    <a id="scriptBackButton" href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
-                        &larr; Retour
-                    </a>
-                    <button id="scriptNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
-                        Suivant &rarr;
-                    </button>
-                </div>
+        <!-- ÉCRAN SCRIPT -->
+        <div id="scriptScreen" class="w-full bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-auto max-h-[90vh]">
+            <h1 class="text-2xl md:text-3xl font-bold text-teal-300 mb-2">Début du R1</h1>
+            <div class="space-y-4 text-gray-200 md:text-lg text-base overflow-y-auto custom-scrollbar flex-grow pr-2">
+                <p>Bonjour <span id="scriptProspectName" class="font-bold text-white">[Prénom]</span>, c'est François de la Guitare Impro Académie.</p>
+                <p>On est bon pour notre créneau ?</p>
+                <p class="font-semibold text-amber-300"><span id="scriptProspectName2" class="font-bold text-amber-300">[Prénom]</span>, est-ce que ça te va si on se tutoie ? Ce sera plus sympa comme ça ?</p>
+                <p class="text-sm text-gray-400 italic">[Attendre la réponse positive du prospect]</p>
+            </div>
+            <div class="flex justify-between items-center pt-4 mt-auto border-t border-slate-700/50">
+                <a href="index.html" id="scriptBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
+                    &larr; Accueil
+                </a>
+                <button id="scriptNextButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                    Suivant &rarr;
+                </button>
             </div>
         </div>
 
-
-        <!-- ======================================= -->
-        <!-- ÉCRAN 3: CADRAGE (Ancien Script)        -->
-        <!-- ======================================= -->
-        <div id="cadrageScreen" class="h-full flex flex-col items-center justify-center p-4 hidden">
-            <div class="w-full max-w-4xl bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex flex-col h-full md:max-h-[90vh] overflow-y-auto custom-scrollbar">
-                
-                <h1 class="text-2xl md:text-3xl font-bold text-amber-300 mb-2">Point Important Avant de Commencer</h1>
-                
-                <div class="space-y-4 text-gray-200 md:text-lg text-base">
-                    <p>
-                        Alors, juste un point très important avant de commencer. Comme je l'explique dans la vidéo de présentation, la Guitare Impro Académie est une formation <span class="font-semibold text-white">accélérée et intensive</span> qui demande beaucoup d'engagement, de la part de l'apprenti et du mien.
-                    </p>
-                    <p>
-                        L'objectif est de te rendre <span class="font-semibold text-white">totalement autonome en 9 mois</span> et t'assurer un niveau assez solide pour maîtriser ton instrument, que tu veuilles jouer en groupe ou simplement pour ton plaisir personnel.
-                    </p>
-                    <p class="font-semibold text-amber-300">
-                        Déjà, avant d'aller plus loin, est-ce que tu avais bien compris les objectifs de cette formation ? (9 mois, maîtrise de l'instrument, potentiellement jeu en groupe...)
-                    </p>
-                    <p class="text-sm text-gray-400 italic">
-                        [Attendre la réponse positive du prospect]
-                    </p>
-                    <p>
-                        Parfait. Cet appel est un <span class="font-semibold text-white">appel de qualification</span>, c'est à dire que je vais te poser plusieurs questions et les réponses vont me permettre de renseigner un outil qui tranchera si ce programme est réellement la bonne solution pour toi, ou s'il est préférable de te diriger vers des cours de guitare standard comme une école de musique ou un professeur particulier.
-                    </p>
-                    <p class="font-semibold text-amber-300">
-                        Ça te va, on y va pour les questions ?
-                    </p>
-                </div>
-
-                <!-- Boutons de navigation -->
-                <div class="flex justify-between items-center pt-4 mt-auto">
-                    <button id="cadrageBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
-                        &larr; Retour
-                    </button>
-                    <!-- Ce bouton est maintenant un lien (<a>) -->
-                    <a id="cadrageContinueButton" href="#" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
-                        Continuer vers la Qualification &rarr;
-                    </a>
-                </div>
+        <!-- ÉCRAN CADRAGE (initialement cache) -->
+        <div id="cadrageScreen" class="w-full bg-slate-800/70 backdrop-blur-sm border border-slate-700/50 p-6 md:p-8 rounded-xl shadow-2xl space-y-6 flex-col h-auto max-h-[90vh] hidden">
+            <h1 class="text-2xl md:text-3xl font-bold text-amber-300 mb-2">Point Important Avant de Commencer</h1>
+            <div class="space-y-4 text-gray-200 md:text-lg text-base overflow-y-auto custom-scrollbar flex-grow pr-2">
+                <p>Alors, juste un point très important avant de commencer. Comme je l'explique dans la vidéo de présentation, la Guitare Impro Académie est une formation <span class="font-semibold text-white">accélérée et intensive</span> qui demande beaucoup d'engagement, de la part de l'apprenti et du mien.</p>
+                <p>L'objectif est de te rendre <span class="font-semibold text-white">totalement autonome en 9 mois</span> et t'assurer un niveau assez solide pour maîtriser ton instrument, que tu veuilles jouer en groupe ou simplement pour ton plaisir personnel.</p>
+                <p class="font-semibold text-amber-300">Déjà, avant d'aller plus loin, est-ce que tu avais bien compris les objectifs de cette formation ? (9 mois, maîtrise de l'instrument, potentiellement jeu en groupe...)</p>
+                <p class="text-sm text-gray-400 italic">[Attendre la réponse positive du prospect]</p>
+                <p>Parfait. Cet appel est un <span class="font-semibold text-white">appel de qualification</span>, c'est à dire que je vais te poser plusieurs questions et les réponses vont me permettre de renseigner un outil qui tranchera si ce programme est réellement la bonne solution pour toi, ou s'il est préférable de te diriger vers des cours de guitare standard comme une école de musique ou un professeur particulier.</p>
+                <p class="font-semibold text-amber-300">Ça te va, on y va pour les questions ?</p>
+            </div>
+            <div class="flex justify-between items-center pt-4 mt-auto border-t border-slate-700/50">
+                <button id="cadrageBackButton" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-5 text-sm md:text-md rounded-lg transition-colors duration-200">
+                    &larr; Retour
+                </button>
+                <a href="#" id="cadrageContinueButton" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 text-md md:text-lg rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
+                    Continuer vers la Qualification &rarr;
+                </a>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Récupérer les paramètres de l'URL
-            const params = new URLSearchParams(window.location.search);
-            const firstName = params.get('firstName') || '[Prénom]';
-            const lastName = params.get('lastName') || '[Nom]';
-            const date = params.get('date') || '';
-
-            // Populer les noms
-            document.getElementById('scriptProspectName').textContent = firstName;
-            document.getElementById('scriptProspectName2').textContent = firstName;
-
-            // Définir le lien de retour vers l'accueil
-            // (index.html gère déjà son propre état)
-            document.getElementById('scriptBackButton').href = 'index.html';
-
-            // Définir le lien "Continuer" pour passer les paramètres à main.html
-            document.getElementById('cadrageContinueButton').href = `main.html?${params.toString()}`;
-
-            // Gestion de la navigation entre les écrans
             const scriptScreen = document.getElementById('scriptScreen');
             const cadrageScreen = document.getElementById('cadrageScreen');
-            
-            document.getElementById('scriptNextButton').addEventListener('click', () => {
+            const scriptNextButton = document.getElementById('scriptNextButton');
+            const cadrageBackButton = document.getElementById('cadrageBackButton');
+            const cadrageContinueButton = document.getElementById('cadrageContinueButton');
+            const scriptProspectName = document.getElementById('scriptProspectName');
+            const scriptProspectName2 = document.getElementById('scriptProspectName2');
+
+            // Recuperer les parametres de l'URL
+            const params = new URLSearchParams(window.location.search);
+            const firstName = params.get('firstName') || '[Prénom]'; // Valeur par defaut
+
+            // Afficher le prenom
+            if (scriptProspectName) scriptProspectName.textContent = firstName;
+            if (scriptProspectName2) scriptProspectName2.textContent = firstName;
+
+            // Mettre a jour le lien du bouton Continuer pour passer les params a main.html
+            if (cadrageContinueButton) {
+                cadrageContinueButton.href = `main.html?${params.toString()}`;
+            }
+
+            // Navigation entre ecrans
+            scriptNextButton?.addEventListener('click', () => {
                 scriptScreen.classList.add('hidden');
+                scriptScreen.classList.remove('flex');
                 cadrageScreen.classList.remove('hidden');
+                cadrageScreen.classList.add('flex');
             });
 
-            document.getElementById('cadrageBackButton').addEventListener('click', () => {
+            cadrageBackButton?.addEventListener('click', () => {
                 cadrageScreen.classList.add('hidden');
+                cadrageScreen.classList.remove('flex');
                 scriptScreen.classList.remove('hidden');
+                scriptScreen.classList.add('flex');
             });
         });
     </script>
 
 </body>
 </html>
+

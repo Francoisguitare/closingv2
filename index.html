@@ -14,10 +14,19 @@
         #feedbackMessage.show { opacity: 1; pointer-events: auto; }
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
-        .input-style { width: 100%; background-color: #f1f5f9; border: 1px solid #94a3b8; border-radius: 0.5rem; padding: 0.625rem 1rem; color: #111827; outline: none; }
+        .input-style {
+            width: 100%; background-color: #f1f5f9; border: 1px solid #94a3b8; border-radius: 0.5rem;
+            padding: 0.625rem 1rem; color: #111827; outline: none;
+        }
         .input-style::placeholder { color: #6b7280; }
         .input-style:focus { border-color: #2dd4bf; box-shadow: 0 0 0 2px #5eead4; }
-        .button-disabled { width: 100%; font-size: 1.125rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.5rem; transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
+        .button-disabled { width: 100%; font-size: 1.125rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.5rem; transition: all 300ms; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
+        label { cursor: pointer; display: block; }
+        /* Style spécifique pour les labels date/heure */
+        label[for="prospectDateInput"], label[for="prospectTimeInput"] {
+             cursor: pointer; /* Indiquer qu'ils sont cliquables */
+        }
+
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full flex items-center justify-center">
@@ -30,13 +39,12 @@
             <hr class="border-slate-700 mb-6"/>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div><label for="prospectFirstNameInput" class="block text-sm font-medium text-gray-300 mb-2">Prénom Prospect</label><input id="prospectFirstNameInput" type="text" placeholder="Jean" class="input-style"></div>
-                <div><label for="prospectLastNameInput" class="block text-sm font-medium text-gray-300 mb-2">Nom Prospect</label><input id="prospectLastNameInput" type="text" placeholder="Dupont" class="input-style"></div>
+                <div><label for="prospectFirstNameInput" class="text-sm font-medium text-gray-300 mb-2">Prénom Prospect</label><input id="prospectFirstNameInput" type="text" placeholder="Jean" class="input-style"></div>
+                <div><label for="prospectLastNameInput" class="text-sm font-medium text-gray-300 mb-2">Nom Prospect</label><input id="prospectLastNameInput" type="text" placeholder="Dupont" class="input-style"></div>
             </div>
-            <!-- Ajout du champ Heure -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div><label for="prospectDateInput" class="block text-sm font-medium text-gray-300 mb-2">Date R1 Prévue</label><input id="prospectDateInput" type="date" class="input-style"></div>
-                <div><label for="prospectTimeInput" class="block text-sm font-medium text-gray-300 mb-2">Heure R1 Prévue</label><input id="prospectTimeInput" type="time" class="input-style"></div>
+                <div><label for="prospectDateInput" class="text-sm font-medium text-gray-300 mb-2">Date R1 Prévue</label><input id="prospectDateInput" type="date" class="input-style"></div>
+                <div><label for="prospectTimeInput" class="text-sm font-medium text-gray-300 mb-2">Heure R1 Prévue</label><input id="prospectTimeInput" type="time" class="input-style"></div>
             </div>
             <hr class="border-slate-700"/>
             <button id="scheduleButton" disabled class="button-disabled">Remplir les informations</button>
@@ -45,78 +53,45 @@
      <!-- Feedback Element -->
      <div id="feedbackMessage"></div>
 
-    <!-- Firebase -->
+    <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        let db, auth, appId;
-        let isSaving = false;
-
-        async function initFirebase() { /* ... comme avant ... */ try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); await new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); console.log("Firebase prêt (index.html)"); return true; } catch (e) { console.error("Err init Firebase:", e); showFeedback("Erreur DB.", true); return false; } }
-
+        let db, auth, appId; let isSaving = false;
+        async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); await new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); console.log("Firebase prêt (index.html)"); return true; } catch (e) { console.error("Err init Firebase:", e); showFeedback("Erreur DB.", true); return false; } }
         document.addEventListener('DOMContentLoaded', async () => {
-            const firstNameInput = document.getElementById('prospectFirstNameInput');
-            const lastNameInput = document.getElementById('prospectLastNameInput');
-            const dateInput = document.getElementById('prospectDateInput');
-            const timeInput = document.getElementById('prospectTimeInput'); // Nouveau champ
-            const scheduleButton = document.getElementById('scheduleButton');
+            const fN = document.getElementById('prospectFirstNameInput'); const lN = document.getElementById('prospectLastNameInput'); const dI = document.getElementById('prospectDateInput'); const tI = document.getElementById('prospectTimeInput'); const sB = document.getElementById('scheduleButton');
+            // Récupérer les labels
+            const dateLabel = document.querySelector('label[for="prospectDateInput"]');
+            const timeLabel = document.querySelector('label[for="prospectTimeInput"]');
 
-            const firebaseReady = await initFirebase();
-            if (!firebaseReady) { scheduleButton.textContent = "Erreur DB"; return; }
 
-            function updateScheduleButtonState() {
-                const firstName = firstNameInput.value.trim();
-                const lastName = lastNameInput.value.trim();
-                const date = dateInput.value;
-                const time = timeInput.value; // Lire l'heure
-                const canSchedule = firstName && lastName && date && time && !isSaving; // Ajouter condition heure
+            const fR = await initFirebase(); if (!fR) { sB.textContent = "Erreur DB"; return; }
+            function uSBS() { const f = fN.value.trim(), l = lN.value.trim(), d = dI.value, t = tI.value; const cS = f && l && d && t && !isSaving; sB.disabled = !cS; if (isSaving) { sB.textContent = "Enregistrement..."; } else if (cS) { sB.textContent = "Enregistrer et Voir Dashboard"; sB.className = 'w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-teal-600 hover:bg-teal-500 text-white shadow-teal-800/40 cursor-pointer'; } else { sB.textContent = "Remplir Prénom, Nom, Date et Heure"; sB.className = 'button-disabled'; } }
+            const today = new Date().toISOString().split('T')[0]; dI.value = today; tI.value = "09:00";
+            fN.addEventListener('input', uSBS); lN.addEventListener('input', uSBS); dI.addEventListener('input', uSBS); tI.addEventListener('input', uSBS);
 
-                scheduleButton.disabled = !canSchedule;
-                if (isSaving) { scheduleButton.textContent = "Enregistrement..."; }
-                else if (canSchedule) { scheduleButton.textContent = "Enregistrer et Voir Dashboard"; scheduleButton.className = 'w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-teal-600 hover:bg-teal-500 text-white shadow-teal-800/40 cursor-pointer'; }
-                else { scheduleButton.textContent = "Remplir Prénom, Nom, Date et Heure"; scheduleButton.className = 'button-disabled'; }
-            }
+            // --- CORRECTION: Clic sur label déclenche clic sur input ---
+            if (dateLabel && dI) {
+                 dateLabel.addEventListener('click', () => dI.click());
+                 // Optionnel: Essayer showPicker en fallback si click ne marche pas
+                 // dateLabel.addEventListener('click', () => { try { dI.showPicker(); } catch(e){ dI.click();} });
+             }
+             if (timeLabel && tI) {
+                 timeLabel.addEventListener('click', () => tI.click());
+                 // Optionnel: Essayer showPicker en fallback si click ne marche pas
+                 // timeLabel.addEventListener('click', () => { try { tI.showPicker(); } catch(e){ tI.click();} });
+             }
+             // Empêcher le clic sur l'input lui-même d'ouvrir DEUX fois le picker (si showPicker marche)
+            // dI.addEventListener('click', (e) => e.preventDefault()); // A tester si double ouverture
+            // tI.addEventListener('click', (e) => e.preventDefault()); // A tester si double ouverture
 
-            const today = new Date().toISOString().split('T')[0]; dateInput.value = today;
-            // Initialiser heure par défaut (ex: 09:00)
-            timeInput.value = "09:00";
 
-            firstNameInput.addEventListener('input', updateScheduleButtonState);
-            lastNameInput.addEventListener('input', updateScheduleButtonState);
-            dateInput.addEventListener('input', updateScheduleButtonState);
-            timeInput.addEventListener('input', updateScheduleButtonState); // Écouter changements heure
-
-            scheduleButton.addEventListener('click', async () => {
-                if (isSaving || !db) return; isSaving = true; updateScheduleButtonState();
-                const firstName = firstNameInput.value.trim(); const lastName = lastNameInput.value.trim(); const date = dateInput.value; const time = timeInput.value; const prospectName = `${firstName} ${lastName}`;
-
-                try {
-                     const collectionPath = `artifacts/${appId}/public/data/r1_closings`;
-                     // On peut chercher par nom/date OU juste créer (la gestion doublon se fait via feedback)
-                     const q = query(collection(db, collectionPath), where("prospectName", "==", prospectName), where("prospectDate", "==", date), where("prospectTime", "==", time)); // Ajout heure dans la verif doublon
-                     const existingDocs = await getDocs(q);
-
-                     if (!existingDocs.empty) { showFeedback(`R1 déjà planifié pour ${prospectName} à ${date} ${time}.`, false); }
-                     else {
-                         const newR1Data = {
-                             prospectFirstName: firstName, prospectLastName: lastName, prospectName: prospectName, prospectDate: date,
-                             prospectTime: time, // Enregistrer l'heure
-                             context: {}, customNotes: '', scores: {total: 0}, qualificationStatus: 'N/A', qualificationText: '',
-                             savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user',
-                             status: 'R1 Scheduled', // Statut planifié
-                             amountCollected: 0, recurringAmount: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: ""
-                         };
-                         await addDoc(collection(db, collectionPath), newR1Data); showFeedback("R1 Planifié enregistré.", false);
-                     }
-                     setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-                } catch (error) { console.error("Erreur enregistrement R1:", error); showFeedback("Erreur enregistrement !", true); isSaving = false; updateScheduleButtonState(); }
-            });
-            updateScheduleButtonState();
+            sB.addEventListener('click', async () => { if (isSaving || !db) return; isSaving = true; uSBS(); const fn = fN.value.trim(), ln = lN.value.trim(), date = dI.value, time = tI.value, pN = `${fn} ${ln}`; try { const cP = `artifacts/${appId}/public/data/r1_closings`; const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", date), where("prospectTime", "==", time)); const eD = await getDocs(q); if (!eD.empty) { showFeedback(`R1 déjà planifié pour ${pN} à ${date} ${time}.`, false); } else { const nD = { prospectFirstName: fn, prospectLastName: ln, prospectName: pN, prospectDate: date, prospectTime: time, context: {}, customNotes: '', scores: {total: 0}, qualificationStatus: 'N/A', qualificationText: '', savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Scheduled', amountCollected: 0, recurringAmount: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: "" }; await addDoc(collection(db, cP), nD); showFeedback("R1 Planifié enregistré.", false); } setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); } catch (e) { console.error("Erreur save R1:", e); showFeedback("Erreur enregistrement !", true); isSaving = false; uSBS(); } });
+            uSBS();
         });
-
-         function showFeedback(message, isError = false) { /* ... comme avant ... */ let fE=document.getElementById('feedbackMessage');if(!fE)return;fE.textContent=message;fE.classList.remove('bg-red-600','bg-green-600','opacity-0');fE.classList.add(isError?'bg-red-600':'bg-green-600','show');setTimeout(()=>{fE.classList.remove('show');fE.classList.add('opacity-0');},3000); }
+        function showFeedback(message, isError = false) { let fE=document.getElementById('feedbackMessage');if(!fE)return;fE.textContent=message;fE.classList.remove('bg-red-600','bg-green-600','opacity-0');fE.classList.add(isError?'bg-red-600':'bg-green-600','show');setTimeout(()=>{fE.classList.remove('show');fE.classList.add('opacity-0');},3000); }
     </script>
 
 </body>

@@ -94,17 +94,16 @@
             </div>
         </section>
 
-        <!-- KPIs (Ajout ID et classes kpi-card-toggle) -->
+        <!-- KPIs -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
              <div id="kpi-card-r1-planned" class="kpi-card-toggle kpi-card-static border-t-amber-500"><span id="kpiR1Planned" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
              <div id="kpi-card-r1-noshow" class="kpi-card-toggle kpi-card-static border-t-red-500"><div class="flex items-center justify-center"><span id="kpiR1NoShowCount" class="text-4xl font-bold text-red-400 block">0</span><span id="kpiR1NoShowRate" class="kpi-secondary-value block">(0%)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">No Show R1</span></div>
              <div id="kpi-card-r1-completed" class="kpi-card-toggle kpi-card-static border-t-blue-500"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
              <div id="kpi-card-r2-count" class="kpi-card-toggle kpi-card-static border-t-purple-500"><span id="kpiR2Count" class="text-4xl font-bold text-purple-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Effec/Planif</span></div>
-             <div id="kpi-card-r2-noshow" class="kpi-card-toggle kpi-card-static border-t-red-700"><div class="flex items-center justify-center"><span id="kpiR2NoShowCount" class="text-4xl font-bold text-red-500 block">0</span><span id="kpiR2NoShowRate" class="kpi-secondary-value block">(0%)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">No Show R2</span></div>
+             <div id="kpi-card-r2-noshow" class="kpi-card-toggle kpi-card-static border-t-orange-500"><div class="flex items-center justify-center"><span id="kpiR2NoShowCount" class="text-4xl font-bold text-orange-400 block">0</span><span id="kpiR2NoShowRate" class="kpi-secondary-value !text-orange-400 block">(0%)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">No Show R2</span></div>
              <div id="kpi-card-closing" class="kpi-card-toggle kpi-card-static border-t-green-500"><span id="kpiClosingCount" class="text-4xl font-bold text-green-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span></div>
              <div class="kpi-card-static border-t-teal-500"><span id="kpiConversionRate" class="text-4xl font-bold text-teal-300 block mb-1">0%</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 Eff → Closé</span></div>
              <div id="kpi-card-cash" class="kpi-card-toggle kpi-card-static border-t-teal-500"><span id="kpiCashCollected" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Période</span></div>
-             <!-- MODIFICATION: Retrait de kpi-card-toggle pour Cash Futur -->
              <div id="kpi-card-cash-future" class="kpi-card-static border-t-teal-500"><span id="kpiCashFutureRecurring" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent Futur</span></div>
         </section>
 
@@ -145,9 +144,50 @@
         </section>
     </div>
 
-    <!-- Modals (Édition & Suppression & Start/NoShow) -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <!-- Modal Édition (Ajout Date/Heure R1) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
+            <input type="hidden" id="modalDocId">
+            
+            <!-- Champs Date/Heure R1 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div>
+                    <label for="modalProspectDate" class="block text-sm font-medium text-gray-300 mb-1">Date R1</label>
+                    <input type="date" id="modalProspectDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                 </div>
+                 <div>
+                    <label for="modalProspectTime" class="block text-sm font-medium text-gray-300 mb-1">Heure R1</label>
+                    <input type="time" id="modalProspectTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                 </div>
+            </div>
+
+            <!-- Champs Statut -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div>
+                <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div>
+            </div>
+            
+            <hr class="border-slate-600 my-4"/>
+            <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div>
+                <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+            </div>
+            <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div>
+            <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
+        </div>
+    </div>
+    
+    <!-- Modal Suppression -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <!-- Modal Démarrer/NoShow -->
     <div id="startR1ConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-teal-300">Démarrer R1</h2> <p class="text-gray-300 text-sm my-3">Le prospect "<span id="startR1ProspectName" class="font-bold"></span>" est-il présent ?</p> <input type="hidden" id="startR1DocId"> <div class="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3 pt-4"> <button id="noShowButton" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Absent (No Show)</button> <button id="startR1ConfirmButton" type="button" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Présent (Démarrer)</button> </div> <div class="flex justify-center pt-2"> <button id="startR1CancelButton" type="button" class="text-gray-400 hover:text-gray-300 text-sm">Annuler</button> </div> <p id="startR1Error" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
 
     <!-- Script -->
@@ -229,79 +269,52 @@
             document.getElementById('kpiCashFutureRecurring').textContent = `${cashFutureRecurring.toLocaleString('fr-FR')}€`;
         }
         
-        // --- MODIFIÉ: updateChart (Changement type: 'bar' -> 'line') ---
+        // --- updateChart (Inchangée) ---
         function updateChart(data, filterStart, filterEnd) {
             const ctx = document.getElementById('mainChart'); if (!ctx) return;
             const dailyData = {};
             let currentDate = new Date(filterStart);
             while (currentDate <= filterEnd) { const dateString = getISODate(currentDate); dailyData[dateString] = { r1: 0, r1_planned: 0, r1_noshow: 0, r2_count: 0, r2_noshow: 0, closed: 0, cash: 0, cash_future: 0 }; currentDate.setDate(currentDate.getDate() + 1); }
-            
             const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other'];
             const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost', 'No Show R2'];
-
             data.forEach(item => {
                 const status = item.status || 'R1 Scheduled'; const itemR1DateStr = item.prospectDate; const itemR1Date = parseDateString(itemR1DateStr);
-                
-                // Agrégation pour le graphique (basée sur la date R1)
                 if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) {
                     const dateStr = itemR1DateStr;
                     if(dailyData[dateStr]) {
-                        dailyData[dateStr].r1_planned++; // Compte tous les R1 planifiés ce jour-là
+                        dailyData[dateStr].r1_planned++;
                         if (status === 'No Show R1') dailyData[dateStr].r1_noshow++;
                         if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') dailyData[dateStr].r1++;
                         if (consideredStatusesForR2.includes(status)) dailyData[dateStr].r2_count++;
                         if (status === 'No Show R2') dailyData[dateStr].r2_noshow++;
                     }
                 }
-                // Agrégation Cash & Closing (basée sur date paiement/échéance)
                 if (status === 'Closed') { const pT = item.paymentType || 'unique'; let pD = null; let amt = 0; let cashDateStr = null;
                     if (pT === 'unique') { pD = itemR1Date; amt = Number(item.amountCollected) || 0; if (pD) cashDateStr = getISODate(pD); }
                     else if (pT === 'installments') { pD = parseDateString(item.startDateOfPayment); amt = Number(item.installmentAmount) || 0; const nI = parseInt(item.numberOfInstallments) || 0;
-                        if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } else if (cPD > filterEnd) { /* Géré par KPI, pas par jour graphique */ } } }
-                        if(pD) cashDateStr = getISODate(pD); // Compter le closing à la date de 1ere échéance
+                        if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } } }
+                        if(pD) cashDateStr = getISODate(pD); 
                     }
                     if (pD && pD >= filterStart && pD <= filterEnd && dailyData[cashDateStr]) {
                         dailyData[cashDateStr].closed++;
                         if (pT === 'unique') { dailyData[cashDateStr].cash += amt; }
                     }
                 }
-                // (Cash futur n'est pas par jour, donc pas dans dailyData)
             });
-            
             const labels = Object.keys(dailyData).sort();
-            const r1PlannedData = labels.map(date => dailyData[date].r1_planned);
-            const r1NoShowData = labels.map(date => dailyData[date].r1_noshow);
-            const r1Data = labels.map(date => dailyData[date].r1);
-            const r2CountData = labels.map(date => dailyData[date].r2_count);
-            const r2NoShowData = labels.map(date => dailyData[date].r2_noshow);
-            const closedData = labels.map(date => dailyData[date].closed);
-            const cashData = labels.map(date => dailyData[date].cash);
-            // (Cash futur n'est pas dans le graphique)
-            
+            const r1PlannedData = labels.map(date => dailyData[date].r1_planned); const r1NoShowData = labels.map(date => dailyData[date].r1_noshow); const r1Data = labels.map(date => dailyData[date].r1); const r2CountData = labels.map(date => dailyData[date].r2_count); const r2NoShowData = labels.map(date => dailyData[date].r2_noshow); const closedData = labels.map(date => dailyData[date].closed); const cashData = labels.map(date => dailyData[date].cash);
             if (mainChartInstance) { mainChartInstance.destroy(); }
-            
-            // Lire l'état 'hidden' depuis les cartes KPI
             const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; };
-
             mainChartInstance = new Chart(ctx.getContext('2d'), {
-                type: 'line', // <-- Type par défaut 'line'
+                type: 'line', 
                 data: { labels: labels, datasets: [
-                        // --- Index 0 ---
                         { label: 'R1 Planifiés', data: r1PlannedData, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-planned') },
-                        // --- Index 1 ---
                         { label: 'No Show R1', data: r1NoShowData, borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-noshow') },
-                        // --- Index 2 ---
                         { label: 'R1 Effectués', data: r1Data, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-completed') },
-                        // --- Index 3 ---
                         { label: 'R2 Effec/Planif', data: r2CountData, borderColor: 'rgba(168, 85, 247, 1)', backgroundColor: 'rgba(168, 85, 247, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-count') },
-                        // --- Index 4 ---
                         { label: 'No Show R2', data: r2NoShowData, borderColor: 'rgba(185, 28, 28, 1)', backgroundColor: 'rgba(185, 28, 28, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-noshow') },
-                        // --- Index 5 ---
                         { label: 'Closings', data: closedData, borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-closing') },
-                        // --- Index 6 ---
                         { label: 'Cash Période (€)', data: cashData, borderColor: 'rgba(20, 184, 166, 1)', backgroundColor: 'rgba(20, 184, 166, 0.7)', tension: 0.1, yAxisID: 'yCash', hidden: isHidden('kpi-card-cash') },
-                        // --- Index 7 (Cash futur) ---
-                        // (On pourrait ajouter un dataset pour le cash futur s'il est agrégé par jour, mais ce n'est pas le cas ici)
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -314,8 +327,6 @@
                 }
             });
         }
-
-        // --- MODIFIÉ: updateChartVisibility (pour gérer 7 datasets) ---
         function updateChartVisibility() {
             if (!mainChartInstance) return;
             try {
@@ -326,56 +337,18 @@
                 mainChartInstance.data.datasets[4].hidden = !document.getElementById('kpi-card-r2-noshow')?.classList.contains('kpi-chart-active');
                 mainChartInstance.data.datasets[5].hidden = !document.getElementById('kpi-card-closing')?.classList.contains('kpi-chart-active');
                 mainChartInstance.data.datasets[6].hidden = !document.getElementById('kpi-card-cash')?.classList.contains('kpi-chart-active');
-                // (Dataset 7 'Cash Futur' n'est pas dans ce graphique)
                 mainChartInstance.update();
             } catch (e) { console.error("Erreur MAJ visibilité graphique:", e); }
         }
-
-        // --- MODIFIÉ: setupKpiCardToggles (pour inclure toutes les cartes) ---
         function setupKpiCardToggles() {
-            const kpiCards = [
-                { id: 'kpi-card-r1-planned', defaultActive: false },
-                { id: 'kpi-card-r1-noshow', defaultActive: false },
-                { id: 'kpi-card-r1-completed', defaultActive: true }, // Actif par défaut
-                { id: 'kpi-card-r2-count', defaultActive: false },
-                { id: 'kpi-card-r2-noshow', defaultActive: false },
-                { id: 'kpi-card-closing', defaultActive: false },
-                { id: 'kpi-card-cash', defaultActive: false }
-                // 'kpi-card-cash-future' est retiré des toggles
-            ];
-            
-            const toggleLogic = (e) => {
-                const card = e.currentTarget;
-                card.classList.toggle('kpi-chart-active');
-                card.classList.toggle('opacity-60');
-                updateChartVisibility();
-            };
-
-            kpiCards.forEach(cardInfo => {
-                const cardEl = document.getElementById(cardInfo.id);
-                if (cardEl) {
-                    // Appliquer l'état initial
-                    if (cardInfo.defaultActive) {
-                        cardEl.classList.add('kpi-chart-active');
-                        cardEl.classList.remove('opacity-60');
-                    } else {
-                        cardEl.classList.remove('kpi-chart-active');
-                        cardEl.classList.add('opacity-60');
-                    }
-                    // Attacher l'écouteur
-                    cardEl.addEventListener('click', toggleLogic);
-                } else {
-                    console.warn(`KPI Card Toggle non trouvé: #${cardInfo.id}`);
-                }
-            });
-            
-            // S'assurer que les cartes non-cliquables n'ont pas l'effet 'opacity'
+            const kpiCards = [ { id: 'kpi-card-r1-planned', defaultActive: false }, { id: 'kpi-card-r1-noshow', defaultActive: false }, { id: 'kpi-card-r1-completed', defaultActive: true }, { id: 'kpi-card-r2-count', defaultActive: false }, { id: 'kpi-card-r2-noshow', defaultActive: false }, { id: 'kpi-card-closing', defaultActive: false }, { id: 'kpi-card-cash', defaultActive: false } ];
+            const toggleLogic = (e) => { const card = e.currentTarget; card.classList.toggle('kpi-chart-active'); card.classList.toggle('opacity-60'); updateChartVisibility(); };
+            kpiCards.forEach(cardInfo => { const cardEl = document.getElementById(cardInfo.id); if (cardEl) { if (cardInfo.defaultActive) { cardEl.classList.add('kpi-chart-active'); cardEl.classList.remove('opacity-60'); } else { cardEl.classList.remove('kpi-chart-active'); cardEl.classList.add('opacity-60'); } cardEl.addEventListener('click', toggleLogic); } else { console.warn(`KPI Card Toggle non trouvé: #${cardInfo.id}`); } });
              document.getElementById('kpi-card-cash-future')?.classList.remove('kpi-card-toggle', 'opacity-60');
         }
-
-        // ... (updateTable - inchangée) ...
+        
+        // --- Fonctions Modals (Edit, Delete, Start R1) ---
         function updateTable(data) { const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Scheduled';const sC=getStatusClass(sV);const tA=Number(i.amountCollected)||0; let instTxt='-'; if(i.paymentType==='installments'&&i.installmentAmount&&i.numberOfInstallments){instTxt=`${i.numberOfInstallments}x ${i.installmentAmount.toLocaleString('fr-FR')}€`;} const qST=i.qualificationStatus?i.qualificationStatus.replace(' (Client Rêvé)','').trim():'N/A';const qC=i.qualificationStatus?.includes('VERT')?'text-green-400':(i.qualificationStatus?.includes('ROUGE')?'text-red-400':'text-gray-400');const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); const dTD=`${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`; let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" target="_blank" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;} return `<tr> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700"><span class="${qC}">${qST}</span></td> <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${instTxt}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td> </tr>`;}).join(''); }
-        // ... (getStatusClass, resetKPIs, setupFiltersAndLoad, displayError, Modals... inchangés) ...
         function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
         function resetKPIs() { /* ... */ document.getElementById('kpiR1Planned').textContent='0'; document.getElementById('kpiR1NoShowCount').textContent='0'; document.getElementById('kpiR1NoShowRate').textContent='(0%)'; document.getElementById('kpiR1Completed').textContent='0'; document.getElementById('kpiR2Count').textContent='0'; document.getElementById('kpiR2NoShowCount').textContent='0'; document.getElementById('kpiR2NoShowRate').textContent='(0%)'; document.getElementById('kpiClosingCount').textContent='0';document.getElementById('kpiConversionRate').textContent='0%';document.getElementById('kpiCashCollected').textContent='0€';document.getElementById('kpiCashFutureRecurring').textContent='0€'; }
         function setupFiltersAndLoad() { /* ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); const shortcuts=document.getElementById('dateShortcuts'); function setDates(startDate,endDate){s.value=getISODate(startDate);e.value=getISODate(endDate);validateDates();fetchDataAndDisplay(s.value,e.value);} function handleShortcutClick(ev){if(ev.target.tagName!=='BUTTON')return; shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); ev.target.classList.add('active'); const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today); if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}else{const numDays=parseInt(days,10); if(numDays===0){startDate.setDate(today.getDate());}else{startDate.setDate(today.getDate()-numDays+1);}} const sUTC=new Date(Date.UTC(startDate.getFullYear(),startDate.getMonth(),startDate.getDate())); const eUTC=new Date(Date.UTC(endDate.getFullYear(),endDate.getMonth(),endDate.getDate())); setDates(sUTC,eUTC); } shortcuts.addEventListener('click',handleShortcutClick); function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates();}); e.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates();}); f.addEventListener('click',()=>{fetchDataAndDisplay(s.value,e.value);}); shortcuts.querySelector('button[data-days="month"]').click(); }

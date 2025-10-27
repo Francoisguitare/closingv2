@@ -10,26 +10,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Styles CSS de base (NON-Tailwind ou styles simples) -->
+    <!-- Styles CSS de base -->
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Couleurs pour les badges de statut (sans @apply) */
-        .status-r1 { background-color: #2563eb; color: #dbeafe; } /* blue-600 / blue-100 */
-        .status-r2 { background-color: #9333ea; color: #f3e8ff; } /* purple-600 / purple-100 */
-        .status-closed { background-color: #16a34a; color: #dcfce7; } /* green-600 / green-100 */
-        .status-lost { background-color: #dc2626; color: #fee2e2; } /* red-600 / red-100 */
-        .status-other { background-color: #4b5563; color: #f3f4f6; } /* gray-600 / gray-100 */
-        /* Cacher/Afficher les champs paiement échelonné */
+        .status-r1 { background-color: #2563eb; color: #dbeafe; }
+        .status-r2 { background-color: #9333ea; color: #f3e8ff; }
+        .status-closed { background-color: #16a34a; color: #dcfce7; }
+        .status-lost { background-color: #dc2626; color: #fee2e2; }
+        .status-other { background-color: #4b5563; color: #f3f4f6; }
         .installments-fields.hidden { display: none; }
-        /* Style minimal pour le modal (Tailwind fera le reste) */
         .modal.hidden { display: none; }
     </style>
 </head>
-{/* Ajout des classes de base directement sur body */}
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white min-h-screen p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-teal-300 mb-4 md:mb-0">Tableau de Bord GIA</h1>
             <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg shadow-teal-800/40">
@@ -37,7 +33,7 @@
             </a>
         </header>
 
-        {/* Filtres */}
+        <!-- Filtres -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
             <h2 class="text-lg font-semibold text-gray-300 mr-4 whitespace-nowrap">Période :</h2>
             <div class="flex-grow flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
@@ -52,9 +48,9 @@
             <button id="resetFilterButton" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 w-full md:w-auto ml-0 md:ml-2">Ce mois-ci</button>
         </section>
 
-        {/* KPIs (Classes appliquées directement) */}
+        <!-- KPIs -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            {/* KPI Card Structure : div avec toutes les classes Tailwind */}
+            <!-- KPI Card Structure -->
             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
                 <span id="kpiR1Count" class="text-4xl font-bold text-teal-300 block mb-1">0</span>
                 <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span>
@@ -76,7 +72,7 @@
                 <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Encaissé</span>
             </div>
             <div class="bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 rounded-xl shadow-xl text-center transition-all duration-300 hover:bg-slate-700/90 relative overflow-hidden border-t-4 border-t-teal-500" style="box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);">
-                <span id="kpiCashRecurring" class="text-4xl font-bold text-teal-300 block mb-1">N/A</span> <!-- Reste N/A pour l'instant -->
+                <span id="kpiCashRecurring" class="text-4xl font-bold text-teal-300 block mb-1">N/A</span> <!-- Reste N/A -->
                 <span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent</span>
             </div>
         </section>
@@ -88,7 +84,7 @@
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
              <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
              <div class="min-w-[900px]">
-                 {/* Table avec th/td stylisés via classes Tailwind */}
+                 <!-- Table -->
                  <table class="w-full divide-y divide-slate-700 table-fixed">
                     <thead class="sticky top-[4.5rem] z-10">
                         <tr>
@@ -103,6 +99,7 @@
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody" class="bg-slate-800 divide-y divide-slate-700">
+                        <!-- Lignes générées par JS -->
                         <tr><td colspan="8" class="text-center py-4 text-gray-400 px-4 whitespace-nowrap text-sm border-b border-slate-700">Chargement...</td></tr>
                     </tbody>
                 </table>
@@ -110,9 +107,9 @@
         </section>
     </div>
 
-    <!-- Modal Édition (Classes appliquées directement) -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4">
+    <!-- Modal Édition -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <!-- Utilisation classe Tailwind 'hidden' -->
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4"> <!-- Utilisation classes Tailwind -->
             <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
             <input type="hidden" id="modalDocId">
 
@@ -134,8 +131,8 @@
                  <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div>
                  <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3000" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
             </div>
-            {/* Champs paiement échelonné */}
-            <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <!-- Champs paiement échelonné -->
+            <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <!-- Utilisation classe Tailwind 'hidden' -->
                  <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
                  <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
                  <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
@@ -148,9 +145,9 @@
         </div>
     </div>
 
-    {/* Modal Confirmation Suppression */}
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-         <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4">
+    <!-- Modal Confirmation Suppression -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <!-- Utilisation classe Tailwind 'hidden' -->
+         <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <!-- Utilisation classes Tailwind -->
              <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2>
              <p class="text-gray-300 text-sm my-3">Voulez-vous vraiment supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p>
              <input type="hidden" id="deleteDocId">
@@ -162,7 +159,7 @@
          </div>
     </div>
 
-    {/* Script (inchangé) */}
+    <!-- Script (inchangé) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, getDocs, query, where, doc, updateDoc, Timestamp, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";

@@ -1,15 +1,15 @@
 // =======================================
-// FICHIER MODULE JAVASCRIPT: app.mjs (Statut R1 Auto + Retour Dashboard)
+// FICHIER MODULE JAVASCRIPT: app.mjs (Retrait MAJ Auto Statut R1)
 // =======================================
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- CONSTANTES (inchangées, version courte) ---
+// --- CONSTANTES (inchangées) ---
 export const allBadgeNames=["Chomage/Instable","Actif/Libéral","Retraité","< 3h/sem.","3-5h/sem.","+5h/sem.","+8h/sem.","18-35 ans","36-50 ans","51-65 ans","+ 65 ans","Plaisir","Pas d'objectif","Jouer des solos","Rêve jeunesse","Challenge perso","Technique","Composer","Jeu en groupe","Liberté manche","Improviser librement","Parcours structuré","< 1 an","1-5 ans","5-10 ans","+ 10 ans","Pas de cours","< 1 an cours","1-3 ans cours","+ 3 ans cours","Pop/Chanson","Metal","Jazz/Funk","Blues/Rock","Pas de matériel","Électrique","Home Studio","Aucun","Stagnation","Abandon","Grosse frustration"];
 export const badgeCategories={statut:[0,1,2],temps:[3,4,5,6],age:[7,8,9,10],douleur:[11,12,13,14,15,16,17,18,19,20,21],experience:[22,23,24,25],parcours:[26,27,28,29],style:[30,31,32,33],materiel:[34,35,36],consequence:[37,38,39,40]};
 export const badgeData={0:[0,0,0,-2,0],1:[1,0,0,2,0],2:[3,0,0,3,0],3:[0,0,0,0,0],4:[2,0,0,0,0],5:[4,0,0,0,0],6:[5,0,0,0,0],7:[0,0,0,0,0],8:[0,1,0,0,0],9:[0,2,0,0,0],10:[0,2,0,0,0],11:[0,-1,-2,0,0],12:[0,-5,-2,0,0],13:[0,2,0,0,0],14:[0,2,1,0,0],15:[0,2,2,0,0],16:[0,2,0,0,0],17:[0,0,2,0,0],18:[0,0,3,0,0],19:[0,0,4,0,0],20:[0,0,5,0,0],21:[0,0,5,0,0],22:[0,0,0,0,1],23:[0,0,0,0,2],24:[0,0,0,0,3],25:[0,0,0,0,4],26:[0,1,0,0,1],27:[0,1,0,0,2],28:[0,2,0,0,3],29:[0,3,0,0,3],30:[0,0,0,0,0],31:[0,0,0,0,0],32:[0,0,1,0,0],33:[0,0,2,0,0],34:[0,0,0,-2,0],35:[0,0,0,1,0],36:[0,0,0,3,0],37:[0,-3,-1,0,0],38:[0,1,0,0,0],39:[0,2,0,0,0],40:[0,5,0,0,0]};
 export const maxScores={dispo:8,motiv:18,adeq:25,capa:6,competence:7};
 export const SEUILS={motiv:5,capa:2,total:30,dispo:3,adeq:3,competence:3};
-export const initialState={prospectFirstName:'',prospectLastName:'',prospectDate:'',customNotes:'',currentDocId: null, isViewingMode: false, currentStatus: null, context:{statut:'',temps:'',age:'',experience:'',parcours:'',materiel:[],douleur:[],consequence:'',style:[]}}; // Ajout currentStatus
+export const initialState={prospectFirstName:'',prospectLastName:'',prospectDate:'',customNotes:'',currentDocId: null, isViewingMode: false, currentStatus: null, context:{statut:'',temps:'',age:'',experience:'',parcours:'',materiel:[],douleur:[],consequence:'',style:[]}};
 export const badgeColorRanks={0:'red',1:'green',2:'rainbow',3:'red',4:'green',5:'rainbow',6:'rainbow',7:'orange',8:'orange',9:'green',10:'green',11:'red',12:'red-dark',13:'green',14:'orange',15:'orange',16:'green',17:'green',18:'rainbow',19:'rainbow',20:'rainbow',21:'rainbow',22:'orange',23:'orange',24:'green',25:'rainbow',26:'orange',27:'green',28:'green',29:'rainbow',30:'orange',31:'orange',32:'green',33:'rainbow',34:'red-dark',35:'green',36:'rainbow',37:'red',38:'green',39:'green',40:'rainbow'};
 export const colorRankOrder={'red-dark':0,'red':1,'orange':2,'green':3,'rainbow':4};
 export const tagStyles={base:"w-[140px] min-h-[44px] inline-flex items-center justify-center text-center p-1 rounded-lg text-xs font-medium transition-all duration-200 shadow-md border",inactive:"bg-slate-700 text-slate-300 hover:bg-slate-600",active:{'rainbow':"bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg -translate-y-0.5",'green':"bg-green-600 text-white shadow-lg -translate-y-0.5",'orange':"bg-amber-600 text-white shadow-lg -translate-y-0.5",'red':"bg-red-600 text-white shadow-lg -translate-y-0.5",'red-dark':"bg-red-800 text-white shadow-lg -translate-y-0.5"},borders:{'rainbow':"border-purple-700",'green':"border-green-700",'orange':"border-amber-700",'red':"border-red-700",'red-dark':"border-red-900"}};
@@ -31,29 +31,26 @@ export const App = {
         const docIdParam = params.get('docId');
 
         if (docIdParam) {
-            // Mode Consultation/Modification
-            this.state.isViewingMode = true;
+            this.state.isViewingMode = true; // Mode consultation/modif
             await this.loadProspectData(docIdParam); // Charge data + currentStatus
 
-            // Si le statut actuel est R1 Planifié, le mettre a jour a R1 Effectué
-            if (this.state.currentStatus === 'R1 Scheduled') {
-                await this.updateProspectStatusOnly('R1 Completed', null, false); // Mettre a jour discretement
-                this.state.currentStatus = 'R1 Completed'; // Mettre a jour l'etat local aussi
-                console.log(`Statut automatiquement mis à jour: R1 Completed pour ${this.state.currentDocId}`);
-            }
+            // --- SUPPRESSION DE LA MAJ AUTOMATIQUE DU STATUT ICI ---
+            // if (this.state.currentStatus === 'R1 Scheduled') {
+            //     await this.updateProspectStatusOnly('R1 Completed', null, false);
+            //     this.state.currentStatus = 'R1 Completed';
+            //     console.log(`Statut automatiquement mis à jour: R1 Completed pour ${this.state.currentDocId}`);
+            // }
 
         } else {
-            // Mode Nouveau R1 (normalement plus utilise si creation sur index.html)
-            this.state.isViewingMode = false;
-            // ... (logique precedente si necessaire, mais peut etre retiree)
-            this.showFeedback("Erreur: Aucun ID de prospect fourni.", true);
-            // Idealement rediriger vers dashboard ou index
-             window.location.href = 'index.html'; // Rediriger si pas d'ID
-             return; // Arreter l'init ici
+            // Si on arrive ici sans docId, c'est une erreur dans le flux
+            this.showFeedback("Erreur: ID de prospect manquant pour la qualification.", true);
+            window.location.href = 'dashboard.html'; // Rediriger vers le dashboard
+            return;
         }
 
         // Configurer les liens de navigation
-        if (this.elements.mainBackButton) { this.elements.mainBackButton.href = `dashboard.html`; } // Retour au Dashboard
+        // --- MODIFICATION: Bouton Retour pointe vers Dashboard ---
+        if (this.elements.mainBackButton) { this.elements.mainBackButton.href = `dashboard.html`; }
         if (this.elements.resetButton) { this.elements.resetButton.href = 'index.html'; }
 
         this.renderAllTags();
@@ -77,70 +74,12 @@ export const App = {
     renderAllTags() { /* ... comme avant ... */ const { context } = this.state; this.renderTags('contextStatutContainer','statut',context.statut); this.renderTags('contextTempsContainer','temps',context.temps); this.renderTags('contextAgeContainer','age',context.age); this.renderTags('contextExperienceContainer','experience',context.experience); this.renderTags('contextParcoursContainer','parcours',context.parcours); this.renderTags('contextConsequenceContainer','consequence',context.consequence); this.renderTags('contextMaterielContainer','materiel',context.materiel,true); this.renderTags('contextStyleContainer','style',context.style,true); this.renderTags('contextDouleursContainer','douleur',context.douleur,true); },
     renderTags(cId, type, cV, isM = false) { /* ... comme avant ... */ const c=this.elements[cId]; if(!c)return; c.innerHTML=''; const bi=badgeCategories[type]; if(!bi)return; const sbi=[...bi].sort((a,b)=>(colorRankOrder[badgeColorRanks[a]||'orange'] - colorRankOrder[badgeColorRanks[b]||'orange'])); sbi.forEach(idx=>{const bt=allBadgeNames[idx]; if(!bt)return; const isSel=isM?cV.includes(bt):cV===bt; const btn=document.createElement('button'); btn.dataset.type=type; btn.dataset.value=bt; btn.textContent=bt; const ck=badgeColorRanks[idx]||'orange'; const stateStyle=isSel?this.tagStyles.active[ck]:this.tagStyles.inactive; const borderStyle=this.tagStyles.borders[ck]; btn.className=`${this.tagStyles.base} ${stateStyle} ${borderStyle}`; c.appendChild(btn);}); },
     async exportToPDF() { /* ... comme avant ... */ const pN=`${this.state.prospectFirstName} ${this.state.prospectLastName}`;const {prospectDate:pD}=this.state;const fn=`Fiche_Qualif_GIA_${pN.replace(/\s+/g,'_')||'Prospect'}_${pD||'date'}.pdf`;const sp=document.createElement('div');sp.id='pdf-spinner';sp.innerHTML='<span>Génération PDF...</span>';document.body.appendChild(sp);const mg=this.elements.mainGrid,lc=this.elements.leftColumn,lcc=this.elements.leftColumnContent,dc=this.elements.dashboardColumn,dco=this.elements.dashboardContent;const oS={gtc:mg?.style.gridTemplateColumns,lo:lc?.style.overflow,lco:lcc?.style.overflowY,dco:dc?.style.overflowY,dcp:dco?.style.position};try{if(mg)mg.style.gridTemplateColumns='2fr 1fr';if(lc)lc.style.overflow='visible';if(lcc)lcc.style.overflowY='visible';if(dc)dc.style.overflowY='visible';if(dco)dco.style.position='relative';await new Promise(r=>setTimeout(r,100));const {jsPDF}=window.jspdf;if(!jsPDF||!window.html2canvas)throw new Error("Libs PDF manquantes!");const cv=await window.html2canvas(this.elements.mainScreen,{useCORS:true,backgroundColor:'#0f172a',scale:1.5,logging:false});const iD=cv.toDataURL('image/png');const pdf=new jsPDF('l','mm','a4');const pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight();const cW=cv.width,cH=cv.height;const cR=cW/cH,pR=pW/pH;let iFW,iFH;if(cR>pR){iFW=pW-20;iFH=iFW/cR;}else{iFH=pH-20;iFW=iFH*cR;}const x=(pW-iFW)/2,y=(pH-iFH)/2;pdf.addImage(iD,'PNG',x,y,iFW,iFH);pdf.save(fn);}catch(e){console.error("Err PDF:",e);}finally{if(mg)mg.style.gridTemplateColumns=oS.gtc;if(lc)lc.style.overflow=oS.lo;if(lcc)lcc.style.overflowY=oS.lco;if(dc)dc.style.overflowY=oS.dco;if(dco)dco.style.position=oS.dcp;sp.remove();} },
-
-    // --- MISE A JOUR DOC EXISTANT ---
-    async updateProspectDoc() {
-        const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId;
-        // MAJ uniquement si on a un ID (donc pas en creation initiale)
-        if (!db || !docId) { return; }
-        try {
-            const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId);
-            const scores = this.calculateScores(this.state.context); const qual = this.updateQualification(scores, this.state.context, true);
-            const dTU = { context: this.state.context, customNotes: this.state.customNotes, scores: scores, qualificationStatus: qual.status, qualificationText: qual.text, lastUpdatedAt: Timestamp.now() };
-            await updateDoc(dR, dTU);
-            // console.log(`Doc ${docId} MAJ auto.`); // Commenté pour moins de logs
-        } catch (error) { console.error(`Err MAJ auto doc ${docId}:`, error); this.showFeedback("Erreur sauvegarde auto!", true); }
-    },
-
-    // --- Chercher ou creer le doc prospect (Initialisation R1 Planifié) ---
-    async findOrCreateProspectDoc() { // Modifié pour initialiser status à R1 Scheduled
-        const { db, auth, appId } = window.firebaseServices || {}; if (!db || !appId || !this.state.prospectFirstName || !this.state.prospectDate) { this.showFeedback("Erreur: Sauvegarde R1 impossible", true); return; } const cP = `artifacts/${appId}/public/data/r1_closings`; const pN = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; const pD = this.state.prospectDate; try { const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", pD)); const qS = await getDocs(q); if (!qS.empty) { const eD = qS.docs[0]; this.state.currentDocId = eD.id; this.state.currentStatus = eD.data().status || 'R1 Scheduled'; /* Stocker le statut existant */ this.showFeedback("Prospect R1 déjà existant.", false); } else { const sc = {}; const qu = {status:'N/A', text:''}; const nD = { prospectFirstName: this.state.prospectFirstName, prospectLastName: this.state.prospectLastName, prospectName: pN, prospectDate: pD, context: {}, customNotes: '', scores: sc, qualificationStatus: qu.status, qualificationText: qu.text, savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Scheduled', /* Initialisation ici */ amountCollected: 0, recurringAmount: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: "" }; const dR = await addDoc(collection(db, cP), nD); this.state.currentDocId = dR.id; this.state.currentStatus = 'R1 Scheduled'; this.showFeedback("Prospect R1 enregistré comme 'Planifié'.", false); } } catch (e) { console.error("Err findOrCreate:", e); this.state.currentDocId = null; this.showFeedback("Erreur sauvegarde R1!", true); }
-    },
-
-     // --- Mettre a jour UNIQUEMENT le statut vente et raison ---
-     // 'button' est optionnel, showFeedback aussi
-    async updateProspectStatusOnly(newStatus, reason = "", showFeedbackMsg = true) {
-        const { db } = window.firebaseServices || {};
-        const docId = this.state.currentDocId;
-        if (!db || !docId) { console.error("Impossible MAJ statut: ID/DB manquants."); if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; }
-        try {
-            const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId);
-            const dTU = { status: newStatus, lastUpdatedAt: Timestamp.now() };
-            if (newStatus === 'Lost') { dTU.lostReason = reason || ""; }
-            else { dTU.lostReason = deleteField(); } // Supprimer la raison si pas Lost
-            await updateDoc(dR, dTU);
-            console.log(`Statut doc ${docId} MAJ: ${newStatus}`);
-            this.state.currentStatus = newStatus; // Mettre a jour l'etat local
-             if(showFeedbackMsg) this.showFeedback(`Statut mis à jour: ${newStatus.replace('Scheduled', 'Planifié').replace('Completed', 'Effectué')}`, false);
-             return true; // Succes
-        } catch (e) { console.error(`Err MAJ statut (${newStatus}) pour ${docId}:`, e); if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; } // Echec
-    },
-
-    // --- Handlers pour boutons Pitch ---
-    async confirmR2Schedule() {
-        const success = await this.updateProspectStatusOnly('R2 Scheduled');
-        if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); }
-        // Gerer feedback visuel sur bouton ici si besoin
-    },
-    async confirmR2Rejection() {
-        const reason = this.elements.lostReasonInput?.value.trim() || "";
-        const success = await this.updateProspectStatusOnly('Lost', reason);
-        if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); }
-        // Gerer feedback visuel sur bouton ici si besoin
-    },
-
-     // --- Charger donnees prospect via docId ---
-    async loadProspectData(docId) {
-        const { db } = window.firebaseServices || {}; if (!db) { this.showFeedback("Erreur DB", true); return; } try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dS = await getDoc(dR); if (dS.exists()) { const data = dS.data(); this.state.currentDocId = docId; this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || ''; this.state.prospectDate = data.prospectDate || ''; this.state.context = { ...initialState.context, ...(data.context || {}) }; this.state.context.materiel = Array.isArray(this.state.context.materiel) ? this.state.context.materiel : []; this.state.context.douleur = Array.isArray(this.state.context.douleur) ? this.state.context.douleur : []; this.state.context.style = Array.isArray(this.state.context.style) ? this.state.context.style : []; this.state.customNotes = data.customNotes || ''; this.state.currentStatus = data.status || 'R1 Scheduled'; /* Stocker statut courant */ if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = data.prospectName || 'Inconnu'; } this.showFeedback("Fiche prospect chargée.", false); } else { console.error(`Doc ${docId} non trouvé!`); this.showFeedback("Erreur: Fiche non trouvée!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; } } catch (error) { console.error(`Err chargement doc ${docId}:`, error); this.showFeedback("Erreur chargement fiche!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; }
-    },
-
-    showFeedback(message, isError = false, buttonElement = null, successText = null) {
-        let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;}
-        fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); // Reset propre
-        fE.classList.add(isError?'bg-red-600':'bg-green-600','show');
-        if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;}
-        // Re-cacher apres delai
-        setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000);
-     }
+    async updateProspectDoc() { /* ... comme avant ... */ const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId; if (!db || !docId) return; try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const scores = this.calculateScores(this.state.context); const qual = this.updateQualification(scores, this.state.context, true); const dTU = { context: this.state.context, customNotes: this.state.customNotes, scores: scores, qualificationStatus: qual.status, qualificationText: qual.text, lastUpdatedAt: Timestamp.now() }; await updateDoc(dR, dTU); } catch (error) { console.error(`Err MAJ auto doc ${docId}:`, error); this.showFeedback("Erreur sauvegarde auto!", true); } },
+    async findOrCreateProspectDoc() { /* ... comme avant (initialise R1 Scheduled) ... */ const { db, auth, appId } = window.firebaseServices || {}; if (!db || !appId || !this.state.prospectFirstName || !this.state.prospectDate) { this.showFeedback("Erreur: Sauvegarde R1 impossible", true); return; } const cP = `artifacts/${appId}/public/data/r1_closings`; const pN = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; const pD = this.state.prospectDate; try { const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", pD)); const qS = await getDocs(q); if (!qS.empty) { const eD = qS.docs[0]; this.state.currentDocId = eD.id; this.state.currentStatus = eD.data().status || 'R1 Scheduled'; this.showFeedback("Prospect R1 déjà existant.", false); } else { const sc = {}; const qu = {status:'N/A', text:''}; const nD = { prospectFirstName: this.state.prospectFirstName, prospectLastName: this.state.prospectLastName, prospectName: pN, prospectDate: pD, prospectTime: this.state.prospectTime || null /* Heure optionnelle */, context: {}, customNotes: '', scores: sc, qualificationStatus: qu.status, qualificationText: qu.text, savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Scheduled', amountCollected: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: "" }; const dR = await addDoc(collection(db, cP), nD); this.state.currentDocId = dR.id; this.state.currentStatus = 'R1 Scheduled'; this.showFeedback("Prospect R1 enregistré comme 'Planifié'.", false); } } catch (e) { console.error("Err findOrCreate:", e); this.state.currentDocId = null; this.showFeedback("Erreur sauvegarde R1!", true); } },
+    async updateProspectStatusOnly(newStatus, reason = "", showFeedbackMsg = true) { /* ... comme avant ... */ const { db } = window.firebaseServices || {}; const docId = this.state.currentDocId; if (!db || !docId) { if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; } try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dTU = { status: newStatus, lastUpdatedAt: Timestamp.now() }; if (newStatus === 'Lost') { dTU.lostReason = reason || ""; } else { dTU.lostReason = deleteField(); } await updateDoc(dR, dTU); this.state.currentStatus = newStatus; if(showFeedbackMsg) this.showFeedback(`Statut MàJ: ${newStatus.replace('Scheduled', 'Planifié').replace('Completed', 'Effectué')}`, false); return true; } catch (e) { console.error(`Err MAJ statut (${newStatus}) ${docId}:`, e); if(showFeedbackMsg) this.showFeedback("Erreur MAJ statut!", true); return false; } },
+    async confirmR2Schedule() { /* ... comme avant ... */ const success = await this.updateProspectStatusOnly('R2 Scheduled'); if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); } },
+    async confirmR2Rejection() { /* ... comme avant ... */ const reason = this.elements.lostReasonInput?.value.trim() || ""; const success = await this.updateProspectStatusOnly('Lost', reason); if (success) { setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); } },
+    async loadProspectData(docId) { /* ... comme avant ... */ const { db } = window.firebaseServices || {}; if (!db) { this.showFeedback("Erreur DB", true); return; } try { const { appId } = window.firebaseServices; const cP = `artifacts/${appId}/public/data/r1_closings`; const dR = doc(db, cP, docId); const dS = await getDoc(dR); if (dS.exists()) { const data = dS.data(); this.state.currentDocId = docId; this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || ''; this.state.prospectDate = data.prospectDate || ''; this.state.context = { ...initialState.context, ...(data.context || {}) }; this.state.context.materiel = Array.isArray(this.state.context.materiel) ? this.state.context.materiel : []; this.state.context.douleur = Array.isArray(this.state.context.douleur) ? this.state.context.douleur : []; this.state.context.style = Array.isArray(this.state.context.style) ? this.state.context.style : []; this.state.customNotes = data.customNotes || ''; this.state.currentStatus = data.status || 'R1 Scheduled'; if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = data.prospectName || 'Inconnu'; } /*this.showFeedback("Fiche chargée.", false);*/ } else { console.error(`Doc ${docId} non trouvé!`); this.showFeedback("Erreur: Fiche non trouvée!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; } } catch (error) { console.error(`Err chargement doc ${docId}:`, error); this.showFeedback("Erreur chargement fiche!", true); this.state.currentDocId = null; window.location.href = 'dashboard.html'; } },
+    showFeedback(message, isError = false, buttonElement = null, successText = null) { /* ... comme avant ... */ let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); }
 };
 

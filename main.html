@@ -16,9 +16,7 @@
     <!-- SDK Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // --- CORRECTION ICI ---
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Chemin corrigé
-        // --- FIN CORRECTION ---
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         window.firebaseIsReady = false;
@@ -71,10 +69,14 @@
         <div id="mainScreen" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-4 md:p-6 w-full max-w-7xl mx-auto">
             <!-- Colonne Gauche -->
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
-                <div class="flex justify-between items-center p-2 flex-shrink-0">
-                    <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Script</a>
-                    <h2 class="text-lg font-semibold text-gray-300">Prospect: <span id="mainProspectName" class="text-white font-bold"></span></h2>
-                    <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">Reset</a>
+                <!-- Header: Retour Script, Nom Prospect, Reset, Dashboard -->
+                <div class="flex justify-between items-center p-2 flex-shrink-0 space-x-4">
+                    <a id="mainBackButton" href="#" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap">&larr; Retour Script</a>
+                    <h2 class="text-lg font-semibold text-gray-300 text-center flex-grow truncate px-2">Prospect: <span id="mainProspectName" class="text-white font-bold"></span></h2>
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap">Dashboard</a>
+                        <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200 whitespace-nowrap">Reset</a>
+                    </div>
                 </div>
                 <!-- Coach Questions -->
                 <div id="questionCoachContainer" class="bg-slate-900/50 rounded-xl border border-amber-500/50 shadow-lg flex-shrink-0">

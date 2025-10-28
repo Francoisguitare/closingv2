@@ -1,5 +1,5 @@
 // =======================================
-// FICHIER MODULE JAVASCRIPT: app.mjs (Seuil 35 + PDF Portrait)
+// FICHIER MODULE JAVASCRIPT: app.mjs (Seuil 35 + PDF Portrait Corrigé)
 // =======================================
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -52,7 +52,7 @@ export const App = {
         this.switchScreen('main');
     },
 
-    cacheElements() { const $ = (id) => document.getElementById(id); const ids = ['mainScreen', 'giaPitchScreen', 'mainBackButton', 'resetButton', 'mainProspectName', 'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer', 'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer', 'contextParcoursContainer', 'contextStyleContainer', 'contextMaterielContainer', 'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence', 'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel', 'totalScore', 'qualificationStatus', 'qualificationText', 'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle', 'questionCoachList', 'showPitchButton', 'notesTextarea', 'pitchBackButton', 'scheduleR2ConfirmButton', 'rejectR2Button', 'lostReasonInput', 'lostReasonContainer', 'coachToggleTrigger', 'coachToggleIcon', 'exportPdfButton', 'dashboardColumn', 'dashboardContent', 'mainGrid', 'leftColumn', 'leftColumnContent']; ids.forEach(id => { const el = $(id); if (el) { this.elements[id] = el; } }); },
+    cacheElements() { const $ = (id) => document.getElementById(id); const ids = ['mainScreen', 'giaPitchScreen', 'mainBackButton', 'resetButton', 'mainProspectName', 'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer', 'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer', 'contextParcoursContainer', 'contextStyleContainer', 'contextMaterielContainer', 'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence', 'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel', 'totalScore', 'qualificationStatus', 'qualificationText', 'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle', 'questionCoachList', 'showPitchButton', 'notesTextarea', 'pitchBackButton', 'scheduleR2ConfirmButton', 'rejectR2Button', 'lostReasonInput', 'lostReasonContainer', 'coachToggleTrigger', 'coachToggleIcon', 'exportPdfButton', 'dashboardColumn', 'dashboardContent', 'mainGrid', 'leftColumn', 'leftColumnContent', 'appFeedback']; ids.forEach(id => { const el = $(id); if (el) { this.elements[id] = el; } }); },
     bindEvents() { this.elements.mainScreen?.addEventListener('click', (event) => { const b = event.target.closest('button[data-type]'); if (b) { this.handleTagClick(b); } }); this.elements.notesTextarea?.addEventListener('input', (e) => this.handleNotesInput(e)); this.elements.coachToggleTrigger?.addEventListener('click', () => { this.elements.questionCoachList?.classList.toggle('hidden'); this.elements.coachToggleIcon?.classList.toggle('-rotate-180'); }); this.elements.exportPdfButton?.addEventListener('click', () => this.exportToPDF()); this.elements.showPitchButton?.addEventListener('click', () => this.switchScreen('giaPitch')); this.elements.pitchBackButton?.addEventListener('click', () => this.switchScreen('main')); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => this.confirmR2Schedule()); this.elements.rejectR2Button?.addEventListener('click', () => this.confirmR2Rejection()); this.elements.rejectR2Button?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.remove('hidden'); }); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.add('hidden'); }); },
     switchScreen(screenName) { const s = { main: this.elements.mainScreen, giaPitch: this.elements.giaPitchScreen }; if (!s.main || !s.giaPitch) return; s.main.classList.add('hidden'); s.main.classList.remove('grid'); s.giaPitch.classList.add('hidden'); s.giaPitch.classList.remove('flex'); if (screenName === 'main') { s.main.classList.remove('hidden'); s.main.classList.add('grid'); } else if (screenName === 'giaPitch') { s.giaPitch.classList.remove('hidden'); s.giaPitch.classList.add('flex'); } },
     handleTagClick(btn) { const { type, value } = btn.dataset; if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) { this.state.context[type] = (this.state.context[type] === value) ? '' : value; } else { const arr = this.state.context[type]; if (!arr) return; const index = arr.indexOf(value); if (index > -1) { arr.splice(index, 1); } else { arr.push(value); } } this.renderAllTags(); this.updateDashboard(); this.updateProspectDoc(); },
@@ -61,17 +61,33 @@ export const App = {
     calculateScores(context) { const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 }; const addPoints = (bt) => { if (!bt) return; const idx = allBadgeNames.indexOf(bt); if (idx === -1) return; const pts = badgeData[idx]; if (pts) { pts.forEach((p, i) => { scores[Object.keys(scores)[i]] += p; }); } }; addPoints(context.statut); addPoints(context.temps); addPoints(context.age); addPoints(context.consequence); addPoints(context.experience); addPoints(context.parcours); context.materiel.forEach(addPoints); context.douleur.forEach(addPoints); context.style.forEach(addPoints); Object.keys(scores).forEach(key => { scores[key] = Math.max(0, Math.min(scores[key], maxScores[key])); }); scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence; return scores; },
     updateGauges(scores) { const uG = (g, l, s, m, t, tk) => { if (!g || !l) return; const p = (s / m) * 100, pc = Math.max(0, Math.min(100, p)); g.style.width = `${pc}%`; g.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500'); Object.values(this.gaugeLabelColors).forEach(cc => l.classList.remove(cc)); if (tk === 'motiv' || tk === 'capa') { l.classList.add(s > t ? this.gaugeLabelColors.green : this.gaugeLabelColors.red); } else { l.classList.add(s >= t ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber); } if (pc < (t / m * 100)) { g.classList.add('bg-red-500'); } else if (pc < 80) { g.classList.add('bg-amber-500'); } else { g.classList.add('bg-green-500'); } }; uG(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, scores.dispo, maxScores.dispo, SEUILS.dispo, 'dispo'); uG(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, scores.motiv, maxScores.motiv, SEUILS.motiv, 'motiv'); uG(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, scores.adeq, maxScores.adeq, SEUILS.adeq, 'adeq'); uG(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, scores.capa, maxScores.capa, SEUILS.capa, 'capa'); uG(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, scores.competence, maxScores.competence, SEUILS.competence, 'competence'); },
     
-    // --- MODIFIÉ: Seuil total à 35 ---
+    // --- CORRIGÉ: Logique 'else if' en 'else' (Correction Erreur Syntaxe) ---
     updateQualification(scores, context, isReady) {
-        const isCapable = scores.capa > SEUILS.capa; const isMotivated = scores.motiv > SEUILS.motiv;
+        const isCapable = scores.capa > SEUILS.capa;
+        const isMotivated = scores.motiv > SEUILS.motiv;
         const isTotalOK = scores.total >= SEUILS.total; // Utilise 35
         let qual = { status: "En attente...", text: "...", color: "bg-gray-500", isCapable, isMotivated, isTotalOK, isFinal: isReady };
-        if (!isReady) { let m = []; if (!context.statut) m.push("Statut"); if (!context.temps) m.push("Temps"); if (context.douleur.length === 0) m.push("Objectifs"); if (!context.consequence) m.push("Conséquence"); qual.text = `Remplir: ${m.join(', ')}.`; }
-        else { if (!isCapable || !isMotivated || !isTotalOK) { qual.status = "FEU ROUGE"; qual.text = "Inqualifiable. Pas de R2."; qual.color = "bg-red-600"; }
-        else { const i = scores.total >= 30; qual.status = `FEU VERT ${i ? "(Client Rêvé)" : ""}`; qual.text = "Prospect qualifié !"; qual.color = i ? "bg-emerald-600" : "bg-green-600"; } } // Note: "Client Rêvé" est toujours à 30 ? Gardons-le comme ça, mais le "Feu Vert" est à 35.
-        // --- RE-MODIFICATION: Seuil Feu Vert à 35 ---
-        else { if (!isCapable || !isMotivated || !isTotalOK) { qual.status = "FEU ROUGE"; qual.text = "Inqualifiable. Pas de R2."; qual.color = "bg-red-600"; }
-        else { const isIdeal = scores.total >= 40; /* Mettre un seuil 'rêvé' plus haut que 35 */ qual.status = `FEU VERT ${isIdeal ? "(Client Rêvé)" : ""}`; qual.text = "Prospect qualifié !"; qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600"; } }
+
+        if (!isReady) {
+            let m = [];
+            if (!context.statut) m.push("Statut");
+            if (!context.temps) m.push("Temps");
+            if (context.douleur.length === 0) m.push("Objectifs");
+            if (!context.consequence) m.push("Conséquence");
+            qual.text = `Remplir: ${m.join(', ')}.`;
+        } else {
+            // C'est le seul bloc 'else' qui s'exécute si 'isReady' est true
+            if (!isCapable || !isMotivated || !isTotalOK) {
+                qual.status = "FEU ROUGE";
+                qual.text = "Inqualifiable. Pas de R2.";
+                qual.color = "bg-red-600";
+            } else {
+                const isIdeal = scores.total >= 40; // Seuil "rêvé"
+                qual.status = `FEU VERT ${isIdeal ? "(Client Rêvé)" : ""}`;
+                qual.text = "Prospect qualifié !";
+                qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600";
+            }
+        }
         
         if (this.elements.qualificationStatus) { this.elements.qualificationStatus.textContent = qual.status; this.elements.qualificationStatus.className = `inline-block text-lg font-bold px-5 py-2 rounded-lg text-white shadow-lg ${qual.color}`; }
         if (this.elements.qualificationText) { this.elements.qualificationText.textContent = qual.text; }
@@ -103,7 +119,7 @@ export const App = {
     renderAllTags() { /* ... comme avant ... */ const { context } = this.state; this.renderTags('contextStatutContainer','statut',context.statut); this.renderTags('contextTempsContainer','temps',context.temps); this.renderTags('contextAgeContainer','age',context.age); this.renderTags('contextExperienceContainer','experience',context.experience); this.renderTags('contextParcoursContainer','parcours',context.parcours); this.renderTags('contextConsequenceContainer','consequence',context.consequence); this.renderTags('contextMaterielContainer','materiel',context.materiel,true); this.renderTags('contextStyleContainer','style',context.style,true); this.renderTags('contextDouleursContainer','douleur',context.douleur,true); },
     renderTags(cId, type, cV, isM = false) { /* ... comme avant ... */ const c=this.elements[cId]; if(!c)return; c.innerHTML=''; const bi=badgeCategories[type]; if(!bi)return; const sbi=[...bi].sort((a,b)=>(colorRankOrder[badgeColorRanks[a]||'orange'] - colorRankOrder[badgeColorRanks[b]||'orange'])); sbi.forEach(idx=>{const bt=allBadgeNames[idx]; if(!bt)return; const isSel=isM?cV.includes(bt):cV===bt; const btn=document.createElement('button'); btn.dataset.type=type; btn.dataset.value=bt; btn.textContent=bt; const ck=badgeColorRanks[idx]||'orange'; const stateStyle=isSel?this.tagStyles.active[ck]:this.tagStyles.inactive; const borderStyle=this.tagStyles.borders[ck]; btn.className=`${this.tagStyles.base} ${stateStyle} ${borderStyle}`; c.appendChild(btn);}); },
     
-    // --- MODIFIÉ: PDF Export ---
+    // --- MODIFIÉ: PDF Export (Forcer layout 1 colonne + délai) ---
     async exportToPDF() {
         const prospectName = `${this.state.prospectFirstName} ${this.state.prospectLastName}`;
         const { prospectDate } = this.state;
@@ -111,59 +127,72 @@ export const App = {
         
         const spinner = document.createElement('div'); spinner.id = 'pdf-spinner'; spinner.innerHTML = '<span id="pdf-spinner-text">Génération PDF...</span>'; document.body.appendChild(spinner);
         
-        // --- Éléments à masquer ---
+        // Éléments à masquer
         const coach = this.elements.questionCoachContainer;
-        const gaugeCapa = this.elements.gaugeCapa?.parentElement; // Le div parent
-        const totalScoreEl = this.elements.totalScore?.parentElement; // Le div parent
-        // Trouver l'alerte financiere specifique dans la liste
+        const gaugeCapa = this.elements.gaugeCapa?.parentElement; 
+        const totalScoreEl = this.elements.totalScore?.parentElement; 
         const vigilanceItems = this.elements.diagnosticVigilance?.querySelectorAll('li');
         let financialAlertItem = null;
         vigilanceItems?.forEach(item => { if (item.textContent.includes("capacité") || item.textContent.includes("investir")) { financialAlertItem = item; } });
+
+        // Éléments de layout à modifier
+        const mainGrid = this.elements.mainGrid;
+        const leftCol = this.elements.leftColumn;
+        const dashboardCol = this.elements.dashboardColumn;
 
         // Sauvegarder les styles originaux
         const coachOrigDisplay = coach ? coach.style.display : '';
         const capaOrigDisplay = gaugeCapa ? gaugeCapa.style.display : '';
         const scoreOrigDisplay = totalScoreEl ? totalScoreEl.style.display : '';
         const alertOrigDisplay = financialAlertItem ? financialAlertItem.style.display : '';
+        const gridOrigLayout = mainGrid ? mainGrid.style.gridTemplateColumns : '';
+        const leftColOrigSpan = leftCol ? leftCol.className : ''; // Sauvegarder toutes les classes
+        const dashColOrigSpan = dashboardCol ? dashboardCol.className : '';
 
-        // Cacher les éléments
-        if (coach) coach.style.display = 'none';
-        if (gaugeCapa) gaugeCapa.style.display = 'none';
-        if (totalScoreEl) totalScoreEl.style.display = 'none';
-        if (financialAlertItem) financialAlertItem.style.display = 'none';
-
-        // Styles temporaires pour capture (inchangé)
-        const mg=this.elements.mainGrid,lc=this.elements.leftColumn,lcc=this.elements.leftColumnContent,dc=this.elements.dashboardColumn,dco=this.elements.dashboardContent; const oS={gtc:mg?.style.gridTemplateColumns,lo:lc?.style.overflow,lco:lcc?.style.overflowY,dco:dc?.style.overflowY,dcp:dco?.style.position};
-        
         try {
-            if (mg) mg.style.gridTemplateColumns = '2fr 1fr'; if (lc) lc.style.overflow = 'visible'; if (lcc) lcc.style.overflowY = 'visible'; if (dc) dc.style.overflowY = 'visible'; if (dco) dco.style.position = 'relative';
-            await new Promise(r => setTimeout(r, 100));
+            // --- Appliquer les styles pour le PDF ---
+            // 1. Cacher les éléments
+            if (coach) coach.style.display = 'none';
+            if (gaugeCapa) gaugeCapa.style.display = 'none';
+            if (totalScoreEl) totalScoreEl.style.display = 'none';
+            if (financialAlertItem) financialAlertItem.style.display = 'none';
+
+            // 2. Forcer la mise en page 1 colonne pour PDF portrait
+            if (mainGrid) mainGrid.style.gridTemplateColumns = '1fr';
+            if (leftCol) leftCol.className = leftCol.className.replace('md:col-span-2', 'col-span-1'); // Forcer col-span 1
+            if (dashboardCol) dashboardCol.className = dashboardCol.className.replace('md:col-span-1', 'col-span-1'); // Forcer col-span 1
+            
+            // 3. Attendre que le navigateur applique ces changements
+            await new Promise(r => setTimeout(r, 150)); // Petit délai
             
             const { jsPDF } = window.jspdf; if (!jsPDF || !window.html2canvas) throw new Error("Libs PDF manquantes!");
             
-            const canvas = await window.html2canvas(this.elements.mainScreen, { useCORS: true, backgroundColor: '#0f172a', scale: 1.5, logging: false });
+            const canvas = await window.html2canvas(this.elements.mainScreen, {
+                 useCORS: true, backgroundColor: '#0f172a', scale: 1.5, logging: false,
+                 windowWidth: 800 // Simuler une largeur plus petite
+            });
             const imgData = canvas.toDataURL('image/png');
             
-            // --- MODIFIÉ: Passage en Portrait ---
-            const pdf = new jsPDF('p', 'mm', 'a4'); // 'p' pour Portrait
-            const pdfWidth = pdf.internal.pageSize.getWidth(); // ~210
-            const pdfHeight = pdf.internal.pageSize.getHeight(); // ~297
-            
+            // PDF en Portrait
+            const pdf = new jsPDF('p', 'mm', 'a4'); 
+            const pdfWidth = pdf.internal.pageSize.getWidth(); 
+            const pdfHeight = pdf.internal.pageSize.getHeight(); 
             const canvasWidth = canvas.width, canvasHeight = canvas.height; const canvasRatio = canvasWidth / canvasHeight; const pdfRatio = pdfWidth / pdfHeight; let imgFinalWidth, imgFinalHeight;
             
-            // Logique de scaling (inchangée, s'adapte au format)
             if (canvasRatio > pdfRatio) { imgFinalWidth = pdfWidth - 20; imgFinalHeight = imgFinalWidth / canvasRatio; }
             else { imgFinalHeight = pdfHeight - 20; imgFinalWidth = imgFinalHeight * canvasRatio; }
-            const x = (pdfWidth - imgFinalWidth) / 2, y = (pdfHeight - imgFinalHeight) / 2;
+            const x = (pdfWidth - imgFinalWidth) / 2, y = (pdfWidth - imgFinalWidth) / 2; // Marge X/Y egale
             
             pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
             pdf.save(filename);
         
         } catch (e) { console.error("Err PDF:", e); }
         finally {
-            // Restaurer styles
-            if (mg) mg.style.gridTemplateColumns = oS.gtc; if (lc) lc.style.overflow = oS.lo; if (lcc) lcc.style.overflowY = oS.lco; if (dc) dc.style.overflowY = oS.dco; if (dco) dco.style.position = oS.dcp;
-            // Restaurer affichage
+            // --- Restaurer les styles originaux ---
+            if (mainGrid) mainGrid.style.gridTemplateColumns = gridOrigLayout;
+            if (leftCol) leftCol.className = leftColOrigSpan;
+            if (dashboardCol) dashboardCol.className = dashColOrigSpan;
+            
             if (coach) coach.style.display = coachOrigDisplay;
             if (gaugeCapa) gaugeCapa.style.display = capaOrigDisplay;
             if (totalScoreEl) totalScoreEl.style.display = scoreOrigDisplay;

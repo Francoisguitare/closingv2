@@ -15,17 +15,14 @@
             body { font-family: 'Inter', sans-serif; }
         }
         @layer components {
-            /* Badges de Statut (MODIFIÉ ICI) */
+            /* Badges de Statut */
             .status-scheduled { background-color: #fbbf24; color: #78350f; }
-            .status-noshow-r1 { background-color: #f87171; color: #7f1d1d; } /* Rouge vif pour R1 */
-            .status-noshow-r2 { background-color: #fb923c; color: #7c2d12; } /* Orange pour R2 */
+            .status-noshow-r1, .status-noshow-r2 { background-color: #f87171; color: #7f1d1d; }
             .status-r1 { background-color: #2563eb; color: #dbeafe; }
             .status-r2 { background-color: #9333ea; color: #f3e8ff; }
             .status-closed { background-color: #16a34a; color: #dcfce7; }
             .status-lost { background-color: #dc2626; color: #fee2e2; }
             .status-other { background-color: #4b5563; color: #f3f4f6; }
-            /* Fin Modification */
-            
             .installments-fields.hidden, .modal.hidden { display: none; }
             input[type="date"]:invalid { border-color: #f87171; }
             .kpi-secondary-value { font-size: 1rem; font-weight: 600; color: #f87171; margin-left: 0.5rem; }
@@ -133,50 +130,9 @@
         </section>
     </div>
 
-    <!-- Modal Édition (Ajout Date/Heure R1) -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
-            <input type="hidden" id="modalDocId">
-            
-            <!-- Champs Date/Heure R1 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div>
-                    <label for="modalProspectDate" class="block text-sm font-medium text-gray-300 mb-1">Date R1</label>
-                    <input type="date" id="modalProspectDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
-                 <div>
-                    <label for="modalProspectTime" class="block text-sm font-medium text-gray-300 mb-1">Heure R1</label>
-                    <input type="time" id="modalProspectTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-                 </div>
-            </div>
-
-            <!-- Champs Statut -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div>
-                <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div>
-            </div>
-            
-            <hr class="border-slate-600 my-4"/>
-            <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div>
-                <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
-            </div>
-            <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
-                <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
-                <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
-            </div>
-            
-            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div>
-            <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
-        </div>
-    </div>
-    
-    <!-- Modal Suppression -->
+    <!-- Modals (Édition & Suppression & Start/NoShow) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalProspectDate" class="block text-sm font-medium text-gray-300 mb-1">Date R1</label><input type="date" id="modalProspectDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalProspectTime" class="block text-sm font-medium text-gray-300 mb-1">Heure R1</label><input type="time" id="modalProspectTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut Vente</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
-    <!-- Modal Démarrer/NoShow -->
     <div id="startR1ConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-teal-300">Démarrer R1</h2> <p class="text-gray-300 text-sm my-3">Le prospect "<span id="startR1ProspectName" class="font-bold"></span>" est-il présent ?</p> <input type="hidden" id="startR1DocId"> <div class="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3 pt-4"> <button id="noShowButton" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Absent (No Show)</button> <button id="startR1ConfirmButton" type="button" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Présent (Démarrer)</button> </div> <div class="flex justify-center pt-2"> <button id="startR1CancelButton" type="button" class="text-gray-400 hover:text-gray-300 text-sm">Annuler</button> </div> <p id="startR1Error" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
 
     <!-- Script -->
@@ -189,11 +145,11 @@
         let currentData = [];
         let mainChartInstance = null; 
 
-        // ... (Fonctions utilitaires : addMonths, parseDateString, getISODate, initFirebase, fetchDataAndDisplay (inchangées)) ...
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
         function parseDateString(dateString) { if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null; const parts = dateString.split('-'); return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))); }
         function getISODate(date) { return date.toISOString().split('T')[0]; }
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
+
         async function fetchDataAndDisplay(startDateStr, endDateStr) {
              if (!db || !appId) { displayError("DB non prête."); return; }
              const tableBody = document.getElementById('detailsTableBody'); tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; resetKPIs();
@@ -350,25 +306,20 @@
              const pD=currentData.find(i=>i.id===docId); if(!pD)return;
              document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A';
              document.getElementById('modalDocId').value=docId;
-             // Ajout: pré-remplir date/heure R1
              document.getElementById('modalProspectDate').value = pD.prospectDate || '';
              document.getElementById('modalProspectTime').value = pD.prospectTime || '';
-
              const cS=pD.status||'R1 Scheduled'; modalStatusSelect.value=cS; document.getElementById('modalLostReason').value=pD.lostReason||''; const showReason = cS === 'Lost' || cS === 'No Show R2'; modalLostReasonContainer.classList.toggle('hidden', !showReason); const reasonLabel = modalLostReasonContainer.querySelector('label'); if (cS === 'No Show R2') { reasonLabel.textContent = 'Raison No Show R2 (optionnel)'; } else { reasonLabel.textContent = 'Raison si Perdu (optionnel)'; } const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden');
         }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         async function saveModalChanges() {
              const dId=document.getElementById('modalDocId').value;
-             // Ajout: lire date/heure R1
              const newProspectDate = document.getElementById('modalProspectDate').value;
              const newProspectTime = document.getElementById('modalProspectTime').value;
-
              const nS=modalStatusSelect.value; const nPT=modalPaymentTypeSelect.value; const nTA=Number(document.getElementById('modalAmountCollected').value)||0; const nIA=Number(document.getElementById('modalInstallmentAmount').value)||0; const nNI=parseInt(document.getElementById('modalNumberOfInstallments').value)||0; const nSD=document.getElementById('modalStartDateOfPayment').value||null; const nLR=document.getElementById('modalLostReason').value.trim(); const mE=document.getElementById('modalError'); const sB=document.getElementById('modalSaveButton');
-             if (!dId || !nS || !newProspectDate) { mE.textContent = "ID, Statut et Date R1 requis."; return; } // Date R1 est requise
+             if (!dId || !nS || !newProspectDate) { mE.textContent = "ID, Statut et Date R1 requis."; return; }
              mE.textContent='';sB.disabled=true;sB.textContent='Sauvegarde...';
              try {
                  const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId);
-                 // Ajout date/heure R1 à l'objet de MAJ
                  const dTU={status:nS, prospectDate: newProspectDate, prospectTime: newProspectTime, lastUpdatedAt:Timestamp.now()};
                  if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){if(!nIA||!nNI||!nSD){throw new Error("Détails échelonnement manquants.");} dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();} if(nS==='Lost' || nS === 'No Show R2'){dTU.lostReason=nLR;} else {dTU.lostReason=deleteField();}
                  await updateDoc(dR,dTU);

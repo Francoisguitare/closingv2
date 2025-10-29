@@ -29,16 +29,19 @@
             .installments-fields.hidden, .modal.hidden { display: none; }
             input[type="date"]:invalid { border-color: #f87171; }
             
+            /* KPI Secondaire (pour Nombres) */
             .kpi-secondary-value { 
-                font-size: 1rem; font-weight: 600;
+                font-size: 1rem; /* text-base */
+                font-weight: 600; /* font-semibold */
                 color: #9ca3af; /* gray-400 */
-                margin-left: 0.5rem;
+                margin-left: 0.5rem; /* ml-2 */
             }
             .kpi-secondary-value.text-red-400 { color: #f87171; }
             .kpi-secondary-value.text-orange-400 { color: #fb923c; }
             
-            .date-shortcut { @apply text-sm font-medium text-gray-400 hover:text-white px-3 py-1 rounded-md transition-colors; }
-            .date-shortcut.active { @apply bg-blue-600 text-white; }
+            .date-shortcut, .view-toggle { @apply text-sm font-medium text-gray-400 hover:text-white px-3 py-1 rounded-md transition-colors; }
+            .date-shortcut.active, .view-toggle.active { @apply bg-blue-600 text-white; }
+            .date-shortcut:disabled, .view-toggle:disabled { @apply opacity-40 cursor-not-allowed; }
             
             th { @apply px-4 py-3 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; }
             td { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
@@ -95,21 +98,18 @@
             </div>
         </section>
 
-        <!-- KPIs (Ordre corrigé + Format % modifié) -->
+        <!-- KPIs -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-             <!-- Ligne 1: Tunnel R1 -->
              <div id="kpi-card-r1-planned" class="kpi-card-toggle kpi-card-static border-t-amber-500"><span id="kpiR1Planned" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
              <div id="kpi-card-r1-noshow" class="kpi-card-toggle kpi-card-static border-t-red-500"><div class="flex items-center justify-center"><span id="kpiR1NoShowRate" class="text-4xl font-bold text-red-400 block">0%</span><span id="kpiR1NoShowCount" class="kpi-secondary-value text-red-400 block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">% No Show R1</span></div>
              <div id="kpi-card-r1-completed" class="kpi-card-toggle kpi-card-static border-t-blue-500"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
              <div class="kpi-card-static border-t-teal-500"><div class="flex items-center justify-center"><span id="kpiR1toR2Rate" class="text-4xl font-bold text-teal-300 block">0%</span><span id="kpiR1toR2Count" class="kpi-secondary-value block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 Eff → R2</span></div>
              
-             <!-- Ligne 2: Tunnel R2 -->
              <div id="kpi-card-r2-count" class="kpi-card-toggle kpi-card-static border-t-purple-500"><span id="kpiR2Count" class="text-4xl font-bold text-purple-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Effec/Planif</span></div>
              <div id="kpi-card-r2-noshow" class="kpi-card-toggle kpi-card-static border-t-orange-500"><div class="flex items-center justify-center"><span id="kpiR2NoShowRate" class="text-4xl font-bold text-orange-400 block">0%</span><span id="kpiR2NoShowCount" class="kpi-secondary-value !text-orange-400 block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">% No Show R2</span></div>
              <div class="kpi-card-static border-t-teal-500"><div class="flex items-center justify-center"><span id="kpiR2toClosedRate" class="text-4xl font-bold text-teal-300 block">0%</span><span id="kpiR2toClosedCount" class="kpi-secondary-value block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R2 → Closé</span></div>
              <div id="kpi-card-closing" class="kpi-card-toggle kpi-card-static border-t-green-500"><span id="kpiClosingCount" class="text-4xl font-bold text-green-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span></div>
              
-             <!-- Ligne 3: Cash & Statut Annexe -->
              <div id="kpi-card-cash" class="kpi-card-toggle kpi-card-static border-t-teal-500"><span id="kpiCashCollected" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Période</span></div>
              <div id="kpi-card-cash-future" class="kpi-card-static border-t-teal-500"><span id="kpiCashFutureRecurring" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent Futur</span></div>
              <div id="kpi-card-waiting" class="kpi-card-static border-t-blue-400"><span id="kpiWaitingCount" class="text-4xl font-bold text-blue-400 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Total "En Attente"</span></div>
@@ -168,6 +168,7 @@
         let currentData = [];
         let mainChartInstance = null; 
         let currentViewMode = 'period';
+        let currentKpiFilter = null; // NOUVEAU: Pour suivre le filtre KPI
 
         // --- Fonctions Utilitaires ---
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
@@ -178,6 +179,7 @@
         function formatFirebaseTimestamp(timestamp) { if (!timestamp || typeof timestamp.toDate !== 'function') return 'N/A'; try { return timestamp.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return 'Date invalide'; } }
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
 
+        // --- MODIFIÉ: renderFilteredData (logique de filtre KPI) ---
         function renderFilteredData() {
             const startDateStr = document.getElementById('startDate').value;
             const endDateStr = document.getElementById('endDate').value;
@@ -185,17 +187,54 @@
             const filterEndDate = parseDateString(endDateStr);
             if (!filterStartDate || !filterEndDate) { displayError("Dates de filtre invalides."); return; }
             filterEndDate.setUTCHours(23, 59, 59, 999);
-            let filteredData = [];
-            let kpiData = []; 
-            kpiData = currentData.filter(item => { const itemR1Date = parseDateString(item.prospectDate); return itemR1Date && itemR1Date >= filterStartDate && itemR1Date <= filterEndDate; });
-            if (currentViewMode === 'waiting') {
-                filteredData = currentData.filter(item => item.status === 'Waiting');
-                filteredData.sort((a, b) => (a.relaunchDate || '9999-12-31').localeCompare(b.relaunchDate || '9999-12-31'));
-            } else { filteredData = kpiData; } // En vue période, la table est filtrée par date R1
             
-            // Le tri par date R1 (plus récent) est déjà fait sur currentData
+            let tableData = []; // Données pour la table
+            let kpiData = []; // Données pour les KPIs (toujours par date)
+            
+            // 1. Données KPI (toujours basées sur la période)
+            kpiData = currentData.filter(item => { const itemR1Date = parseDateString(item.prospectDate); return itemR1Date && itemR1Date >= filterStartDate && itemR1Date <= filterEndDate; });
+            
+            const statusesR1Completed = ['R1 Completed', 'R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost', 'Other'];
+            const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
+
+            // 2. Données Table (basées sur la vue ou filtre KPI)
+            if (currentKpiFilter) {
+                // Un KPI est sélectionné, il surcharge la vue
+                switch (currentKpiFilter) {
+                    case 'kpi-card-r1-planned':
+                        tableData = currentData.filter(item => (item.status || 'R1 Scheduled') === 'R1 Scheduled');
+                        break;
+                    case 'kpi-card-r1-noshow':
+                        tableData = currentData.filter(item => item.status === 'No Show R1');
+                        break;
+                    case 'kpi-card-r1-completed':
+                        tableData = currentData.filter(item => statusesR1Completed.includes(item.status));
+                        break;
+                    case 'kpi-card-r2-count':
+                        tableData = currentData.filter(item => item.prospectDateR2 || statusesR2Count.includes(item.status));
+                        break;
+                    case 'kpi-card-r2-noshow':
+                        tableData = currentData.filter(item => item.status === 'No Show R2');
+                        break;
+                    case 'kpi-card-closing':
+                        tableData = currentData.filter(item => item.status === 'Closed');
+                        break;
+                    case 'kpi-card-cash':
+                        tableData = currentData.filter(item => item.status === 'Closed'); // Cash vient des closés
+                        break;
+                }
+                // Trier la nouvelle liste filtrée
+                tableData.sort((a, b) => { const dtA = `${a.prospectDate||'0'}T${a.prospectTime||'0'}`; const dtB = `${b.prospectDate||'0'}T${b.prospectTime||'0'}`; return dtB.localeCompare(dtA); });
+            } else if (currentViewMode === 'waiting') {
+                tableData = currentData.filter(item => item.status === 'Waiting');
+                tableData.sort((a, b) => (a.relaunchDate || '9999-12-31').localeCompare(b.relaunchDate || '9999-12-31'));
+            } else {
+                // Vue Période par défaut
+                tableData = kpiData; // kpiData est déjà trié par date R1 (car currentData l'est)
+            }
+
             updateKPIs(kpiData, filterStartDate, filterEndDate); 
-            updateTable(filteredData);
+            updateTable(tableData);
             updateChart(kpiData, filterStartDate, filterEndDate); 
             const totalWaiting = currentData.filter(item => item.status === 'Waiting').length;
             safeSet('kpiWaitingCount', totalWaiting);
@@ -210,7 +249,6 @@
                  const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const querySnapshot = await getDocs(query(collection(db, collectionPath))); currentData = [];
                  querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
                  
-                 // Tri par date/heure R1 (plus récent en haut)
                  currentData.sort((a, b) => { 
                      const dtA = `${a.prospectDate||'0000-00-00'}T${a.prospectTime||'00:00'}`; 
                      const dtB = `${b.prospectDate||'0000-00-00'}T${b.prospectTime||'00:00'}`; 
@@ -218,7 +256,7 @@
                  });
                  
                  await fetchAndDisplaySlidingKPIs(currentData); 
-                 renderFilteredData(); 
+                 // renderFilteredData(); // Appel déplacé dans setupFiltersAndLoad
              } catch (error) { 
                  console.error("Erreur fetch Firestore:", error); 
                  displayError("Erreur chargement données."); 
@@ -246,41 +284,30 @@
         
         const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; else console.warn(`Element KPI non trouvé: #${id}`); };
 
-        // --- MODIFIÉ: updateKPIs (Logique R1/R2 Corrigée) ---
         function updateKPIs(dataForPeriod, filterStart, filterEnd) {
             let totalR1BookedInPeriod = dataForPeriod.length;
             let r1CompletedCount = 0; let r1NoShowCount = 0;
             let r2TotalPool = 0; let r2NoShowCount = 0; let r2Count = 0; let closingCount = 0;
             let cashCollectedInPeriod = 0; let cashFutureRecurring = 0;
             
-            // R1 Effectué = A eu lieu (n'est plus "Planifié" ou "NoShow R1")
             const statusesR1Completed = ['R1 Completed', 'R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost', 'Other'];
-            // R2 Pool (base pour % R1->R2) = R1 Effectués
-            // R2 Comptés (base pour % R2->Closé) = A une date R2 OU est "En Attente"
             const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
 
             dataForPeriod.forEach(item => {
                 const status = item.status || 'R1 Scheduled';
-                
                 if (status === 'No Show R1') r1NoShowCount++;
                 if (status === 'No Show R2') r2NoShowCount++;
-                
-                if (statusesR1Completed.includes(status)) {
-                    r1CompletedCount++;
-                    r2TotalPool++; // Pool pour R1->R2
-                }
-                if (item.prospectDateR2 || statusesR2Count.includes(status)) {
-                     r2Count++;
-                }
+                if (statusesR1Completed.includes(status)) { r1CompletedCount++; r2TotalPool++; }
+                if (item.prospectDateR2 || statusesR2Count.includes(status)) { r2Count++; }
                 if (status === 'Closed') closingCount++;
             });
 
             currentData.forEach(item => { const status = item.status; if (status === 'Closed') { const pT=item.paymentType||'unique'; const tA=Number(item.amountCollected)||0; const itemR1Date = parseDateString(item.prospectDate); if(pT==='unique'){ const paymentDate = itemR1Date; if(paymentDate && paymentDate >= filterStart && paymentDate <= filterEnd){ cashCollectedInPeriod += tA; }} else if(pT==='installments'){ const iA=Number(item.installmentAmount)||0; const nI=parseInt(item.numberOfInstallments)||0; const fPD=parseDateString(item.startDateOfPayment); if(iA>0&&nI>0&&fPD){ for(let i=0;i<nI;i++){ const pD=addMonths(fPD,i); if(pD>=filterStart&&pD<=filterEnd){ cashCollectedInPeriod+=iA; } else if(pD>filterEnd){ cashFutureRecurring+=iA; }}}} } });
             
             const noShowRate = totalR1BookedInPeriod > 0 ? ((r1NoShowCount / totalR1BookedInPeriod) * 100).toFixed(1) : 0;
-            const r2NoShowRate = r2TotalPool > 0 ? ((r2NoShowCount / r2TotalPool) * 100).toFixed(1) : 0; // % NoShow R2 / R1 Effectués
-            const r1ToR2Rate = r1CompletedCount > 0 ? ((r2Count / r1CompletedCount) * 100).toFixed(1) : 0; // % R1 Eff -> R2
-            const r2ToClosedRate = r2Count > 0 ? ((closingCount / r2Count) * 100).toFixed(1) : 0; // % R2 -> Closé
+            const r2NoShowRate = r2TotalPool > 0 ? ((r2NoShowCount / r2TotalPool) * 100).toFixed(1) : 0;
+            const r1ToR2Rate = r1CompletedCount > 0 ? ((r2Count / r1CompletedCount) * 100).toFixed(1) : 0;
+            const r2ToClosedRate = r2Count > 0 ? ((closingCount / r2Count) * 100).toFixed(1) : 0; 
 
             safeSet('kpiR1Planned', totalR1BookedInPeriod);
             safeSet('kpiR1NoShowRate', `${noShowRate}%`);
@@ -290,74 +317,153 @@
             safeSet('kpiR2NoShowRate', `${r2NoShowRate}%`);
             safeSet('kpiR2NoShowCount', `(${r2NoShowCount})`);
             safeSet('kpiClosingCount', closingCount);
-            
             safeSet('kpiR1toR2Rate', `${r1ToR2Rate}%`);
             safeSet('kpiR1toR2Count', `(${r2Count})`);
             safeSet('kpiR2toClosedRate', `${r2ToClosedRate}%`);
             safeSet('kpiR2toClosedCount', `(${closingCount})`);
-            
             safeSet('kpiCashCollected', `${cashCollectedInPeriod.toLocaleString('fr-FR')}€`);
             safeSet('kpiCashFutureRecurring', `${cashFutureRecurring.toLocaleString('fr-FR')}€`);
         }
         
         function updateChart(dataForChart, filterStart, filterEnd) { /* ... (inchangée) ... */ const ctx = document.getElementById('mainChart'); if (!ctx) return; const dailyData = {}; let currentDate = new Date(filterStart); while (currentDate <= filterEnd) { const dateString = getISODate(currentDate); dailyData[dateString] = { r1: 0, r1_planned: 0, r1_noshow: 0, r2_count: 0, r2_noshow: 0, closed: 0, cash: 0, cash_future: 0 }; currentDate.setDate(currentDate.getDate() + 1); } const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other']; const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost', 'No Show R2']; dataForChart.forEach(item => { const status = item.status || 'R1 Scheduled'; const itemR1DateStr = item.prospectDate; const itemR1Date = parseDateString(itemR1DateStr); if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) { const dateStr = itemR1DateStr; if(dailyData[dateStr]) { dailyData[dateStr].r1_planned++; if (status === 'No Show R1') dailyData[dateStr].r1_noshow++; if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') dailyData[dateStr].r1++; if (consideredStatusesForR2.includes(status)) dailyData[dateStr].r2_count++; if (status === 'No Show R2') dailyData[dateStr].r2_noshow++; } } if (status === 'Closed') { const pT = item.paymentType || 'unique'; let pD = null; let amt = 0; let cashDateStr = null; if (pT === 'unique') { pD = itemR1Date; amt = Number(item.amountCollected) || 0; if (pD) cashDateStr = getISODate(pD); } else if (pT === 'installments') { pD = parseDateString(item.startDateOfPayment); amt = Number(item.installmentAmount) || 0; const nI = parseInt(item.numberOfInstallments) || 0; if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } } } if(pD) cashDateStr = getISODate(pD); } if (pD && pD >= filterStart && pD <= filterEnd && dailyData[cashDateStr]) { dailyData[cashDateStr].closed++; if (pT === 'unique') { dailyData[cashDateStr].cash += amt; } } } }); const labels = Object.keys(dailyData).sort(); const r1PlannedData = labels.map(date => dailyData[date].r1_planned); const r1NoShowData = labels.map(date => dailyData[date].r1_noshow); const r1Data = labels.map(date => dailyData[date].r1); const r2CountData = labels.map(date => dailyData[date].r2_count); const r2NoShowData = labels.map(date => dailyData[date].r2_noshow); const closedData = labels.map(date => dailyData[date].closed); const cashData = labels.map(date => dailyData[date].cash); if (mainChartInstance) { mainChartInstance.destroy(); } const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; }; mainChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'R1 Planifiés', data: r1PlannedData, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-planned') }, { label: 'No Show R1', data: r1NoShowData, borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-noshow') }, { label: 'R1 Effectués', data: r1Data, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-completed') }, { label: 'R2 Effec/Planif', data: r2CountData, borderColor: 'rgba(168, 85, 247, 1)', backgroundColor: 'rgba(168, 85, 247, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-count') }, { label: 'No Show R2', data: r2NoShowData, borderColor: 'rgba(185, 28, 28, 1)', backgroundColor: 'rgba(185, 28, 28, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-noshow') }, { label: 'Closings', data: closedData, borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-closing') }, { label: 'Cash Période (€)', data: cashData, borderColor: 'rgba(20, 184, 166, 1)', backgroundColor: 'rgba(20, 184, 166, 0.7)', tension: 0.1, yAxisID: 'yCash', hidden: isHidden('kpi-card-cash') }, ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, yCount: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: '#374151' }, title: { display: true, text: 'Nombre', color: '#9ca3af' } }, yCash: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: '#9ca3af', callback: (value) => `${value}€` }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Montant (€)', color: '#9ca3af' } } }, plugins: { legend: { display: false }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 }, footerFont: { size: 10 } } } } }); }
-        function updateChartVisibility() { /* ... (inchangée) ... */ if (!mainChartInstance) return; try { mainChartInstance.data.datasets[0].hidden = !document.getElementById('kpi-card-r1-planned')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[1].hidden = !document.getElementById('kpi-card-r1-noshow')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[2].hidden = !document.getElementById('kpi-card-r1-completed')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[3].hidden = !document.getElementById('kpi-card-r2-count')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[4].hidden = !document.getElementById('kpi-card-r2-noshow')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[5].hidden = !document.getElementById('kpi-card-closing')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[6].hidden = !document.getElementById('kpi-card-cash')?.classList.contains('kpi-chart-active'); mainChartInstance.update(); } catch (e) { console.error("Erreur MAJ visibilité graphique:", e); } }
-        function setupKpiCardToggles() { /* ... (inchangée) ... */ const kpiCards = [ { id: 'kpi-card-r1-planned', defaultActive: false }, { id: 'kpi-card-r1-noshow', defaultActive: false }, { id: 'kpi-card-r1-completed', defaultActive: true }, { id: 'kpi-card-r2-count', defaultActive: false }, { id: 'kpi-card-r2-noshow', defaultActive: false }, { id: 'kpi-card-closing', defaultActive: false }, { id: 'kpi-card-cash', defaultActive: false } ]; const toggleLogic = (e) => { const card = e.currentTarget; card.classList.toggle('kpi-chart-active'); card.classList.toggle('opacity-60'); updateChartVisibility(); }; kpiCards.forEach(cardInfo => { const cardEl = document.getElementById(cardInfo.id); if (cardEl) { if (cardInfo.defaultActive) { cardEl.classList.add('kpi-chart-active'); cardEl.classList.remove('opacity-60'); } else { cardEl.classList.remove('kpi-chart-active'); cardEl.classList.add('opacity-60'); } cardEl.addEventListener('click', toggleLogic); } else { console.warn(`KPI Card Toggle non trouvé: #${cardInfo.id}`); } }); document.getElementById('kpi-card-cash-future')?.classList.remove('kpi-card-toggle', 'opacity-60'); }
         
-        // --- MODIFIÉ: updateTable (nouvelle structure colonnes) ---
-        function updateTable(data) {
-             const tB=document.getElementById('detailsTableBody');
-             if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;}
-             tB.innerHTML = data.map(i => {
-                 const sV = i.status || 'R1 Scheduled'; const sC = getStatusClass(sV);
-                 const tA = Number(i.amountCollected) || 0;
-                 const qST = (i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A';
-                 const qC = qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400');
-                 const pN = i.prospectName || 'N/A'; const ePn = pN.replace(/"/g,'&quot;');
-                 const dTD = `${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`;
-                 const dTD_R2 = `${i.prospectDateR2||'-'} ${i.prospectTimeR2 ? `<span class="text-xs text-gray-400">${i.prospectTimeR2}</span>` : ''}`;
-                 const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-';
-                 
-                 let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;}
-                 
-                 return `<tr>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td>
-                     <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('Waiting','En Attente').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD_R2}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td>
-                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td>
-                 </tr>`;
-             }).join('');
-         }
+        function updateChartVisibility() { 
+            if (!mainChartInstance) return; 
+            try {
+                // Fonction pour obtenir l'état "caché" d'une carte
+                const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; };
 
-        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'Waiting': return 'status-waiting'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
-        
-        function resetKPIs() {
-            safeSet('kpiR1Planned', '0');
-            safeSet('kpiR1NoShowCount', '0');
-            safeSet('kpiR1NoShowRate', '(0%)');
-            safeSet('kpiR1Completed', '0');
-            safeSet('kpiR2Count', '0');
-            safeSet('kpiR2NoShowCount', '0');
-            safeSet('kpiR2NoShowRate', '(0%)');
-            safeSet('kpiClosingCount', '0');
-            safeSet('kpiR1toR2Rate', '0%'); 
-            safeSet('kpiR1toR2Count', '(0)');
-            safeSet('kpiR2toClosedRate', '0%');
-            safeSet('kpiR2toClosedCount', '(0)');
-            safeSet('kpiCashCollected', '0€');
-            safeSet('kpiCashFutureRecurring', '0€');
-            safeSet('kpiWaitingCount', '0');
+                mainChartInstance.data.datasets[0].hidden = isHidden('kpi-card-r1-planned');
+                mainChartInstance.data.datasets[1].hidden = isHidden('kpi-card-r1-noshow');
+                mainChartInstance.data.datasets[2].hidden = isHidden('kpi-card-r1-completed');
+                mainChartInstance.data.datasets[3].hidden = isHidden('kpi-card-r2-count');
+                mainChartInstance.data.datasets[4].hidden = isHidden('kpi-card-r2-noshow');
+                mainChartInstance.data.datasets[5].hidden = isHidden('kpi-card-closing');
+                mainChartInstance.data.datasets[6].hidden = isHidden('kpi-card-cash');
+                mainChartInstance.update(); 
+            } catch (e) { console.error("Erreur MAJ visibilité graphique:", e); } 
+        }
+
+        // --- NOUVELLE FONCTION: deactiveAllKpiCards ---
+        function deactiveAllKpiCards() {
+            document.querySelectorAll('.kpi-card-toggle').forEach(card => {
+                card.classList.remove('kpi-chart-active');
+                card.classList.add('opacity-60');
+            });
+            // S'assurer que le graphique est aussi mis à jour
+            updateChartVisibility();
+        }
+
+        function setupKpiCardToggles() {
+            const kpiCards = [ 'kpi-card-r1-planned', 'kpi-card-r1-noshow', 'kpi-card-r1-completed', 'kpi-card-r2-count', 'kpi-card-r2-noshow', 'kpi-card-closing', 'kpi-card-cash' ];
+            
+            const kpiToggleLogic = (e) => {
+                const card = e.currentTarget;
+                const cardId = card.id;
+                
+                // Vérifier si la carte est déjà active
+                const wasActive = card.classList.contains('kpi-chart-active');
+                
+                // 1. Désactiver toutes les cartes et filtres de vue
+                deactiveAllKpiCards();
+                document.getElementById('viewTogglePeriod').classList.remove('active');
+                document.getElementById('viewToggleWaiting').classList.remove('active');
+
+                if (wasActive) {
+                    // Si elle était active, on la désactive et on retourne à la vue Période
+                    currentKpiFilter = null;
+                    document.getElementById('viewTogglePeriod').click(); // Simule clic sur "Vue Période"
+                } else {
+                    // Si elle n'était pas active, on l'active
+                    card.classList.add('kpi-chart-active');
+                    card.classList.remove('opacity-60');
+                    currentKpiFilter = cardId; // Définir comme filtre actif
+                    renderFilteredData(); // Re-filtrer les données
+                }
+            };
+
+            kpiCards.forEach(id => {
+                const cardEl = document.getElementById(id);
+                if (cardEl) {
+                    // Etat initial (R1 complété actif par défaut)
+                    if (id === 'kpi-card-r1-completed') {
+                        cardEl.classList.add('kpi-chart-active');
+                        cardEl.classList.remove('opacity-60');
+                    } else {
+                        cardEl.classList.remove('kpi-chart-active');
+                        cardEl.classList.add('opacity-60');
+                    }
+                    cardEl.addEventListener('click', kpiToggleLogic);
+                } else {
+                    console.warn(`KPI Card Toggle non trouvé: #${id}`);
+                }
+            });
+            document.getElementById('kpi-card-cash-future')?.classList.remove('kpi-card-toggle', 'opacity-60');
         }
         
-        function setupFiltersAndLoad() { /* ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); const shortcuts=document.getElementById('dateShortcuts'); const viewToggles = document.getElementById('viewToggles'); const viewPeriodBtn = document.getElementById('viewTogglePeriod'); const viewWaitingBtn = document.getElementById('viewToggleWaiting'); function setDates(startDate, endDate) { s.value = getISODate(startDate); e.value = getISODate(endDate); validateDates(); } function handleShortcutClick(ev){ if(ev.target.tagName!=='BUTTON')return; shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); ev.target.classList.add('active'); currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today); if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}else{const numDays=parseInt(days,10); if(numDays===0){startDate.setDate(today.getDate());}else{startDate.setDate(today.getDate()-numDays+1);}} const sUTC=new Date(Date.UTC(startDate.getFullYear(),startDate.getMonth(),startDate.getDate())); const eUTC=new Date(Date.UTC(endDate.getFullYear(),endDate.getMonth(),endDate.getDate())); setDates(sUTC,eUTC); renderFilteredData(); } shortcuts.addEventListener('click',handleShortcutClick); function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); e.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); f.addEventListener('click',()=>{ renderFilteredData(); }); viewPeriodBtn.addEventListener('click', () => { currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); shortcuts.querySelector('button[data-days="month"]').click(); }); viewWaitingBtn.addEventListener('click', () => { currentViewMode = 'waiting'; viewWaitingBtn.classList.add('active'); viewPeriodBtn.classList.remove('active'); shortcuts.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); renderFilteredData(); }); shortcuts.querySelector('button[data-days="month"]').click(); }
+        function updateTable(data) { /* ... (inchangée) ... */ const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Scheduled';const sC=getStatusClass(sV);const tA=Number(i.amountCollected)||0; const qST=(i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A'; const qC=qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400'); const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); const dTD=`${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`; const dTD_R2=`${i.prospectDateR2||'-'} ${i.prospectTimeR2 ? `<span class="text-xs text-gray-400">${i.prospectTimeR2}</span>` : ''}`; const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-'; let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;} return `<tr> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td> <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('Waiting','En Attente').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD_R2}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td> </tr>`;}).join(''); }
+        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'Waiting': return 'status-waiting'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
+        function resetKPIs() { safeSet('kpiR1Planned', '0'); safeSet('kpiR1NoShowCount', '0'); safeSet('kpiR1NoShowRate', '(0%)'); safeSet('kpiR1Completed', '0'); safeSet('kpiR2Count', '0'); safeSet('kpiR2NoShowCount', '0'); safeSet('kpiR2NoShowRate', '(0%)'); safeSet('kpiClosingCount', '0');safeSet('kpiR1toR2Rate', '0%'); safeSet('kpiR1toR2Count', '(0)'); safeSet('kpiR2toClosedRate', '0%'); safeSet('kpiR2toClosedCount', '(0)'); safeSet('kpiCashCollected', '0€'); safeSet('kpiCashFutureRecurring', '0€'); safeSet('kpiWaitingCount', '0'); }
+        
+        function setupFiltersAndLoad() {
+            const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton');
+            const shortcuts=document.getElementById('dateShortcuts');
+            const viewToggles = document.getElementById('viewToggles');
+            const viewPeriodBtn = document.getElementById('viewTogglePeriod');
+            const viewWaitingBtn = document.getElementById('viewToggleWaiting');
+            
+            function setDates(startDate, endDate) { s.value = getISODate(startDate); e.value = getISODate(endDate); validateDates(); }
+            
+            function handleShortcutClick(ev){
+                if(ev.target.tagName!=='BUTTON')return;
+                shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+                ev.target.classList.add('active');
+                currentViewMode = 'period';
+                currentKpiFilter = null; // Réinitialiser le filtre KPI
+                viewPeriodBtn.classList.add('active');
+                viewWaitingBtn.classList.remove('active');
+                deactiveAllKpiCards(); // Désactiver visuellement les KPIs
+                setupKpiCardToggles(); // Réappliquer l'état par défaut (R1 actif)
+                
+                const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today);
+                if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}
+                else{const numDays=parseInt(days,10); if(numDays===0){startDate.setDate(today.getDate());}else{startDate.setDate(today.getDate()-numDays+1);}}
+                const sUTC=new Date(Date.UTC(startDate.getFullYear(),startDate.getMonth(),startDate.getDate())); const eUTC=new Date(Date.UTC(endDate.getFullYear(),endDate.getMonth(),endDate.getDate()));
+                setDates(sUTC,eUTC);
+                renderFilteredData();
+            }
+            shortcuts.addEventListener('click',handleShortcutClick);
+            
+            function validateDates(){f.disabled=!s.value||!e.value;}
+            s.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); });
+            e.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); });
+            f.addEventListener('click',()=>{ renderFilteredData(); });
+            
+            viewPeriodBtn.addEventListener('click', () => {
+                currentViewMode = 'period';
+                currentKpiFilter = null;
+                viewPeriodBtn.classList.add('active');
+                viewWaitingBtn.classList.remove('active');
+                deactiveAllKpiCards();
+                setupKpiCardToggles(); // Réappliquer l'état par défaut
+                shortcuts.querySelector('button[data-days="month"]').click();
+            });
+            viewWaitingBtn.addEventListener('click', () => {
+                currentViewMode = 'waiting';
+                currentKpiFilter = null;
+                viewWaitingBtn.classList.add('active');
+                viewPeriodBtn.classList.remove('active');
+                shortcuts.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                deactiveAllKpiCards();
+                renderFilteredData();
+            });
+            
+            // Démarrage initial
+            shortcuts.querySelector('button[data-days="month"]').click();
+        }
+        
         function displayError(message) { /* ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
         
-        // --- MODIFIÉ: Logique Modals (Auto-remplissage dates) ---
         const modalStatusSelect = document.getElementById('modalStatus'); const modalLostReasonContainer = document.getElementById('modalLostReasonContainer'); const modalPaymentTypeSelect = document.getElementById('modalPaymentType'); const installmentsFieldsDiv = document.getElementById('installmentsFields'); const modalAmountCollectedInput = document.getElementById('modalAmountCollected'); const modalInstallmentAmountInput = document.getElementById('modalInstallmentAmount'); const modalNumberOfInstallmentsInput = document.getElementById('modalNumberOfInstallments');
         const modalRelaunchDateContainer = document.getElementById('modalRelaunchDateContainer');
         const paymentDetailsContainer = document.getElementById('paymentDetailsContainer');
@@ -375,12 +481,7 @@
              paymentDetailsContainer.classList.toggle('hidden', !showPayment);
              const reasonLabel = modalLostReasonContainer.querySelector('label');
              if (status === 'No Show R2') { reasonLabel.textContent = 'Raison No Show R2 (optionnel)'; } else { reasonLabel.textContent = 'Raison si Perdu (optionnel)'; }
-
-             // Auto-remplissage dates
-             const today = new Date();
-             const todayStr = getISODate(today);
-             const todayTime = getHHMMTime(today);
-             
+             const today = new Date(); const todayStr = getISODate(today); const todayTime = getHHMMTime(today);
              if (status === 'R2 Scheduled' && !document.getElementById('modalProspectDateR2').value) {
                  document.getElementById('modalProspectDateR2').value = todayStr;
                  document.getElementById('modalProspectTimeR2').value = todayTime;
@@ -391,8 +492,6 @@
              if (status === 'Closed' && !document.getElementById('modalStartDateOfPayment').value) {
                  document.getElementById('modalStartDateOfPayment').value = todayStr;
              }
-             
-             // Logique d'effacement si on "rétrograde"
              const statusesR2OrHigher = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
              if (!statusesR2OrHigher.includes(status)) {
                   document.getElementById('modalProspectDateR2').value = '';
@@ -414,13 +513,14 @@
                  const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId);
                  const dTU={status:nS, prospectDate: newProspectDate, prospectTime: newProspectTime, lastUpdatedAt:Timestamp.now()};
                  
-                 // Logique de sauvegarde/effacement des dates
-                 const statusesR2OrHigher = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
-                 if (statusesR2OrHigher.includes(nS)) { dTU.prospectDateR2 = newProspectDateR2; dTU.prospectTimeR2 = newProspectTimeR2; }
+                 // --- CORRECTION: Logique d'effacement/sauvegarde des dates ---
+                 if (newProspectDateR2) { dTU.prospectDateR2 = newProspectDateR2; dTU.prospectTimeR2 = newProspectTimeR2; }
                  else { dTU.prospectDateR2 = deleteField(); dTU.prospectTimeR2 = deleteField(); }
                  
-                 if (nS === 'Waiting') { dTU.relaunchDate = nRD; } else { dTU.relaunchDate = deleteField(); }
-                 if (nS==='Lost' || nS === 'No Show R2'){ dTU.lostReason=nLR; } else { dTU.lostReason=deleteField(); }
+                 if (nS === 'Waiting' && nRD) { dTU.relaunchDate = nRD; } 
+                 else { dTU.relaunchDate = deleteField(); }
+                 
+                 if(nS==='Lost' || nS === 'No Show R2'){ dTU.lostReason=nLR; } else { dTU.lostReason=deleteField(); }
 
                  if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){if(!nIA||!nNI||!nSD){throw new Error("Détails échelonnement manquants.");} dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}
                  
@@ -430,7 +530,7 @@
                  if (docIndex > -1) { 
                      // Mettre à jour les données locales pour refléter les suppressions
                      const updatedDoc = { ...currentData[docIndex], ...dTU, id: dId, lastUpdatedAt: Timestamp.now() };
-                     if (!statusesR2OrHigher.includes(nS)) { delete updatedDoc.prospectDateR2; delete updatedDoc.prospectTimeR2; }
+                     if (!newProspectDateR2) { delete updatedDoc.prospectDateR2; delete updatedDoc.prospectTimeR2; }
                      if (nS !== 'Waiting') { delete updatedDoc.relaunchDate; }
                      currentData[docIndex] = updatedDoc;
                  }
@@ -456,11 +556,17 @@
                 currentData = [];
                 querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
                 
-                // --- CORRECTION ORDRE ---
+                // Trier les données une seule fois au début
+                currentData.sort((a, b) => { 
+                     const dtA = `${a.prospectDate||'0000-00-00'}T${a.prospectTime||'00:00'}`; 
+                     const dtB = `${b.prospectDate||'0000-00-00'}T${b.prospectTime||'00:00'}`; 
+                     return dtB.localeCompare(dtA); 
+                });
+                
                 attachListeners();
                 setupKpiCardToggles();
                 setupFiltersAndLoad(); // Lance le premier renderFilteredData
-                await fetchAndDisplaySlidingKPIs(currentData); 
+                await fetchAndDisplaySlidingKPIs(currentData); // Calculer J-180
 
             } catch (e) {
                  console.error("Erreur critique au démarrage:", e);

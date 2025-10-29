@@ -200,6 +200,7 @@
             const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
 
             if (currentKpiFilter) {
+                // Si un KPI est cliqué, il filtre TOUTES les données (pas seulement la période)
                 switch (currentKpiFilter) {
                     case 'kpi-card-r1-planned':
                         tableData = currentData.filter(item => (item.status || 'R1 Scheduled') === 'R1 Scheduled');
@@ -211,7 +212,8 @@
                         tableData = currentData.filter(item => statusesR1Completed.includes(item.status));
                         break;
                     case 'kpi-card-r2-count':
-                        tableData = currentData.filter(item => item.prospectDateR2 || statusesR2Count.includes(item.status));
+                        // MODIFIÉ: Logique "Date R2" ou "En Attente"
+                        tableData = currentData.filter(item => item.prospectDateR2 || item.status === 'Waiting');
                         break;
                     case 'kpi-card-r2-noshow':
                         tableData = currentData.filter(item => item.status === 'No Show R2');
@@ -223,6 +225,7 @@
                         tableData = currentData.filter(item => item.status === 'Closed');
                         break;
                 }
+                // Trier la liste filtrée par KPI par date R1
                 tableData.sort((a, b) => { const dtA = `${a.prospectDate||'0'}T${a.prospectTime||'0'}`; const dtB = `${b.prospectDate||'0'}T${b.prospectTime||'0'}`; return dtB.localeCompare(dtA); });
             } else if (currentViewMode === 'waiting') {
                 tableData = currentData.filter(item => item.status === 'Waiting');
@@ -255,15 +258,11 @@
                  });
                  
                  // CORRECTION: Ordre d'appel
-                 // 1. Charger les données (fait ci-dessus)
-                 // 2. Mettre en place les filtres (qui appellera renderFilteredData)
-                 setupFiltersAndLoad(); 
-                 // 3. Attacher les listeners
                  attachListeners();
-                 setupKpiCardToggles();
-                 // 4. Calculer J-180 (maintenant que currentData est plein)
-                 await fetchAndDisplaySlidingKPIs(currentData); 
-                 
+                 setupKpiCardToggles(); // Mettre en place les clics
+                 setupFiltersAndLoad(); // Lance le premier renderFilteredData
+                 await fetchAndDisplaySlidingKPIs(currentData); // Calculer J-180
+
              } catch (error) { 
                  console.error("Erreur fetch Firestore:", error); 
                  displayError("Erreur chargement données."); 
@@ -292,13 +291,17 @@
         
         const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; else console.warn(`Element KPI non trouvé: #${id}`); };
 
+        // --- MODIFIÉ: updateKPIs (Logique R1/R2 Corrigée) ---
         function updateKPIs(dataForPeriod, filterStart, filterEnd) {
             let totalR1BookedInPeriod = dataForPeriod.length;
             let r1CompletedCount = 0; let r1NoShowCount = 0;
             let r2TotalPool = 0; let r2NoShowCount = 0; let r2Count = 0; let closingCount = 0;
             let cashCollectedInPeriod = 0; let cashFutureRecurring = 0;
             
+            // R1 Effectué = A eu lieu (n'est plus "Planifié" ou "NoShow R1")
             const statusesR1Completed = ['R1 Completed', 'R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost', 'Other'];
+            // R2 Pool (base pour % R1->R2) = R1 Effectués
+            // R2 Comptés (base pour % R2->Closé) = A une date R2 OU est "En Attente"
             const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
 
             dataForPeriod.forEach(item => {
@@ -306,7 +309,10 @@
                 if (status === 'No Show R1') r1NoShowCount++;
                 if (status === 'No Show R2') r2NoShowCount++;
                 if (statusesR1Completed.includes(status)) { r1CompletedCount++; r2TotalPool++; }
-                if (item.prospectDateR2 || statusesR2Count.includes(status)) { r2Count++; }
+                // MODIFIÉ: Logique R2 (Date R2 OU Statut "En Attente")
+                if (item.prospectDateR2 || status === 'Waiting') { 
+                    r2Count++; 
+                }
                 if (status === 'Closed') closingCount++;
             });
 
@@ -333,7 +339,10 @@
             safeSet('kpiCashFutureRecurring', `${cashFutureRecurring.toLocaleString('fr-FR')}€`);
         }
         
-        function updateChart(dataForChart, filterStart, filterEnd) { const ctx = document.getElementById('mainChart'); if (!ctx) return; const dailyData = {}; let currentDate = new Date(filterStart); while (currentDate <= filterEnd) { const dateString = getISODate(currentDate); dailyData[dateString] = { r1: 0, r1_planned: 0, r1_noshow: 0, r2_count: 0, r2_noshow: 0, closed: 0, cash: 0, cash_future: 0 }; currentDate.setDate(currentDate.getDate() + 1); } const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other']; const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost', 'No Show R2']; dataForChart.forEach(item => { const status = item.status || 'R1 Scheduled'; const itemR1DateStr = item.prospectDate; const itemR1Date = parseDateString(itemR1DateStr); if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) { const dateStr = itemR1DateStr; if(dailyData[dateStr]) { dailyData[dateStr].r1_planned++; if (status === 'No Show R1') dailyData[dateStr].r1_noshow++; if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') dailyData[dateStr].r1++; if (consideredStatusesForR2.includes(status)) dailyData[dateStr].r2_count++; if (status === 'No Show R2') dailyData[dateStr].r2_noshow++; } } if (status === 'Closed') { const pT = item.paymentType || 'unique'; let pD = null; let amt = 0; let cashDateStr = null; if (pT === 'unique') { pD = itemR1Date; amt = Number(item.amountCollected) || 0; if (pD) cashDateStr = getISODate(pD); } else if (pT === 'installments') { pD = parseDateString(item.startDateOfPayment); amt = Number(item.installmentAmount) || 0; const nI = parseInt(item.numberOfInstallments) || 0; if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } } } if(pD) cashDateStr = getISODate(pD); } if (pD && pD >= filterStart && pD <= filterEnd && dailyData[cashDateStr]) { dailyData[cashDateStr].closed++; if (pT === 'unique') { dailyData[cashDateStr].cash += amt; } } } }); const labels = Object.keys(dailyData).sort(); const r1PlannedData = labels.map(date => dailyData[date].r1_planned); const r1NoShowData = labels.map(date => dailyData[date].r1_noshow); const r1Data = labels.map(date => dailyData[date].r1); const r2CountData = labels.map(date => dailyData[date].r2_count); const r2NoShowData = labels.map(date => dailyData[date].r2_noshow); const closedData = labels.map(date => dailyData[date].closed); const cashData = labels.map(date => dailyData[date].cash); if (mainChartInstance) { mainChartInstance.destroy(); } const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; }; mainChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'R1 Planifiés', data: r1PlannedData, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-planned') }, { label: 'No Show R1', data: r1NoShowData, borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-noshow') }, { label: 'R1 Effectués', data: r1Data, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-completed') }, { label: 'R2 Effec/Planif', data: r2CountData, borderColor: 'rgba(168, 85, 247, 1)', backgroundColor: 'rgba(168, 85, 247, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-count') }, { label: 'No Show R2', data: r2NoShowData, borderColor: 'rgba(185, 28, 28, 1)', backgroundColor: 'rgba(185, 28, 28, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-noshow') }, { label: 'Closings', data: closedData, borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-closing') }, { label: 'Cash Période (€)', data: cashData, borderColor: 'rgba(20, 184, 166, 1)', backgroundColor: 'rgba(20, 184, 166, 0.7)', tension: 0.1, yAxisID: 'yCash', hidden: isHidden('kpi-card-cash') }, ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, yCount: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: '#374151' }, title: { display: true, text: 'Nombre', color: '#9ca3af' } }, yCash: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: '#9ca3af', callback: (value) => `${value}€` }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Montant (€)', color: '#9ca3af' } } }, plugins: { legend: { display: false }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 }, footerFont: { size: 10 } } } } }); }
+        function updateChart(dataForChart, filterStart, filterEnd) { const ctx = document.getElementById('mainChart'); if (!ctx) return; const dailyData = {}; let currentDate = new Date(filterStart); while (currentDate <= filterEnd) { const dateString = getISODate(currentDate); dailyData[dateString] = { r1: 0, r1_planned: 0, r1_noshow: 0, r2_count: 0, r2_noshow: 0, closed: 0, cash: 0, cash_future: 0 }; currentDate.setDate(currentDate.getDate() + 1); } const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other']; const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost', 'No Show R2']; dataForChart.forEach(item => { const status = item.status || 'R1 Scheduled'; const itemR1DateStr = item.prospectDate; const itemR1Date = parseDateString(itemR1DateStr); if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) { const dateStr = itemR1DateStr; if(dailyData[dateStr]) { dailyData[dateStr].r1_planned++; if (status === 'No Show R1') dailyData[dateStr].r1_noshow++; if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') dailyData[dateStr].r1++; if (consideredStatusesForR2.includes(status)) dailyData[dateStr].r2_count++; if (status === 'No Show R2') dailyData[dateStr].r2_noshow++; } } if (status === 'Closed') { const pT = item.paymentType || 'unique'; let pD = null; let amt = 0; let cashDateStr = null; if (pT === 'unique') { pD = itemR1Date; amt = Number(item.amountCollected) || 0; if (pD) cashDateStr = getISODate(pD); } else if (pT === 'installments') { pD = parseDateString(item.startDateOfPayment); amt = Number(item.installmentAmount) || 0; const nI = parseInt(item.numberOfInstallments) || 0; if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } } } if(pD) cashDateStr = getISODate(pD); } if (pD && pD >= filterStart && pD <= filterEnd && dailyData[cashDateStr]) { dailyData[cashDateStr].closed++; if (pT === 'unique') { dailyData[cashDateStr].cash += amt; } } } }); const labels = Object.keys(dailyData).sort(); const r1PlannedData = labels.map(date => dailyData[date].r1_planned); const r1NoShowData = labels.map(date => dailyData[date].r1_noshow); const r1Data = labels.map(date => dailyData[date].r1); const r2CountData = labels.map(date => dailyData[date].r2_count); const r2NoShowData = labels.map(date => dailyData[date].r2_noshow); const closedData = labels.map(date => dailyData[date].closed); const cashData = labels.map(date => dailyData[date].cash); if (mainChartInstance) { mainChartInstance.destroy(); } const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; }; mainChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'R1 Planifiés', data: r1PlannedData, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-planned') }, { label: 'No Show R1', data: r1NoShowData, borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-noshow') }, { label: 'R1 Effectués', data: r1Data, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-completed') }, { label: 'R2 Effec/Planif', data: r2CountData, borderColor: 'rgba(168, 85, 247, 1)', backgroundColor: 'rgba(168, 85, 247, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-count') }, { label: 'No Show R2', data: r2NoShowData, borderColor: 'rgba(185, 28, 28, 1)', backgroundColor: 'rgba(185, 28, 28, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-noshow') }, { label: 'Closings', data: closedData, borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-closing') }, { label: 'Cash Période (€)', data: cashData, borderColor: 'rgba(20, 184, 166, 1)', backgroundColor: 'rgba(20, 184, 166, 0.7)', tension: 0.1, yAxisID: 'yCash', hidden: isHidden('kpi-card-cash') }, ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, yCount: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: '#374151' }, title: { display: true, text: 'Nombre', color: '#9ca3af' } }, yCash: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: '#9ca3af', callback: (value) => `${value}€` }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Montant (€)', color: '#9ca3af' } } }, plugins: { legend: { display: false }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 }, footerFont: { size: 10 } } } } }); 
+            // CORRECTION BUG GRAPHIQUE: Forcer la synchro de visibilité après la création
+            updateChartVisibility();
+        }
         
         function updateChartVisibility() { 
             if (!mainChartInstance) return; 
@@ -355,7 +364,7 @@
                 card.classList.remove('kpi-chart-active');
                 card.classList.add('opacity-60');
             });
-            updateChartVisibility();
+            // NE PAS appeler updateChartVisibility ici
         }
 
         function setupKpiCardToggles() {
@@ -366,19 +375,20 @@
                 const cardId = card.id;
                 const wasActive = card.classList.contains('kpi-chart-active');
                 
-                deactiveAllKpiCards();
+                deactiveAllKpiCards(); // Cache tout visuellement
                 document.getElementById('viewTogglePeriod').classList.remove('active');
                 document.getElementById('viewToggleWaiting').classList.remove('active');
 
                 if (wasActive) {
                     currentKpiFilter = null;
-                    document.getElementById('viewTogglePeriod').click(); 
+                    document.getElementById('viewTogglePeriod').click(); // Re-cliquer sur "Vue Période" réinitialise
                 } else {
                     card.classList.add('kpi-chart-active');
                     card.classList.remove('opacity-60');
                     currentKpiFilter = cardId; 
                     renderFilteredData(); 
                 }
+                updateChartVisibility(); // Mettre à jour le graphique après le changement
             };
 
             kpiCards.forEach(id => {
@@ -464,8 +474,9 @@
                 viewPeriodBtn.classList.add('active');
                 viewWaitingBtn.classList.remove('active');
                 deactiveAllKpiCards(); 
-                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active'); // Réactiver R1 par défaut
+                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active');
                 document.getElementById('kpi-card-r1-completed').classList.remove('opacity-60');
+                updateChartVisibility(); // CORRECTION: Mettre à jour le graphique
                 
                 const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today);
                 if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}
@@ -487,8 +498,9 @@
                 viewPeriodBtn.classList.add('active');
                 viewWaitingBtn.classList.remove('active');
                 deactiveAllKpiCards();
-                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active'); // Réactiver R1 par défaut
+                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active');
                 document.getElementById('kpi-card-r1-completed').classList.remove('opacity-60');
+                updateChartVisibility(); // CORRECTION: Mettre à jour le graphique
                 shortcuts.querySelector('button[data-days="month"]').click();
             });
             viewWaitingBtn.addEventListener('click', () => {
@@ -498,6 +510,7 @@
                 viewPeriodBtn.classList.remove('active');
                 shortcuts.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
                 deactiveAllKpiCards();
+                updateChartVisibility(); // CORRECTION: Mettre à jour le graphique (le vider)
                 renderFilteredData();
             });
             
@@ -571,9 +584,13 @@
                  closeEditModal();
                  const docIndex = currentData.findIndex(item => item.id === dId);
                  if (docIndex > -1) { 
+                     // Mettre à jour les données locales pour refléter les suppressions
                      const updatedDoc = { ...currentData[docIndex], ...dTU, id: dId, lastUpdatedAt: Timestamp.now() };
+                     // Gérer les deleteField() manuellement dans l'objet local
                      if (!newProspectDateR2) { delete updatedDoc.prospectDateR2; delete updatedDoc.prospectTimeR2; }
                      if (nS !== 'Waiting') { delete updatedDoc.relaunchDate; }
+                     if (nS !=='Lost' && nS !== 'No Show R2') { delete updatedDoc.lostReason; }
+                     if (nS !== 'Closed') { delete updatedDoc.paymentType; delete updatedDoc.amountCollected; /* etc. */ }
                      currentData[docIndex] = updatedDoc;
                  }
                  renderFilteredData(); 

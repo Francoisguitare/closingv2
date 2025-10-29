@@ -127,7 +127,7 @@
                     
                     <!-- Bouton Pitch (Feu Vert) -->
                     <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">Voir la Proposition GIA &rarr;</button>
-                    <!-- NOUVEAU BOUTON: Sauvegarde (Feu Rouge) -->
+                    <!-- Bouton Sauvegarde (Feu Rouge) -->
                     <button id="saveAndExitButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-red-700 hover:bg-red-600 text-white shadow-red-800/40">
                         Enregistrer & Quitter (Feu Rouge)
                     </button>
@@ -207,7 +207,6 @@
                 if (docIdParam) {
                     this.state.isViewingMode = true;
                     await this.loadProspectData(docIdParam);
-                    // Mettre à jour le statut seulement si on vient de "Démarrer R1"
                     if (this.state.currentStatus === 'R1 Scheduled') {
                         await this.updateProspectStatusOnly('R1 Completed', null, false);
                         this.state.currentStatus = 'R1 Completed';
@@ -325,7 +324,6 @@
             async confirmR2Schedule() { const success = await this.updateProspectStatusOnly('R2 Scheduled'); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             async confirmR2Rejection() { const reason = this.elements.lostReasonInput?.value.trim() || ""; const success = await this.updateProspectStatusOnly('Lost', reason); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             
-            // --- CORRECTION: Logique de redirection ---
             async loadProspectData(docId) {
                 const { db } = window.firebaseServices || {};
                 if (!db) { this.showFeedback("Erreur DB", true); return; }
@@ -337,7 +335,8 @@
                     if (dS.exists()) {
                         const data = dS.data();
                         this.state.currentDocId = docId;
-                        this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || ''; this.state.prospectDate = data.prospectDate || '';
+                        this.state.prospectFirstName = data.prospectFirstName || ''; this.state.prospectLastName = data.prospectLastName || '';
+                        this.state.prospectDate = data.prospectDate || '';
                         this.state.context = { ...initialState.context, ...(data.context || {}) };
                         this.state.context.materiel = Array.isArray(this.state.context.materiel) ? this.state.context.materiel : [];
                         this.state.context.douleur = Array.isArray(this.state.context.douleur) ? this.state.context.douleur : [];
@@ -349,33 +348,29 @@
                         console.error(`Doc ${docId} non trouvé!`);
                         this.showFeedback("Erreur: Fiche non trouvée!", true);
                         this.state.currentDocId = null;
-                        // NE PAS REDIRIGER AUTOMATIQUEMENT
+                        // NE PAS REDIRIGER
                     }
                 } catch (error) {
                     console.error(`Err chargement doc ${docId}:`, error);
                     this.showFeedback("Erreur chargement fiche!", true);
                     this.state.currentDocId = null;
-                    // NE PAS REDIRIGER AUTOMATIQUEMENT
+                    // NE PAS REDIRIGER
                 }
             },
             showFeedback(message, isError = false, buttonElement = null, successText = null) { let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); },
             
-            // --- NOUVELLE FONCTION: Gère le clic sur "Enregistrer & Quitter (Feu Rouge)" ---
             async saveAndExit() {
                 const btn = this.elements.saveAndExitButton;
                 if (btn) { btn.disabled = true; btn.textContent = "Sauvegarde..."; }
-
                 await this.updateProspectDoc(); // Sauvegarde finale
                 this.showFeedback("Fiche 'Feu Rouge' enregistrée.", false);
-                
-                // Redirection sécurisée vers le dashboard
                 setTimeout(() => {
                     window.location.href = './dashboard.html';
                 }, 1000);
             }
         };
 
-        // --- Initialisation (fusionnée) ---
+        // --- Initialisation ---
         function initializeApp() {
             if (window.appInitialized) return; 
             window.appInitialized = true;

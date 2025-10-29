@@ -124,8 +124,14 @@
                     <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-700 shadow-inner"><span id="qualificationStatus" class="inline-block text-lg font-bold px-5 py-2 rounded-lg text-white bg-gray-500 shadow-lg">En attente...</span><p id="qualificationText" class="text-sm text-gray-300 mt-2 px-1">Remplir les badges...</p></div>
                     <!-- Diagnostic -->
                     <div id="finalDiagnosticContainer" class="hidden bg-slate-900/50 p-4 rounded-xl border-slate-700 shadow-inner space-y-3 border"><h3 class="text-md font-semibold text-teal-300 text-center border-b border-slate-700 pb-2">Diagnostic Final GIA</h3><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-green-400">Points Forts:</h4><ul id="diagnosticForts" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div><div class="space-y-2 pt-2"><h4 class="text-sm font-semibold text-red-400" id="diagnosticVigilanceTitle">Points d'Effort:</h4><ul id="diagnosticVigilance" class="list-disc list-inside text-sm text-gray-200 space-y-1"></ul></div></div>
-                    <!-- Bouton Pitch -->
+                    
+                    <!-- Bouton Pitch (Feu Vert) -->
                     <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">Voir la Proposition GIA &rarr;</button>
+                    <!-- NOUVEAU BOUTON: Sauvegarde (Feu Rouge) -->
+                    <button id="saveAndExitButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-red-700 hover:bg-red-600 text-white shadow-red-800/40">
+                        Enregistrer & Quitter (Feu Rouge)
+                    </button>
+
                     <!-- Export PDF -->
                     <div class="mt-4"><button id="exportPdfButton" class="w-full text-md font-bold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg bg-sky-700 hover:bg-sky-600 text-white shadow-sky-800/40 flex items-center justify-center space-x-2"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg><span>Exporter PDF</span></button></div>
                     <!-- Notes -->
@@ -222,8 +228,22 @@
                 this.switchScreen('main');
             },
 
-            cacheElements() { const $ = (id) => document.getElementById(id); const ids = ['mainScreen', 'giaPitchScreen', 'mainBackButton', 'resetButton', 'mainProspectName', 'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer', 'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer', 'contextParcoursContainer', 'contextStyleContainer', 'contextMaterielContainer', 'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence', 'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel', 'totalScore', 'qualificationStatus', 'qualificationText', 'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle', 'questionCoachList', 'showPitchButton', 'notesTextarea', 'pitchBackButton', 'scheduleR2ConfirmButton', 'rejectR2Button', 'lostReasonInput', 'lostReasonContainer', 'coachToggleTrigger', 'coachToggleIcon', 'exportPdfButton', 'dashboardColumn', 'dashboardContent', 'mainGrid', 'leftColumn', 'leftColumnContent', 'appFeedback']; ids.forEach(id => { const el = $(id); if (el) { this.elements[id] = el; } }); },
-            bindEvents() { this.elements.mainScreen?.addEventListener('click', (event) => { const b = event.target.closest('button[data-type]'); if (b) { this.handleTagClick(b); } }); this.elements.notesTextarea?.addEventListener('input', (e) => this.handleNotesInput(e)); this.elements.coachToggleTrigger?.addEventListener('click', () => { this.elements.questionCoachList?.classList.toggle('hidden'); this.elements.coachToggleIcon?.classList.toggle('-rotate-180'); }); this.elements.exportPdfButton?.addEventListener('click', () => this.exportToPDF()); this.elements.showPitchButton?.addEventListener('click', () => this.switchScreen('giaPitch')); this.elements.pitchBackButton?.addEventListener('click', () => this.switchScreen('main')); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => this.confirmR2Schedule()); this.elements.rejectR2Button?.addEventListener('click', () => this.confirmR2Rejection()); this.elements.rejectR2Button?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.remove('hidden'); }); this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.add('hidden'); }); },
+            cacheElements() { const $ = (id) => document.getElementById(id); const ids = ['mainScreen', 'giaPitchScreen', 'mainBackButton', 'resetButton', 'mainProspectName', 'contextStatutContainer', 'contextTempsContainer', 'contextAgeContainer', 'contextDouleursContainer', 'contextConsequenceContainer', 'contextExperienceContainer', 'contextParcoursContainer', 'contextStyleContainer', 'contextMaterielContainer', 'gaugeDispo', 'gaugeMotiv', 'gaugeAdeq', 'gaugeCapa', 'gaugeCompetence', 'gaugeDispoLabel', 'gaugeMotivLabel', 'gaugeAdeqLabel', 'gaugeCapaLabel', 'gaugeCompetenceLabel', 'totalScore', 'qualificationStatus', 'qualificationText', 'finalDiagnosticContainer', 'diagnosticForts', 'diagnosticVigilance', 'diagnosticVigilanceTitle', 'questionCoachList', 'showPitchButton', 'notesTextarea', 'pitchBackButton', 'scheduleR2ConfirmButton', 'rejectR2Button', 'lostReasonInput', 'lostReasonContainer', 'coachToggleTrigger', 'coachToggleIcon', 'exportPdfButton', 'dashboardColumn', 'dashboardContent', 'mainGrid', 'leftColumn', 'leftColumnContent', 'appFeedback', 'saveAndExitButton']; ids.forEach(id => { const el = $(id); if (el) { this.elements[id] = el; } }); },
+            bindEvents() {
+                this.elements.mainScreen?.addEventListener('click', (event) => { const b = event.target.closest('button[data-type]'); if (b) { this.handleTagClick(b); } });
+                this.elements.notesTextarea?.addEventListener('input', (e) => this.handleNotesInput(e));
+                this.elements.coachToggleTrigger?.addEventListener('click', () => { this.elements.questionCoachList?.classList.toggle('hidden'); this.elements.coachToggleIcon?.classList.toggle('-rotate-180'); });
+                this.elements.exportPdfButton?.addEventListener('click', () => this.exportToPDF());
+                this.elements.showPitchButton?.addEventListener('click', () => this.switchScreen('giaPitch'));
+                // --- NOUVEAU: Listener pour le bouton "Enregistrer & Quitter" ---
+                this.elements.saveAndExitButton?.addEventListener('click', () => this.saveAndExit());
+                
+                this.elements.pitchBackButton?.addEventListener('click', () => this.switchScreen('main'));
+                this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => this.confirmR2Schedule());
+                this.elements.rejectR2Button?.addEventListener('click', () => this.confirmR2Rejection());
+                this.elements.rejectR2Button?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.remove('hidden'); });
+                this.elements.scheduleR2ConfirmButton?.addEventListener('click', () => { this.elements.lostReasonContainer?.classList.add('hidden'); });
+            },
             switchScreen(screenName) { const s = { main: this.elements.mainScreen, giaPitch: this.elements.giaPitchScreen }; if (!s.main || !s.giaPitch) return; s.main.classList.add('hidden'); s.main.classList.remove('grid'); s.giaPitch.classList.add('hidden'); s.giaPitch.classList.remove('flex'); if (screenName === 'main') { s.main.classList.remove('hidden'); s.main.classList.add('grid'); } else if (screenName === 'giaPitch') { s.giaPitch.classList.remove('hidden'); s.giaPitch.classList.add('flex'); } },
             handleTagClick(btn) { const { type, value } = btn.dataset; if (['statut', 'temps', 'age', 'consequence', 'experience', 'parcours'].includes(type)) { this.state.context[type] = (this.state.context[type] === value) ? '' : value; } else { const arr = this.state.context[type]; if (!arr) return; const index = arr.indexOf(value); if (index > -1) { arr.splice(index, 1); } else { arr.push(value); } } this.renderAllTags(); this.updateDashboard(); this.updateProspectDoc(); },
             handleNotesInput(event) { const parts = event.target.value.split("\n\n--- NOTES PERSO ---\n"); this.state.customNotes = parts.length > 1 ? parts.slice(1).join("\n\n--- NOTES PERSO ---\n").trim() : ''; this.updateProspectDoc(); },
@@ -231,17 +251,29 @@
             calculateScores(context) { const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 }; const addPoints = (bt) => { if (!bt) return; const idx = allBadgeNames.indexOf(bt); if (idx === -1) return; const pts = badgeData[idx]; if (pts) { pts.forEach((p, i) => { scores[Object.keys(scores)[i]] += p; }); } }; addPoints(context.statut); addPoints(context.temps); addPoints(context.age); addPoints(context.consequence); addPoints(context.experience); addPoints(context.parcours); context.materiel.forEach(addPoints); context.douleur.forEach(addPoints); context.style.forEach(addPoints); Object.keys(scores).forEach(key => { scores[key] = Math.max(0, Math.min(scores[key], maxScores[key])); }); scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence; return scores; },
             updateGauges(scores) { const uG = (g, l, s, m, t, tk) => { if (!g || !l) return; const p = (s / m) * 100, pc = Math.max(0, Math.min(100, p)); g.style.width = `${pc}%`; g.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500'); Object.values(this.gaugeLabelColors).forEach(cc => l.classList.remove(cc)); if (tk === 'motiv' || tk === 'capa') { l.classList.add(s > t ? this.gaugeLabelColors.green : this.gaugeLabelColors.red); } else { l.classList.add(s >= t ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber); } if (pc < (t / m * 100)) { g.classList.add('bg-red-500'); } else if (pc < 80) { g.classList.add('bg-amber-500'); } else { g.classList.add('bg-green-500'); } }; uG(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, scores.dispo, maxScores.dispo, SEUILS.dispo, 'dispo'); uG(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, scores.motiv, maxScores.motiv, SEUILS.motiv, 'motiv'); uG(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, scores.adeq, maxScores.adeq, SEUILS.adeq, 'adeq'); uG(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, scores.capa, maxScores.capa, SEUILS.capa, 'capa'); uG(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, scores.competence, maxScores.competence, SEUILS.competence, 'competence'); },
             
+            // --- MODIFIÉ: Gère l'affichage des boutons Feu Vert/Feu Rouge ---
             updateQualification(scores, context, isReady) {
                 const isCapable = scores.capa > SEUILS.capa; const isMotivated = scores.motiv > SEUILS.motiv; const isTotalOK = scores.total >= SEUILS.total; // Utilise 35
                 let qual = { status: "En attente...", text: "...", color: "bg-gray-500", isCapable, isMotivated, isTotalOK, isFinal: isReady };
-                if (!isReady) { let m = []; if (!context.statut) m.push("Statut"); if (!context.temps) m.push("Temps"); if (context.douleur.length === 0) m.push("Objectifs"); if (!context.consequence) m.push("Conséquence"); qual.text = `Remplir: ${m.join(', ')}.`; }
-                else {
+                
+                if (!isReady) {
+                    let m = []; if (!context.statut) m.push("Statut"); if (!context.temps) m.push("Temps"); if (context.douleur.length === 0) m.push("Objectifs"); if (!context.consequence) m.push("Conséquence"); qual.text = `Remplir: ${m.join(', ')}.`;
+                } else {
                     if (!isCapable || !isMotivated || !isTotalOK) { qual.status = "FEU ROUGE"; qual.text = "Inqualifiable. Pas de R2."; qual.color = "bg-red-600"; }
                     else { const isIdeal = scores.total >= 40; qual.status = `FEU VERT ${isIdeal ? "(Client Rêvé)" : ""}`; qual.text = "Prospect qualifié !"; qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600"; }
                 }
+
                 if (this.elements.qualificationStatus) { this.elements.qualificationStatus.textContent = qual.status; this.elements.qualificationStatus.className = `inline-block text-lg font-bold px-5 py-2 rounded-lg text-white shadow-lg ${qual.color}`; }
                 if (this.elements.qualificationText) { this.elements.qualificationText.textContent = qual.text; }
-                const spb = qual.status.includes("VERT"); this.elements.showPitchButton?.classList.toggle('hidden', !spb); return qual;
+                
+                // Logique d'affichage des boutons
+                const showVertButton = qual.status.includes("VERT");
+                const showRougeButton = qual.status.includes("ROUGE") && isReady; // Afficher seulement si Feu Rouge ET champs remplis
+                
+                this.elements.showPitchButton?.classList.toggle('hidden', !showVertButton);
+                this.elements.saveAndExitButton?.classList.toggle('hidden', !showRougeButton); // Afficher/Cacher bouton Feu Rouge
+                
+                return qual;
             },
 
             updateFinalDiagnostic(scores, qual, isReady, context) {
@@ -293,6 +325,7 @@
             async confirmR2Schedule() { const success = await this.updateProspectStatusOnly('R2 Scheduled'); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             async confirmR2Rejection() { const reason = this.elements.lostReasonInput?.value.trim() || ""; const success = await this.updateProspectStatusOnly('Lost', reason); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             
+            // --- CORRECTION: Logique de redirection ---
             async loadProspectData(docId) {
                 const { db } = window.firebaseServices || {};
                 if (!db) { this.showFeedback("Erreur DB", true); return; }
@@ -314,18 +347,32 @@
                         if (this.elements.mainProspectName) { this.elements.mainProspectName.textContent = data.prospectName || 'Inconnu'; }
                     } else {
                         console.error(`Doc ${docId} non trouvé!`);
-                        this.showFeedback("Erreur: Fiche non trouvée! Retour au dashboard...", true);
+                        this.showFeedback("Erreur: Fiche non trouvée!", true);
                         this.state.currentDocId = null;
                         // NE PAS REDIRIGER AUTOMATIQUEMENT
                     }
                 } catch (error) {
                     console.error(`Err chargement doc ${docId}:`, error);
-                    this.showFeedback("Erreur chargement fiche! Retour au dashboard...", true);
+                    this.showFeedback("Erreur chargement fiche!", true);
                     this.state.currentDocId = null;
                     // NE PAS REDIRIGER AUTOMATIQUEMENT
                 }
             },
-            showFeedback(message, isError = false, buttonElement = null, successText = null) { let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); }
+            showFeedback(message, isError = false, buttonElement = null, successText = null) { let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); },
+            
+            // --- NOUVELLE FONCTION: Gère le clic sur "Enregistrer & Quitter (Feu Rouge)" ---
+            async saveAndExit() {
+                const btn = this.elements.saveAndExitButton;
+                if (btn) { btn.disabled = true; btn.textContent = "Sauvegarde..."; }
+
+                await this.updateProspectDoc(); // Sauvegarde finale
+                this.showFeedback("Fiche 'Feu Rouge' enregistrée.", false);
+                
+                // Redirection sécurisée vers le dashboard
+                setTimeout(() => {
+                    window.location.href = './dashboard.html';
+                }, 1000);
+            }
         };
 
         // --- Initialisation (fusionnée) ---

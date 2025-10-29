@@ -74,10 +74,10 @@
             <!-- Colonne Gauche -->
             <div id="leftColumn" class="md:col-span-2 space-y-4 h-full flex flex-col overflow-hidden">
                 <div class="flex justify-between items-center p-2 flex-shrink-0">
-                    <!-- CORRECTION: Lien vers ./dashboard.html -->
-                    <a id="mainBackButton" href="./dashboard.html" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Dashboard</a>
+                    <!-- CORRECTION: Lien vers dashboard.html -->
+                    <a id="mainBackButton" href="dashboard.html" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">&larr; Retour Dashboard</a>
                     <h2 class="text-lg font-semibold text-gray-300">Prospect: <span id="mainProspectName" class="text-white font-bold"></span></h2>
-                    <a id="resetButton" href="./index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">Reset</a>
+                    <a id="resetButton" href="index.html" class="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition-colors duration-200">Reset</a>
                 </div>
                 <!-- Coach Questions -->
                 <div id="questionCoachContainer" class="bg-slate-900/50 rounded-xl border border-amber-500/50 shadow-lg flex-shrink-0">
@@ -210,10 +210,10 @@
                 } else {
                     this.showFeedback("Erreur: ID prospect manquant. Retour au dashboard.", true);
                     // --- CORRECTION: Redirection ---
-                    // Utiliser un chemin relatif simple, ou mieux, un chemin absolu si possible
-                    // Pour la robustesse, on utilise un chemin relatif simple
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000); 
-                    return;
+                    // Suppression de la redirection automatique qui cause l'erreur
+                    // setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000); 
+                    console.error("ID de document manquant dans l'URL. Impossible de charger la fiche.");
+                    return; // Arrêter l'initialisation
                 }
 
                 if (this.elements.mainBackButton) { this.elements.mainBackButton.href = `dashboard.html`; }
@@ -320,13 +320,12 @@
                         console.error(`Doc ${docId} non trouvé!`);
                         this.showFeedback("Erreur: Fiche non trouvée! Retour au dashboard...", true);
                         this.state.currentDocId = null;
-                        setTimeout(() => { window.location.href = './dashboard.html'; }, 2000); // Redirection après délai
+                        // Ne pas rediriger, laisser l'utilisateur voir l'erreur
                     }
                 } catch (error) {
                     console.error(`Err chargement doc ${docId}:`, error);
                     this.showFeedback("Erreur chargement fiche! Retour au dashboard...", true);
                     this.state.currentDocId = null;
-                    setTimeout(() => { window.location.href = './dashboard.html'; }, 2000); // Redirection après délai
                 }
             },
             showFeedback(message, isError = false, buttonElement = null, successText = null) { let fE=document.getElementById('appFeedback'); if(!fE){console.warn("Feedback element not found"); return;} fE.textContent=message; fE.classList.remove('bg-red-600','bg-green-600','opacity-0','show'); fE.classList.add(isError?'bg-red-600':'bg-green-600','show'); if(!isError&&buttonElement&&successText){buttonElement.textContent=successText;} setTimeout(()=>{fE.classList.remove('show'); fE.classList.add('opacity-0');},3000); }

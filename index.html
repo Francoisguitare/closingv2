@@ -2,7 +2,7 @@
 <html lang="fr" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>GIA - Planifier R1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,21 +12,55 @@
         body { font-family: 'Inter', sans-serif; }
         #feedbackMessage { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); padding: 0.75rem 1.25rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); color: white; font-weight: 600; font-size: 0.875rem; z-index: 50; transition: opacity 300ms ease-in-out; opacity: 0; pointer-events: none; }
         #feedbackMessage.show { opacity: 1; pointer-events: auto; }
-        input[type="date"]::-webkit-calendar-picker-indicator,
-        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
-        .input-style {
+        
+        /* Style pour les champs texte (Prénom/Nom) */
+        .input-style-text {
             width: 100%; background-color: #f1f5f9; border: 1px solid #94a3b8; border-radius: 0.5rem;
             padding: 0.625rem 1rem; color: #111827; outline: none;
         }
-        .input-style::placeholder { color: #6b7280; }
-        .input-style:focus { border-color: #2dd4bf; box-shadow: 0 0 0 2px #5eead4; }
-        .button-disabled { width: 100%; font-size: 1.125rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.5rem; transition: all 300ms; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
-        label { cursor: pointer; display: block; }
-        /* Style spécifique pour les labels date/heure */
-        label[for="prospectDateInput"], label[for="prospectTimeInput"] {
-             cursor: pointer; /* Indiquer qu'ils sont cliquables */
+        .input-style-text::placeholder { color: #6b7280; }
+        .input-style-text:focus { border-color: #2dd4bf; box-shadow: 0 0 0 2px #5eead4; }
+
+        /* Style pour le "Conteneur" de Date/Heure */
+        .input-style-datetime-wrapper {
+            width: 100%; background-color: #f1f5f9; border: 1px solid #94a3b8; border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            position: relative; /* Permet de positionner l'input */
+        }
+        .input-style-datetime-wrapper:focus-within { /* Style quand l'input intérieur a le focus */
+            border-color: #2dd4bf; box-shadow: 0 0 0 2px #5eead4;
+        }
+        
+        /* Style pour l'input Date/Heure LUI-MEME (invisible, mais fonctionnel) */
+        .input-native-datetime {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #111827; /* Texte visible */
+            cursor: pointer; /* Indique qu'on peut cliquer */
+        }
+        /* Aligner le padding (peut nécessiter ajustement) */
+        input[type="date"].input-native-datetime,
+        input[type="time"].input-native-datetime {
+             padding: 0.5rem 0.75rem; /* Ajustement du padding interne de l'input */
         }
 
+        /* Icône (au cas où le navigateur l'affiche) */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.1); /* Rendre sombre */
+            cursor: pointer;
+            position: absolute;
+            right: 1rem;
+        }
+
+        .button-disabled { width: 100%; font-size: 1.125rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 0.5rem; transition: all 300ms; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
+        label { cursor: pointer; display: block; }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-slate-900 text-white h-full flex items-center justify-center">
@@ -39,13 +73,27 @@
             <hr class="border-slate-700 mb-6"/>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div><label for="prospectFirstNameInput" class="text-sm font-medium text-gray-300 mb-2">Prénom Prospect</label><input id="prospectFirstNameInput" type="text" placeholder="Jean" class="input-style"></div>
-                <div><label for="prospectLastNameInput" class="text-sm font-medium text-gray-300 mb-2">Nom Prospect</label><input id="prospectLastNameInput" type="text" placeholder="Dupont" class="input-style"></div>
+                <div><label for="prospectFirstNameInput" class="block text-sm font-medium text-gray-300 mb-2">Prénom Prospect</label><input id="prospectFirstNameInput" type="text" placeholder="Jean" class="input-style-text"></div>
+                <div><label for="prospectLastNameInput" class="block text-sm font-medium text-gray-300 mb-2">Nom Prospect</label><input id="prospectLastNameInput" type="text" placeholder="Dupont" class="input-style-text"></div>
             </div>
+            
+            <!-- MODIFICATION HTML: Structure Date/Heure -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div><label for="prospectDateInput" class="text-sm font-medium text-gray-300 mb-2">Date R1 Prévue</label><input id="prospectDateInput" type="date" class="input-style"></div>
-                <div><label for="prospectTimeInput" class="text-sm font-medium text-gray-300 mb-2">Heure R1 Prévue</label><input id="prospectTimeInput" type="time" class="input-style"></div>
+                <div>
+                    <label for="prospectDateInput" class="block text-sm font-medium text-gray-300 mb-2">Date R1 Prévue</label>
+                    <div class="input-style-datetime-wrapper">
+                        <input id="prospectDateInput" type="date" class="input-native-datetime">
+                    </div>
+                </div>
+                <div>
+                    <label for="prospectTimeInput" class="block text-sm font-medium text-gray-300 mb-2">Heure R1 Prévue</label>
+                    <div class="input-style-datetime-wrapper">
+                         <input id="prospectTimeInput" type="time" class="input-native-datetime">
+                    </div>
+                </div>
             </div>
+            <!-- FIN MODIFICATION HTML -->
+
             <hr class="border-slate-700"/>
             <button id="scheduleButton" disabled class="button-disabled">Remplir les informations</button>
         </div>
@@ -53,7 +101,7 @@
      <!-- Feedback Element -->
      <div id="feedbackMessage"></div>
 
-    <!-- Firebase Script -->
+    <!-- Firebase Script (inchangé) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -62,31 +110,12 @@
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); await new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); console.log("Firebase prêt (index.html)"); return true; } catch (e) { console.error("Err init Firebase:", e); showFeedback("Erreur DB.", true); return false; } }
         document.addEventListener('DOMContentLoaded', async () => {
             const fN = document.getElementById('prospectFirstNameInput'); const lN = document.getElementById('prospectLastNameInput'); const dI = document.getElementById('prospectDateInput'); const tI = document.getElementById('prospectTimeInput'); const sB = document.getElementById('scheduleButton');
-            // Récupérer les labels
-            const dateLabel = document.querySelector('label[for="prospectDateInput"]');
-            const timeLabel = document.querySelector('label[for="prospectTimeInput"]');
-
-
             const fR = await initFirebase(); if (!fR) { sB.textContent = "Erreur DB"; return; }
             function uSBS() { const f = fN.value.trim(), l = lN.value.trim(), d = dI.value, t = tI.value; const cS = f && l && d && t && !isSaving; sB.disabled = !cS; if (isSaving) { sB.textContent = "Enregistrement..."; } else if (cS) { sB.textContent = "Enregistrer et Voir Dashboard"; sB.className = 'w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-teal-600 hover:bg-teal-500 text-white shadow-teal-800/40 cursor-pointer'; } else { sB.textContent = "Remplir Prénom, Nom, Date et Heure"; sB.className = 'button-disabled'; } }
             const today = new Date().toISOString().split('T')[0]; dI.value = today; tI.value = "09:00";
             fN.addEventListener('input', uSBS); lN.addEventListener('input', uSBS); dI.addEventListener('input', uSBS); tI.addEventListener('input', uSBS);
-
-            // --- CORRECTION: Clic sur label déclenche clic sur input ---
-            if (dateLabel && dI) {
-                 dateLabel.addEventListener('click', () => dI.click());
-                 // Optionnel: Essayer showPicker en fallback si click ne marche pas
-                 // dateLabel.addEventListener('click', () => { try { dI.showPicker(); } catch(e){ dI.click();} });
-             }
-             if (timeLabel && tI) {
-                 timeLabel.addEventListener('click', () => tI.click());
-                 // Optionnel: Essayer showPicker en fallback si click ne marche pas
-                 // timeLabel.addEventListener('click', () => { try { tI.showPicker(); } catch(e){ tI.click();} });
-             }
-             // Empêcher le clic sur l'input lui-même d'ouvrir DEUX fois le picker (si showPicker marche)
-            // dI.addEventListener('click', (e) => e.preventDefault()); // A tester si double ouverture
-            // tI.addEventListener('click', (e) => e.preventDefault()); // A tester si double ouverture
-
+            
+            // --- SUPPRESSION des listeners de clic ---
 
             sB.addEventListener('click', async () => { if (isSaving || !db) return; isSaving = true; uSBS(); const fn = fN.value.trim(), ln = lN.value.trim(), date = dI.value, time = tI.value, pN = `${fn} ${ln}`; try { const cP = `artifacts/${appId}/public/data/r1_closings`; const q = query(collection(db, cP), where("prospectName", "==", pN), where("prospectDate", "==", date), where("prospectTime", "==", time)); const eD = await getDocs(q); if (!eD.empty) { showFeedback(`R1 déjà planifié pour ${pN} à ${date} ${time}.`, false); } else { const nD = { prospectFirstName: fn, prospectLastName: ln, prospectName: pN, prospectDate: date, prospectTime: time, context: {}, customNotes: '', scores: {total: 0}, qualificationStatus: 'N/A', qualificationText: '', savedAt: Timestamp.now(), lastUpdatedAt: Timestamp.now(), closerId: auth?.currentUser?.uid || 'anonymous_user', status: 'R1 Scheduled', amountCollected: 0, recurringAmount: 0, paymentType: null, startDateOfPayment: null, installmentAmount: 0, numberOfInstallments: 0, lostReason: "" }; await addDoc(collection(db, cP), nD); showFeedback("R1 Planifié enregistré.", false); } setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000); } catch (e) { console.error("Erreur save R1:", e); showFeedback("Erreur enregistrement !", true); isSaving = false; uSBS(); } });
             uSBS();

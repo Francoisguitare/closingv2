@@ -16,14 +16,16 @@
         }
         @layer components {
             /* Badges de Statut */
-            .status-scheduled { background-color: #fbbf24; color: #78350f; }
-            .status-noshow-r1 { background-color: #f87171; color: #7f1d1d; } /* Rouge vif */
-            .status-noshow-r2 { background-color: #fb923c; color: #7c2d12; } /* Orange */
+            .status-scheduled { background-color: #fbbf24; color: #78350f; } /* R1 Planifié */
+            .status-waiting { background-color: #60a5fa; color: #1e3a8a; } /* "En Attente" (blue-400) */
+            .status-noshow-r1 { background-color: #f87171; color: #7f1d1d; }
+            .status-noshow-r2 { background-color: #fb923c; color: #7c2d12; }
             .status-r1 { background-color: #2563eb; color: #dbeafe; }
             .status-r2 { background-color: #9333ea; color: #f3e8ff; }
             .status-closed { background-color: #16a34a; color: #dcfce7; }
             .status-lost { background-color: #dc2626; color: #fee2e2; }
             .status-other { background-color: #4b5563; color: #f3f4f6; }
+            
             .installments-fields.hidden, .modal.hidden { display: none; }
             input[type="date"]:invalid { border-color: #f87171; }
             .kpi-secondary-value { font-size: 1rem; font-weight: 600; color: #f87171; margin-left: 0.5rem; }
@@ -31,6 +33,7 @@
             .date-shortcut { @apply text-sm font-medium text-gray-400 hover:text-white px-3 py-1 rounded-md transition-colors; }
             .date-shortcut.active { @apply bg-blue-600 text-white; }
             
+            /* Table Améliorée */
             th { @apply px-4 py-3 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; }
             td { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
             tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
@@ -87,7 +90,7 @@
             </div>
         </section>
 
-        <!-- KPIs (Ajout "En Attente") -->
+        <!-- KPIs -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
              <div id="kpi-card-r1-planned" class="kpi-card-toggle kpi-card-static border-t-amber-500"><span id="kpiR1Planned" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
              <div id="kpi-card-r1-noshow" class="kpi-card-toggle kpi-card-static border-t-red-500"><div class="flex items-center justify-center"><span id="kpiR1NoShowCount" class="text-4xl font-bold text-red-400 block">0</span><span id="kpiR1NoShowRate" class="kpi-secondary-value block">(0%)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">No Show R1</span></div>
@@ -115,7 +118,7 @@
             </div>
         </section>
 
-        <!-- Table Détails -->
+        <!-- Table Détails (Colonnes modifiées) -->
         <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 max-h-[60vh] overflow-auto">
              <h2 class="text-xl font-semibold text-gray-300 mb-4 sticky top-0 bg-slate-800/90 py-2 z-20 backdrop-blur-sm">Détails des Prospects</h2>
              <div class="min-w-[1200px]">
@@ -127,10 +130,9 @@
                             <th class="w-[10%]">Statut Qualif.</th>
                             <th class="w-[5%] text-center">Score</th>
                             <th class="w-[10%]">Statut</th>
-                            <th class="w-[10%] text-right">Montant Total</th>
-                            <th class="w-[10%] text-right">Échéance</th>
-                            <th class="w-[10%]">Date Relance</th>
-                            <th class="w-[10%]">Dernière MAJ</th>
+                            <th class="w-[10%]">Date R2</th> <!-- NOUVEAU -->
+                            <th class="w-[10%]">Date Relance</th> <!-- NOUVEAU -->
+                            <th class="w-[10%] text-right">Montant Total</th> <!-- NOUVEAU -->
                             <th class="w-[18%] text-center">Actions</th>
                         </tr>
                     </thead>
@@ -140,9 +142,53 @@
         </section>
     </div>
 
-    <!-- Modals (Édition & Suppression & Start/NoShow) -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar"> <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2> <input type="hidden" id="modalDocId"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalProspectDate" class="block text-sm font-medium text-gray-300 mb-1">Date R1</label><input type="date" id="modalProspectDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalProspectTime" class="block text-sm font-medium text-gray-300 mb-1">Heure R1</label><input type="time" id="modalProspectTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option><option value="Waiting">En Attente</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div> <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div> <div id="modalRelaunchDateContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalRelaunchDate" class="block text-sm font-medium text-gray-300">Date de Relance</label><input type="date" id="modalRelaunchDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"></div> </div> <hr class="border-slate-600 my-4"/> <h3 class="text-lg font-semibold text-gray-300">Détails Paiement (si Closé)</h3> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div> <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"> <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div> </div> <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div> <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <!-- Modal Édition (Ajout Date R2) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <h2 class="text-xl font-semibold text-teal-300">Modifier Prospect: <span id="modalProspectName"></span></h2>
+            <input type="hidden" id="modalDocId">
+            
+            <fieldset class="border border-slate-600 p-3 rounded-lg">
+                <legend class="text-sm font-medium text-gray-400 px-1">Détails RDV</legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div><label for="modalProspectDate" class="block text-sm font-medium text-gray-300 mb-1">Date R1</label><input type="date" id="modalProspectDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                    <div><label for="modalProspectTime" class="block text-sm font-medium text-gray-300 mb-1">Heure R1</label><input type="time" id="modalProspectTime" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                    <div><label for="modalProspectDateR2" class="block text-sm font-medium text-gray-300 mb-1">Date R2</label><input type="date" id="modalProspectDateR2" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                    <div><label for="modalProspectTimeR2" class="block text-sm font-medium text-gray-300 mb-1">Heure R2</label><input type="time" id="modalProspectTimeR2" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border border-slate-600 p-3 rounded-lg">
+                <legend class="text-sm font-medium text-gray-400 px-1">Statut</legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div><label for="modalStatus" class="block text-sm font-medium text-gray-300 mb-1">Statut</label><select id="modalStatus" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="R1 Scheduled">R1 Planifié</option><option value="R1 Completed">R1 Effectué</option><option value="No Show R1">No Show R1</option> <option value="R2 Scheduled">R2 Planifié</option><option value="No Show R2">No Show R2</option><option value="Waiting">En Attente</option> <option value="Closed">Closé</option> <option value="Lost">Perdu</option> <option value="Other">Autre</option></select></div>
+                    <div id="modalLostReasonContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalLostReason" class="block text-sm font-medium text-gray-300">Raison si Perdu/NoShow</label><input type="text" id="modalLostReason" placeholder="Ex: Prix, Timing..." class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"></div>
+                    <div id="modalRelaunchDateContainer" class="hidden sm:col-span-1 space-y-1"><label for="modalRelaunchDate" class="block text-sm font-medium text-gray-300">Date de Relance</label><input type="date" id="modalRelaunchDate" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"></div>
+                </div>
+            </fieldset>
+            
+            <!-- Détails Paiement (Caché par défaut) -->
+            <fieldset id="paymentDetailsContainer" class="hidden border border-slate-600 p-3 rounded-lg">
+                <legend class="text-sm font-medium text-gray-400 px-1">Détails Paiement</legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div><label for="modalPaymentType" class="block text-sm font-medium text-gray-300 mb-1">Type Paiement</label><select id="modalPaymentType" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"><option value="unique">Unique</option><option value="installments">Échelonné</option></select></div>
+                    <div><label for="modalAmountCollected" class="block text-sm font-medium text-gray-300 mb-1">Montant Total Contrat (€)</label><input type="number" id="modalAmountCollected" placeholder="ex: 3600" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                </div>
+                <div id="installmentsFields" class="installments-fields hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                    <div><label for="modalInstallmentAmount" class="block text-sm font-medium text-gray-300 mb-1">Montant Échéance (€)</label><input type="number" id="modalInstallmentAmount" placeholder="ex: 720" min="0" step="any" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                    <div><label for="modalNumberOfInstallments" class="block text-sm font-medium text-gray-300 mb-1">Nb Échéances</label><input type="number" id="modalNumberOfInstallments" placeholder="ex: 5" min="1" step="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                    <div><label for="modalStartDateOfPayment" class="block text-sm font-medium text-gray-300 mb-1">Date 1ère Échéance</label><input type="date" id="modalStartDateOfPayment" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"></div>
+                </div>
+            </fieldset>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6"><button id="modalCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button><button id="modalSaveButton" type="button" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Enregistrer</button></div>
+            <p id="modalError" class="text-red-400 text-sm mt-2 text-center h-4"></p>
+        </div>
+    </div>
+    
+    <!-- Modal Suppression -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-amber-300">Confirmer Suppression</h2> <p class="text-gray-300 text-sm my-3">Supprimer "<span id="deleteProspectName" class="font-bold"></span>" ? Irréversible.</p> <input type="hidden" id="deleteDocId"> <div class="flex justify-end space-x-3 pt-4"> <button id="deleteCancelButton" type="button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Annuler</button> <button id="deleteConfirmButton" type="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Supprimer</button> </div> <p id="deleteError" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
+    <!-- Modal Démarrer/NoShow -->
     <div id="startR1ConfirmModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"> <div class="bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-700 space-y-4"> <h2 class="text-lg font-semibold text-teal-300">Démarrer R1</h2> <p class="text-gray-300 text-sm my-3">Le prospect "<span id="startR1ProspectName" class="font-bold"></span>" est-il présent ?</p> <input type="hidden" id="startR1DocId"> <div class="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3 pt-4"> <button id="noShowButton" type="button" class="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Absent (No Show)</button> <button id="startR1ConfirmButton" type="button" class="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Présent (Démarrer)</button> </div> <div class="flex justify-center pt-2"> <button id="startR1CancelButton" type="button" class="text-gray-400 hover:text-gray-300 text-sm">Annuler</button> </div> <p id="startR1Error" class="text-red-400 text-sm mt-2 text-center h-4"></p> </div> </div>
 
     <!-- Script -->
@@ -160,10 +206,7 @@
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
         function parseDateString(dateString) { if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null; const parts = dateString.split('-'); return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))); }
         function getISODate(date) { return date.toISOString().split('T')[0]; }
-        function formatFirebaseTimestamp(timestamp) {
-            if (!timestamp || typeof timestamp.toDate !== 'function') return 'N/A';
-            try { return timestamp.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return 'Date invalide'; }
-        }
+        function formatFirebaseTimestamp(timestamp) { if (!timestamp || typeof timestamp.toDate !== 'function') return 'N/A'; try { return timestamp.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return 'Date invalide'; } }
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
 
         function renderFilteredData() {
@@ -173,52 +216,41 @@
             const filterEndDate = parseDateString(endDateStr);
             if (!filterStartDate || !filterEndDate) { displayError("Dates de filtre invalides."); return; }
             filterEndDate.setUTCHours(23, 59, 59, 999);
-
             let filteredData = [];
             let kpiData = []; 
-
             kpiData = currentData.filter(item => { const itemR1Date = parseDateString(item.prospectDate); return itemR1Date && itemR1Date >= filterStartDate && itemR1Date <= filterEndDate; });
-            
             if (currentViewMode === 'waiting') {
                 filteredData = currentData.filter(item => item.status === 'Waiting');
                 filteredData.sort((a, b) => (a.relaunchDate || '9999-12-31').localeCompare(b.relaunchDate || '9999-12-31'));
-            } else {
-                filteredData = kpiData;
-            }
-
+            } else { filteredData = kpiData; }
             updateKPIs(kpiData, filterStartDate, filterEndDate); 
             updateTable(filteredData);
             updateChart(kpiData, filterStartDate, filterEndDate); 
-
-             const totalWaiting = currentData.filter(item => item.status === 'Waiting').length;
-             safeSet('kpiWaitingCount', totalWaiting);
+            const totalWaiting = currentData.filter(item => item.status === 'Waiting').length;
+            safeSet('kpiWaitingCount', totalWaiting);
         }
 
         async function fetchDataAndDisplay() {
              if (!db || !appId) { displayError("DB non prête."); return; }
              const tableBody = document.getElementById('detailsTableBody');
-             tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-400">Chargement...</td></tr>`;
+             tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-400">Chargement...</td></tr>`; // Colspan 9
              resetKPIs();
              try {
                  const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const querySnapshot = await getDocs(query(collection(db, collectionPath))); currentData = [];
                  querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
-                 // Tri initial (le plus récent en haut)
                  currentData.sort((a, b) => { const dtA = `${a.prospectDate||'0'}T${a.prospectTime||'0'}`; const dtB = `${b.prospectDate||'0'}T${b.prospectTime||'0'}`; return dtB.localeCompare(dtA); });
-
-                 await fetchAndDisplaySlidingKPIs(currentData); // Calcul J-180
-                 renderFilteredData(); // Appliquer filtres par défaut (via setupFiltersAndLoad)
-
+                 await fetchAndDisplaySlidingKPIs(currentData); 
+                 renderFilteredData(); 
              } catch (error) { 
                  console.error("Erreur fetch Firestore:", error); 
                  displayError("Erreur chargement données."); 
-                 tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; 
+                 tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-red-400">Erreur chargement.</td></tr>`; // Colspan 9
              }
          }
         
         async function fetchAndDisplaySlidingKPIs(data) {
             if (!db || !appId) return; const today = new Date(); const endDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)); let startDate = new Date(endDate); startDate.setDate(startDate.getDate() - 180); startDate.setUTCHours(0, 0, 0, 0);
             try {
-                 // Utiliser 'data' (currentData) passé en argument
                  const slidingData = data.filter(item => { const iRD = parseDateString(item.prospectDate); return iRD && iRD >= startDate && iRD <= endDate; });
                  let planned = slidingData.length; let completed = 0; let noShowR1 = 0; let closed = 0; let cash = 0; const sC = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other'];
                  slidingData.forEach(item => { const status = item.status || 'R1 Scheduled'; if (status === 'No Show R1') noShowR1++; if (sC.includes(status) && status !== 'No Show R1') completed++; if (status === 'Closed') { closed++; cash += Number(item.amountCollected) || 0; } });
@@ -227,7 +259,6 @@
             } catch(e) { console.error("Erreur calcul J-180:", e); safeSet('kpi-180-planned', 'Err'); }
         }
         
-        // --- Fonction de MAJ sûre ---
         const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; else console.warn(`Element KPI non trouvé: #${id}`); };
 
         function updateKPIs(dataForPeriod, filterStart, filterEnd) {
@@ -239,8 +270,7 @@
 
             dataForPeriod.forEach(item => {
                 const status = item.status || 'R1 Scheduled';
-                totalR1BookedInPeriod++; // Compte TOUS les R1 planifiés (incluant No Show, etc.)
-                // Note: r1ScheduledCount n'est plus utilisé comme KPI, mais totalR1BookedInPeriod oui
+                totalR1BookedInPeriod++; 
                 if (status === 'No Show R1') r1NoShowCount++;
                 if (status === 'No Show R2') r2NoShowCount++;
                 if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') { r1CompletedCount++; r2TotalPool++; }
@@ -270,10 +300,43 @@
         function updateChart(dataForChart, filterStart, filterEnd) { /* ... (inchangée) ... */ const ctx = document.getElementById('mainChart'); if (!ctx) return; const dailyData = {}; let currentDate = new Date(filterStart); while (currentDate <= filterEnd) { const dateString = getISODate(currentDate); dailyData[dateString] = { r1: 0, r1_planned: 0, r1_noshow: 0, r2_count: 0, r2_noshow: 0, closed: 0, cash: 0, cash_future: 0 }; currentDate.setDate(currentDate.getDate() + 1); } const consideredStatusesForCompleted = ['R1 Completed', 'R2 Scheduled', 'Closed', 'Lost', 'Other']; const consideredStatusesForR2 = ['R2 Scheduled', 'Closed', 'Lost', 'No Show R2']; dataForChart.forEach(item => { const status = item.status || 'R1 Scheduled'; const itemR1DateStr = item.prospectDate; const itemR1Date = parseDateString(itemR1DateStr); if (itemR1Date && itemR1Date >= filterStart && itemR1Date <= filterEnd) { const dateStr = itemR1DateStr; if(dailyData[dateStr]) { dailyData[dateStr].r1_planned++; if (status === 'No Show R1') dailyData[dateStr].r1_noshow++; if (consideredStatusesForCompleted.includes(status) && status !== 'No Show R1') dailyData[dateStr].r1++; if (consideredStatusesForR2.includes(status)) dailyData[dateStr].r2_count++; if (status === 'No Show R2') dailyData[dateStr].r2_noshow++; } } if (status === 'Closed') { const pT = item.paymentType || 'unique'; let pD = null; let amt = 0; let cashDateStr = null; if (pT === 'unique') { pD = itemR1Date; amt = Number(item.amountCollected) || 0; if (pD) cashDateStr = getISODate(pD); } else if (pT === 'installments') { pD = parseDateString(item.startDateOfPayment); amt = Number(item.installmentAmount) || 0; const nI = parseInt(item.numberOfInstallments) || 0; if (pD && amt > 0 && nI > 0) { for (let i = 0; i < nI; i++) { const cPD = addMonths(pD, i); const cPDS = getISODate(cPD); if (cPD >= filterStart && cPD <= filterEnd && dailyData[cPDS]) { dailyData[cPDS].cash += amt; } } } if(pD) cashDateStr = getISODate(pD); } if (pD && pD >= filterStart && pD <= filterEnd && dailyData[cashDateStr]) { dailyData[cashDateStr].closed++; if (pT === 'unique') { dailyData[cashDateStr].cash += amt; } } } }); const labels = Object.keys(dailyData).sort(); const r1PlannedData = labels.map(date => dailyData[date].r1_planned); const r1NoShowData = labels.map(date => dailyData[date].r1_noshow); const r1Data = labels.map(date => dailyData[date].r1); const r2CountData = labels.map(date => dailyData[date].r2_count); const r2NoShowData = labels.map(date => dailyData[date].r2_noshow); const closedData = labels.map(date => dailyData[date].closed); const cashData = labels.map(date => dailyData[date].cash); if (mainChartInstance) { mainChartInstance.destroy(); } const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; }; mainChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: 'R1 Planifiés', data: r1PlannedData, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-planned') }, { label: 'No Show R1', data: r1NoShowData, borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-noshow') }, { label: 'R1 Effectués', data: r1Data, borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r1-completed') }, { label: 'R2 Effec/Planif', data: r2CountData, borderColor: 'rgba(168, 85, 247, 1)', backgroundColor: 'rgba(168, 85, 247, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-count') }, { label: 'No Show R2', data: r2NoShowData, borderColor: 'rgba(185, 28, 28, 1)', backgroundColor: 'rgba(185, 28, 28, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-r2-noshow') }, { label: 'Closings', data: closedData, borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.7)', tension: 0.1, yAxisID: 'yCount', hidden: isHidden('kpi-card-closing') }, { label: 'Cash Période (€)', data: cashData, borderColor: 'rgba(20, 184, 166, 1)', backgroundColor: 'rgba(20, 184, 166, 0.7)', tension: 0.1, yAxisID: 'yCash', hidden: isHidden('kpi-card-cash') }, ] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, yCount: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: '#374151' }, title: { display: true, text: 'Nombre', color: '#9ca3af' } }, yCash: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: '#9ca3af', callback: (value) => `${value}€` }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Montant (€)', color: '#9ca3af' } } }, plugins: { legend: { display: false }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 12 }, footerFont: { size: 10 } } } } }); }
         function updateChartVisibility() { /* ... (inchangée) ... */ if (!mainChartInstance) return; try { mainChartInstance.data.datasets[0].hidden = !document.getElementById('kpi-card-r1-planned')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[1].hidden = !document.getElementById('kpi-card-r1-noshow')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[2].hidden = !document.getElementById('kpi-card-r1-completed')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[3].hidden = !document.getElementById('kpi-card-r2-count')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[4].hidden = !document.getElementById('kpi-card-r2-noshow')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[5].hidden = !document.getElementById('kpi-card-closing')?.classList.contains('kpi-chart-active'); mainChartInstance.data.datasets[6].hidden = !document.getElementById('kpi-card-cash')?.classList.contains('kpi-chart-active'); mainChartInstance.update(); } catch (e) { console.error("Erreur MAJ visibilité graphique:", e); } }
         function setupKpiCardToggles() { /* ... (inchangée) ... */ const kpiCards = [ { id: 'kpi-card-r1-planned', defaultActive: false }, { id: 'kpi-card-r1-noshow', defaultActive: false }, { id: 'kpi-card-r1-completed', defaultActive: true }, { id: 'kpi-card-r2-count', defaultActive: false }, { id: 'kpi-card-r2-noshow', defaultActive: false }, { id: 'kpi-card-closing', defaultActive: false }, { id: 'kpi-card-cash', defaultActive: false } ]; const toggleLogic = (e) => { const card = e.currentTarget; card.classList.toggle('kpi-chart-active'); card.classList.toggle('opacity-60'); updateChartVisibility(); }; kpiCards.forEach(cardInfo => { const cardEl = document.getElementById(cardInfo.id); if (cardEl) { if (cardInfo.defaultActive) { cardEl.classList.add('kpi-chart-active'); cardEl.classList.remove('opacity-60'); } else { cardEl.classList.remove('kpi-chart-active'); cardEl.classList.add('opacity-60'); } cardEl.addEventListener('click', toggleLogic); } else { console.warn(`KPI Card Toggle non trouvé: #${cardInfo.id}`); } }); document.getElementById('kpi-card-cash-future')?.classList.remove('kpi-card-toggle', 'opacity-60'); }
-        function updateTable(data) { /* ... (inchangée) ... */ const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Scheduled';const sC=getStatusClass(sV);const tA=Number(i.amountCollected)||0; let instTxt='-'; if(i.paymentType==='installments'&&i.installmentAmount&&i.numberOfInstallments){instTxt=`${i.numberOfInstallments}x ${i.installmentAmount.toLocaleString('fr-FR')}€`;} const qST=(i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A'; const qC=qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400'); const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); const dTD=`${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`; const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-'; const lastUpdate = i.lastUpdatedAt ? formatFirebaseTimestamp(i.lastUpdatedAt) : 'N/A'; let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;} return `<tr> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td> <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${instTxt}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-400 border-b border-slate-700">${lastUpdate}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td> </tr>`;}).join(''); }
-        function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'Waiting': return 'status-waiting'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
         
-        // --- CORRECTION: Fonction resetKPIs sécurisée ---
+        // --- MODIFIÉ: updateTable (nouvelle structure colonnes) ---
+        function updateTable(data) {
+             const tB=document.getElementById('detailsTableBody');
+             if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} // Colspan 9
+             tB.innerHTML = data.map(i => {
+                 const sV = i.status || 'R1 Scheduled';
+                 const sC = getStatusClass(sV);
+                 const tA = Number(i.amountCollected) || 0;
+                 const qST = (i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A';
+                 const qC = qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400');
+                 const pN = i.prospectName || 'N/A';
+                 const ePn = pN.replace(/"/g,'&quot;');
+                 const dTD = `${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`;
+                 // Nouvelles colonnes
+                 const dTD_R2 = `${i.prospectDateR2||''} ${i.prospectTimeR2 ? `<span class="text-xs text-gray-400">${i.prospectTimeR2}</span>` : ''}`;
+                 const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-';
+                 
+                 let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;}
+                 
+                 return `<tr>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td>
+                     <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('Waiting','En Attente').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD_R2}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td>
+                 </tr>`;
+             }).join('');
+         }
+
+        function getStatusClass(status) { /* ... (Ajout Waiting) ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'Waiting': return 'status-waiting'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
+        
+        // --- MODIFIÉ: resetKPIs (IDs corrigés) ---
         function resetKPIs() {
             safeSet('kpiR1Planned', '0');
             safeSet('kpiR1NoShowCount', '0');
@@ -289,24 +352,76 @@
             safeSet('kpiWaitingCount', '0');
         }
         
-        function setupFiltersAndLoad() { /* ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); const shortcuts=document.getElementById('dateShortcuts'); const viewToggles = document.getElementById('viewToggles'); const viewPeriodBtn = document.getElementById('viewTogglePeriod'); const viewWaitingBtn = document.getElementById('viewToggleWaiting'); function setDates(startDate, endDate) { s.value = getISODate(startDate); e.value = getISODate(endDate); validateDates(); } function handleShortcutClick(ev){ if(ev.target.tagName!=='BUTTON')return; shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); ev.target.classList.add('active'); currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today); if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}else{const numDays=parseInt(days,10); if(numDays===0){startDate.setDate(today.getDate());}else{startDate.setDate(today.getDate()-numDays+1);}} const sUTC=new Date(Date.UTC(startDate.getFullYear(),startDate.getMonth(),startDate.getDate())); const eUTC=new Date(Date.UTC(endDate.getFullYear(),endDate.getMonth(),endDate.getDate())); setDates(sUTC,eUTC); renderFilteredData(); } shortcuts.addEventListener('click',handleShortcutClick); function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); e.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); f.addEventListener('click',()=>{ renderFilteredData(); }); viewPeriodBtn.addEventListener('click', () => { currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); shortcuts.querySelector('button[data-days="month"]').click(); }); viewWaitingBtn.addEventListener('click', () => { currentViewMode = 'waiting'; viewWaitingBtn.classList.add('active'); viewPeriodBtn.classList.remove('active'); shortcuts.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); renderFilteredData(); }); shortcuts.querySelector('button[data-days="month"]').click(); }
-        function displayError(message) { /* ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
+        function setupFiltersAndLoad() { /* ... (inchangée) ... */ const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton'),r=document.getElementById('resetFilterButton'); const shortcuts=document.getElementById('dateShortcuts'); const viewToggles = document.getElementById('viewToggles'); const viewPeriodBtn = document.getElementById('viewTogglePeriod'); const viewWaitingBtn = document.getElementById('viewToggleWaiting'); function setDates(startDate, endDate) { s.value = getISODate(startDate); e.value = getISODate(endDate); validateDates(); } function handleShortcutClick(ev){ if(ev.target.tagName!=='BUTTON')return; shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); ev.target.classList.add('active'); currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today); if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}else{const numDays=parseInt(days,10); if(numDays===0){startDate.setDate(today.getDate());}else{startDate.setDate(today.getDate()-numDays+1);}} const sUTC=new Date(Date.UTC(startDate.getFullYear(),startDate.getMonth(),startDate.getDate())); const eUTC=new Date(Date.UTC(endDate.getFullYear(),endDate.getMonth(),endDate.getDate())); setDates(sUTC,eUTC); renderFilteredData(); } shortcuts.addEventListener('click',handleShortcutClick); function validateDates(){f.disabled=!s.value||!e.value;} s.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); e.addEventListener('input',()=>{shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); validateDates(); viewPeriodBtn.click(); }); f.addEventListener('click',()=>{ renderFilteredData(); }); viewPeriodBtn.addEventListener('click', () => { currentViewMode = 'period'; viewPeriodBtn.classList.add('active'); viewWaitingBtn.classList.remove('active'); shortcuts.querySelector('button[data-days="month"]').click(); }); viewWaitingBtn.addEventListener('click', () => { currentViewMode = 'waiting'; viewWaitingBtn.classList.add('active'); viewPeriodBtn.classList.remove('active'); shortcuts.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); renderFilteredData(); }); shortcuts.querySelector('button[data-days="month"]').click(); }
+        function displayError(message) { /* ... (inchangée) ... */ let d=document.getElementById('dashboardError');if(!d){d=document.createElement('div');d.id='dashboardError';d.className='fixed bottom-4 right-4 p-4 bg-red-800 text-white rounded-lg shadow-xl z-[60]';document.body.appendChild(d);}d.textContent=message;setTimeout(()=>d.remove(),5000); }
+        
+        // --- Logique Modals (Ajout Date R2) ---
         const modalStatusSelect = document.getElementById('modalStatus'); const modalLostReasonContainer = document.getElementById('modalLostReasonContainer'); const modalPaymentTypeSelect = document.getElementById('modalPaymentType'); const installmentsFieldsDiv = document.getElementById('installmentsFields'); const modalAmountCollectedInput = document.getElementById('modalAmountCollected'); const modalInstallmentAmountInput = document.getElementById('modalInstallmentAmount'); const modalNumberOfInstallmentsInput = document.getElementById('modalNumberOfInstallments');
         const modalRelaunchDateContainer = document.getElementById('modalRelaunchDateContainer');
+        const paymentDetailsContainer = document.getElementById('paymentDetailsContainer'); // Référence au fieldset
+
         function calculateTotalAmount() { if (modalPaymentTypeSelect.value === 'installments') { const i = Number(modalInstallmentAmountInput.value) || 0; const n = parseInt(modalNumberOfInstallmentsInput.value) || 0; if (i > 0 && n > 0) { modalAmountCollectedInput.value = i * n; } } }
-        modalInstallmentAmountInput.addEventListener('input', calculateTotalAmount); modalNumberOfInstallmentsInput.addEventListener('input', calculateTotalAmount); modalPaymentTypeSelect.addEventListener('change', () => { installmentsFieldsDiv.classList.toggle('hidden', modalPaymentTypeSelect.value !== 'installments'); if (modalPaymentTypeSelect.value === 'installments') { calculateTotalAmount(); } });
+        modalInstallmentAmountInput.addEventListener('input', calculateTotalAmount); modalNumberOfInstallmentsInput.addEventListener('input', calculateTotalAmount);
+        modalPaymentTypeSelect.addEventListener('change', () => { installmentsFieldsDiv.classList.toggle('hidden', modalPaymentTypeSelect.value !== 'installments'); if (modalPaymentTypeSelect.value === 'installments') { calculateTotalAmount(); } });
+        
         modalStatusSelect.addEventListener('change', () => {
              const status = modalStatusSelect.value;
              const showReason = status === 'Lost' || status === 'No Show R2';
              const showRelaunch = status === 'Waiting';
+             const showPayment = status === 'Closed'; // NOUVEAU
              modalLostReasonContainer.classList.toggle('hidden', !showReason);
              modalRelaunchDateContainer.classList.toggle('hidden', !showRelaunch);
+             paymentDetailsContainer.classList.toggle('hidden', !showPayment); // AFFICHER/MASQUER PAIEMENT
              const reasonLabel = modalLostReasonContainer.querySelector('label');
              if (status === 'No Show R2') { reasonLabel.textContent = 'Raison No Show R2 (optionnel)'; } else { reasonLabel.textContent = 'Raison si Perdu (optionnel)'; }
         });
-        function openEditModal(docId) { const pD=currentData.find(i=>i.id===docId); if(!pD)return; document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A'; document.getElementById('modalDocId').value=docId; document.getElementById('modalProspectDate').value = pD.prospectDate || ''; document.getElementById('modalProspectTime').value = pD.prospectTime || ''; const cS=pD.status||'R1 Scheduled'; modalStatusSelect.value=cS; document.getElementById('modalLostReason').value=pD.lostReason||''; document.getElementById('modalRelaunchDate').value = pD.relaunchDate || ''; const showReason = cS === 'Lost' || cS === 'No Show R2'; const showRelaunch = cS === 'Waiting'; modalLostReasonContainer.classList.toggle('hidden', !showReason); modalRelaunchDateContainer.classList.toggle('hidden', !showRelaunch); const reasonLabel = modalLostReasonContainer.querySelector('label'); if (cS === 'No Show R2') { reasonLabel.textContent = 'Raison No Show R2 (optionnel)'; } else { reasonLabel.textContent = 'Raison si Perdu (optionnel)'; } const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden'); }
+        
+        function openEditModal(docId) {
+             const pD=currentData.find(i=>i.id===docId); if(!pD)return;
+             document.getElementById('modalProspectName').textContent=pD.prospectName||'N/A';
+             document.getElementById('modalDocId').value=docId;
+             document.getElementById('modalProspectDate').value = pD.prospectDate || '';
+             document.getElementById('modalProspectTime').value = pD.prospectTime || '';
+             document.getElementById('modalProspectDateR2').value = pD.prospectDateR2 || ''; // Charger Date R2
+             document.getElementById('modalProspectTimeR2').value = pD.prospectTimeR2 || ''; // Charger Heure R2
+             
+             const cS=pD.status||'R1 Scheduled'; modalStatusSelect.value=cS;
+             document.getElementById('modalLostReason').value=pD.lostReason||'';
+             document.getElementById('modalRelaunchDate').value = pD.relaunchDate || '';
+             const showReason = cS === 'Lost' || cS === 'No Show R2';
+             const showRelaunch = cS === 'Waiting';
+             const showPayment = cS === 'Closed';
+             modalLostReasonContainer.classList.toggle('hidden', !showReason);
+             modalRelaunchDateContainer.classList.toggle('hidden', !showRelaunch);
+             paymentDetailsContainer.classList.toggle('hidden', !showPayment); // Cacher/Montrer initialement
+             const reasonLabel = modalLostReasonContainer.querySelector('label'); if (cS === 'No Show R2') { reasonLabel.textContent = 'Raison No Show R2 (optionnel)'; } else { reasonLabel.textContent = 'Raison si Perdu (optionnel)'; }
+             
+             const pT=pD.paymentType||'unique'; modalPaymentTypeSelect.value=pT; document.getElementById('modalAmountCollected').value=pD.amountCollected||''; document.getElementById('modalInstallmentAmount').value=pD.installmentAmount||''; document.getElementById('modalNumberOfInstallments').value=pD.numberOfInstallments||''; document.getElementById('modalStartDateOfPayment').value=pD.startDateOfPayment||''; installmentsFieldsDiv.classList.toggle('hidden',pT!=='installments'); document.getElementById('modalError').textContent=''; document.getElementById('editModal').classList.remove('hidden');
+        }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-        async function saveModalChanges() { const dId=document.getElementById('modalDocId').value; const newProspectDate = document.getElementById('modalProspectDate').value; const newProspectTime = document.getElementById('modalProspectTime').value; const nS=modalStatusSelect.value; const nPT=modalPaymentTypeSelect.value; const nTA=Number(document.getElementById('modalAmountCollected').value)||0; const nIA=Number(document.getElementById('modalInstallmentAmount').value)||0; const nNI=parseInt(document.getElementById('modalNumberOfInstallments').value)||0; const nSD=document.getElementById('modalStartDateOfPayment').value||null; const nLR=document.getElementById('modalLostReason').value.trim(); const nRD = document.getElementById('modalRelaunchDate').value || null; const mE=document.getElementById('modalError'); const sB=document.getElementById('modalSaveButton'); if (!dId || !nS || !newProspectDate) { mE.textContent = "ID, Statut et Date R1 requis."; return; } mE.textContent='';sB.disabled=true;sB.textContent='Sauvegarde...'; try { const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId); const dTU={status:nS, prospectDate: newProspectDate, prospectTime: newProspectTime, lastUpdatedAt:Timestamp.now()}; if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){if(!nIA||!nNI||!nSD){throw new Error("Détails échelonnement manquants.");} dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();} if(nS==='Lost' || nS === 'No Show R2'){dTU.lostReason=nLR;} else {dTU.lostReason=deleteField();} if(nS === 'Waiting') { dTU.relaunchDate = nRD; } else { dTU.relaunchDate = deleteField(); } await updateDoc(dR,dTU); closeEditModal(); const docIndex = currentData.findIndex(item => item.id === dId); if (docIndex > -1) { currentData[docIndex] = { ...currentData[docIndex], ...dTU, id: dId }; } renderFilteredData(); } catch(error){ console.error("Err update:",error); mE.textContent=error.message || "Erreur sauvegarde."; } finally { sB.disabled=false; sB.textContent='Enregistrer'; } }
+        async function saveModalChanges() {
+             const dId=document.getElementById('modalDocId').value;
+             const newProspectDate = document.getElementById('modalProspectDate').value;
+             const newProspectTime = document.getElementById('modalProspectTime').value;
+             const newProspectDateR2 = document.getElementById('modalProspectDateR2').value || null; // Lire Date R2
+             const newProspectTimeR2 = document.getElementById('modalProspectTimeR2').value || null; // Lire Heure R2
+             const nS=modalStatusSelect.value; const nPT=modalPaymentTypeSelect.value; const nTA=Number(document.getElementById('modalAmountCollected').value)||0; const nIA=Number(document.getElementById('modalInstallmentAmount').value)||0; const nNI=parseInt(document.getElementById('modalNumberOfInstallments').value)||0; const nSD=document.getElementById('modalStartDateOfPayment').value||null; const nLR=document.getElementById('modalLostReason').value.trim(); const nRD = document.getElementById('modalRelaunchDate').value || null; const mE=document.getElementById('modalError'); const sB=document.getElementById('modalSaveButton');
+             if (!dId || !nS || !newProspectDate) { mE.textContent = "ID, Statut et Date R1 requis."; return; }
+             mE.textContent='';sB.disabled=true;sB.textContent='Sauvegarde...';
+             try {
+                 const cP=`artifacts/${appId}/public/data/r1_closings`; const dR=doc(db,cP,dId);
+                 const dTU={status:nS, prospectDate: newProspectDate, prospectTime: newProspectTime, prospectDateR2: newProspectDateR2, prospectTimeR2: newProspectTimeR2, lastUpdatedAt:Timestamp.now()};
+                 if(nS==='Closed'){dTU.paymentType=nPT;dTU.amountCollected=nTA; if(nPT==='installments'){if(!nIA||!nNI||!nSD){throw new Error("Détails échelonnement manquants.");} dTU.installmentAmount=nIA;dTU.numberOfInstallments=nNI;dTU.startDateOfPayment=nSD; dTU.recurringAmount=deleteField();} else {dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}} else {dTU.paymentType=deleteField();dTU.amountCollected=deleteField();dTU.installmentAmount=deleteField();dTU.numberOfInstallments=deleteField();dTU.startDateOfPayment=deleteField(); dTU.recurringAmount=deleteField();}
+                 if(nS==='Lost' || nS === 'No Show R2'){dTU.lostReason=nLR;} else {dTU.lostReason=deleteField();}
+                 if(nS === 'Waiting') { dTU.relaunchDate = nRD; } else { dTU.relaunchDate = deleteField(); }
+                 await updateDoc(dR,dTU);
+                 closeEditModal();
+                 const docIndex = currentData.findIndex(item => item.id === dId);
+                 if (docIndex > -1) { currentData[docIndex] = { ...currentData[docIndex], ...dTU, id: dId }; } // MAJ locale
+                 renderFilteredData(); // Re-render
+             } catch(error){ console.error("Err update:",error); mE.textContent=error.message || "Erreur sauvegarde."; }
+             finally { sB.disabled=false; sB.textContent='Enregistrer'; }
+        }
         function openDeleteConfirmModal(docId, prospectName) { /* ... */ document.getElementById('deleteProspectName').textContent=prospectName;document.getElementById('deleteDocId').value=docId;document.getElementById('deleteError').textContent='';document.getElementById('deleteConfirmModal').classList.remove('hidden'); }
         function closeDeleteConfirmModal() { /* ... */ document.getElementById('deleteConfirmModal').classList.add('hidden'); }
         async function confirmDeletion() { const dId=document.getElementById('deleteDocId').value;const dE=document.getElementById('deleteError');const cB=document.getElementById('deleteConfirmButton');if(!dId){dE.textContent="ID manquant.";return;} dE.textContent='';cB.disabled=true;cB.textContent='Suppression...';try{const cP=`artifacts/${appId}/public/data/r1_closings`;const dR=doc(db,cP,dId);await deleteDoc(dR);closeDeleteConfirmModal(); currentData = currentData.filter(item => item.id !== dId); renderFilteredData(); }catch(error){console.error(`Err suppression ${dId}:`,error);dE.textContent="Erreur suppression.";}finally{cB.disabled=false;cB.textContent='Supprimer';} }
@@ -326,13 +441,15 @@
                 currentData = [];
                 querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
                 
-                // Une fois 'currentData' chargé, calculer J-180
-                await fetchAndDisplaySlidingKPIs(currentData);
-                
                 // Configurer les filtres (qui lanceront le 1er rendu filtré)
                 setupFiltersAndLoad(); 
                 attachListeners();
                 setupKpiCardToggles();
+                
+                // Une fois 'currentData' chargé, calculer J-180
+                // NOTE: Déplacé APRES setupFiltersAndLoad pour que currentData soit dispo
+                await fetchAndDisplaySlidingKPIs(currentData); 
+
             } catch (e) {
                  console.error("Erreur critique au démarrage:", e);
                  displayError("Erreur de chargement initiale.");

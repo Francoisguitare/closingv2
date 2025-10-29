@@ -39,9 +39,8 @@
             .kpi-secondary-value.text-red-400 { color: #f87171; }
             .kpi-secondary-value.text-orange-400 { color: #fb923c; }
             
-            .date-shortcut, .view-toggle { @apply text-sm font-medium text-gray-400 hover:text-white px-3 py-1 rounded-md transition-colors; }
-            .date-shortcut.active, .view-toggle.active { @apply bg-blue-600 text-white; }
-            .date-shortcut:disabled, .view-toggle:disabled { @apply opacity-40 cursor-not-allowed; }
+            .date-shortcut { @apply text-sm font-medium text-gray-400 hover:text-white px-3 py-1 rounded-md transition-colors; }
+            .date-shortcut.active { @apply bg-blue-600 text-white; }
             
             th { @apply px-4 py-3 bg-slate-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0 z-10; }
             td { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700; }
@@ -98,18 +97,21 @@
             </div>
         </section>
 
-        <!-- KPIs -->
+        <!-- KPIs (Ordre corrigé + Format % modifié) -->
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+             <!-- Ligne 1: Tunnel R1 -->
              <div id="kpi-card-r1-planned" class="kpi-card-toggle kpi-card-static border-t-amber-500"><span id="kpiR1Planned" class="text-4xl font-bold text-amber-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Planifiés</span></div>
              <div id="kpi-card-r1-noshow" class="kpi-card-toggle kpi-card-static border-t-red-500"><div class="flex items-center justify-center"><span id="kpiR1NoShowRate" class="text-4xl font-bold text-red-400 block">0%</span><span id="kpiR1NoShowCount" class="kpi-secondary-value text-red-400 block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">% No Show R1</span></div>
              <div id="kpi-card-r1-completed" class="kpi-card-toggle kpi-card-static border-t-blue-500"><span id="kpiR1Completed" class="text-4xl font-bold text-blue-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R1 Effectués</span></div>
              <div class="kpi-card-static border-t-teal-500"><div class="flex items-center justify-center"><span id="kpiR1toR2Rate" class="text-4xl font-bold text-teal-300 block">0%</span><span id="kpiR1toR2Count" class="kpi-secondary-value block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R1 Eff → R2</span></div>
              
+             <!-- Ligne 2: Tunnel R2 -->
              <div id="kpi-card-r2-count" class="kpi-card-toggle kpi-card-static border-t-purple-500"><span id="kpiR2Count" class="text-4xl font-bold text-purple-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">R2 Effec/Planif</span></div>
              <div id="kpi-card-r2-noshow" class="kpi-card-toggle kpi-card-static border-t-orange-500"><div class="flex items-center justify-center"><span id="kpiR2NoShowRate" class="text-4xl font-bold text-orange-400 block">0%</span><span id="kpiR2NoShowCount" class="kpi-secondary-value !text-orange-400 block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider block mt-1">% No Show R2</span></div>
              <div class="kpi-card-static border-t-teal-500"><div class="flex items-center justify-center"><span id="kpiR2toClosedRate" class="text-4xl font-bold text-teal-300 block">0%</span><span id="kpiR2toClosedCount" class="kpi-secondary-value block">(0)</span></div><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Conv. R2 → Closé</span></div>
              <div id="kpi-card-closing" class="kpi-card-toggle kpi-card-static border-t-green-500"><span id="kpiClosingCount" class="text-4xl font-bold text-green-300 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Closings</span></div>
              
+             <!-- Ligne 3: Cash & Statut Annexe -->
              <div id="kpi-card-cash" class="kpi-card-toggle kpi-card-static border-t-teal-500"><span id="kpiCashCollected" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Période</span></div>
              <div id="kpi-card-cash-future" class="kpi-card-static border-t-teal-500"><span id="kpiCashFutureRecurring" class="text-4xl font-bold text-teal-300 block mb-1">0€</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Cash Récurrent Futur</span></div>
              <div id="kpi-card-waiting" class="kpi-card-static border-t-blue-400"><span id="kpiWaitingCount" class="text-4xl font-bold text-blue-400 block mb-1">0</span><span class="text-sm text-gray-400 font-medium uppercase tracking-wider">Total "En Attente"</span></div>
@@ -168,7 +170,7 @@
         let currentData = [];
         let mainChartInstance = null; 
         let currentViewMode = 'period';
-        let currentKpiFilter = null; // NOUVEAU: Pour suivre le filtre KPI
+        let currentKpiFilter = null; // Pour suivre le filtre KPI
 
         // --- Fonctions Utilitaires ---
         function addMonths(date, months) { const d = new Date(date); d.setMonth(d.getMonth() + months); if (d.getDate() !== new Date(date).getDate()) { d.setDate(0); } return d; }
@@ -179,7 +181,6 @@
         function formatFirebaseTimestamp(timestamp) { if (!timestamp || typeof timestamp.toDate !== 'function') return 'N/A'; try { return timestamp.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return 'Date invalide'; } }
         async function initFirebase() { try { const fC = { apiKey: "AIzaSyCpRtHQd8oybG-uZKBRz-a2uKQCHrXMapY", authDomain: "closing-gia.firebaseapp.com", projectId: "closing-gia", storageBucket: "closing-gia.firebasestorage.app", messagingSenderId: "260776101981", appId: "1:260776101981:web:30d795f1d04a44d19f65b4" }; appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const app = initializeApp(fC); db = getFirestore(app); auth = getAuth(app); return new Promise((resolve) => { onAuthStateChanged(auth, async (user) => { if (user) { resolve(); } else { try { await signInAnonymously(auth); resolve(); } catch (e){ console.error("Err anon:", e); resolve(); }} }); }); } catch (error) { console.error("Erreur init Firebase:", error); displayError("Erreur connexion DB."); return Promise.reject(error); } }
 
-        // --- MODIFIÉ: renderFilteredData (logique de filtre KPI) ---
         function renderFilteredData() {
             const startDateStr = document.getElementById('startDate').value;
             const endDateStr = document.getElementById('endDate').value;
@@ -191,15 +192,12 @@
             let tableData = []; // Données pour la table
             let kpiData = []; // Données pour les KPIs (toujours par date)
             
-            // 1. Données KPI (toujours basées sur la période)
             kpiData = currentData.filter(item => { const itemR1Date = parseDateString(item.prospectDate); return itemR1Date && itemR1Date >= filterStartDate && itemR1Date <= filterEndDate; });
             
             const statusesR1Completed = ['R1 Completed', 'R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost', 'Other'];
             const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
 
-            // 2. Données Table (basées sur la vue ou filtre KPI)
             if (currentKpiFilter) {
-                // Un KPI est sélectionné, il surcharge la vue
                 switch (currentKpiFilter) {
                     case 'kpi-card-r1-planned':
                         tableData = currentData.filter(item => (item.status || 'R1 Scheduled') === 'R1 Scheduled');
@@ -220,16 +218,14 @@
                         tableData = currentData.filter(item => item.status === 'Closed');
                         break;
                     case 'kpi-card-cash':
-                        tableData = currentData.filter(item => item.status === 'Closed'); // Cash vient des closés
+                        tableData = currentData.filter(item => item.status === 'Closed');
                         break;
                 }
-                // Trier la nouvelle liste filtrée
                 tableData.sort((a, b) => { const dtA = `${a.prospectDate||'0'}T${a.prospectTime||'0'}`; const dtB = `${b.prospectDate||'0'}T${b.prospectTime||'0'}`; return dtB.localeCompare(dtA); });
             } else if (currentViewMode === 'waiting') {
                 tableData = currentData.filter(item => item.status === 'Waiting');
                 tableData.sort((a, b) => (a.relaunchDate || '9999-12-31').localeCompare(b.relaunchDate || '9999-12-31'));
             } else {
-                // Vue Période par défaut
                 tableData = kpiData; // kpiData est déjà trié par date R1 (car currentData l'est)
             }
 
@@ -249,6 +245,7 @@
                  const collectionPath = `artifacts/${appId}/public/data/r1_closings`; const querySnapshot = await getDocs(query(collection(db, collectionPath))); currentData = [];
                  querySnapshot.forEach((doc) => { currentData.push({ id: doc.id, ...doc.data() }); });
                  
+                 // CORRECTION: Tri par date/heure R1 (plus récent en haut)
                  currentData.sort((a, b) => { 
                      const dtA = `${a.prospectDate||'0000-00-00'}T${a.prospectTime||'00:00'}`; 
                      const dtB = `${b.prospectDate||'0000-00-00'}T${b.prospectTime||'00:00'}`; 
@@ -256,7 +253,9 @@
                  });
                  
                  await fetchAndDisplaySlidingKPIs(currentData); 
-                 // renderFilteredData(); // Appel déplacé dans setupFiltersAndLoad
+                 
+                 // L'appel initial se fait dans setupFiltersAndLoad
+                 // renderFilteredData(); 
              } catch (error) { 
                  console.error("Erreur fetch Firestore:", error); 
                  displayError("Erreur chargement données."); 
@@ -265,6 +264,7 @@
          }
         
         async function fetchAndDisplaySlidingKPIs(data) {
+            // CORRECTION: Vérifier que 'data' (currentData) existe
             if (!data) { console.warn("J-180: Données non prêtes."); return; }
             const today = new Date(); const endDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)); let startDate = new Date(endDate); startDate.setDate(startDate.getDate() - 180); startDate.setUTCHours(0, 0, 0, 0);
             try {
@@ -284,13 +284,17 @@
         
         const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; else console.warn(`Element KPI non trouvé: #${id}`); };
 
+        // --- MODIFIÉ: updateKPIs (Logique R1/R2 Corrigée) ---
         function updateKPIs(dataForPeriod, filterStart, filterEnd) {
             let totalR1BookedInPeriod = dataForPeriod.length;
             let r1CompletedCount = 0; let r1NoShowCount = 0;
             let r2TotalPool = 0; let r2NoShowCount = 0; let r2Count = 0; let closingCount = 0;
             let cashCollectedInPeriod = 0; let cashFutureRecurring = 0;
             
+            // R1 Effectué = A eu lieu (n'est plus "Planifié" ou "NoShow R1")
             const statusesR1Completed = ['R1 Completed', 'R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost', 'Other'];
+            // R2 Pool (base pour % R1->R2) = R1 Effectués
+            // R2 Comptés (base pour % R2->Closé) = A une date R2 OU est "En Attente"
             const statusesR2Count = ['R2 Scheduled', 'No Show R2', 'Waiting', 'Closed', 'Lost'];
 
             dataForPeriod.forEach(item => {
@@ -330,9 +334,7 @@
         function updateChartVisibility() { 
             if (!mainChartInstance) return; 
             try {
-                // Fonction pour obtenir l'état "caché" d'une carte
                 const isHidden = (id) => { const card = document.getElementById(id); return card ? !card.classList.contains('kpi-chart-active') : true; };
-
                 mainChartInstance.data.datasets[0].hidden = isHidden('kpi-card-r1-planned');
                 mainChartInstance.data.datasets[1].hidden = isHidden('kpi-card-r1-noshow');
                 mainChartInstance.data.datasets[2].hidden = isHidden('kpi-card-r1-completed');
@@ -344,13 +346,11 @@
             } catch (e) { console.error("Erreur MAJ visibilité graphique:", e); } 
         }
 
-        // --- NOUVELLE FONCTION: deactiveAllKpiCards ---
         function deactiveAllKpiCards() {
             document.querySelectorAll('.kpi-card-toggle').forEach(card => {
                 card.classList.remove('kpi-chart-active');
                 card.classList.add('opacity-60');
             });
-            // S'assurer que le graphique est aussi mis à jour
             updateChartVisibility();
         }
 
@@ -360,33 +360,27 @@
             const kpiToggleLogic = (e) => {
                 const card = e.currentTarget;
                 const cardId = card.id;
-                
-                // Vérifier si la carte est déjà active
                 const wasActive = card.classList.contains('kpi-chart-active');
                 
-                // 1. Désactiver toutes les cartes et filtres de vue
                 deactiveAllKpiCards();
                 document.getElementById('viewTogglePeriod').classList.remove('active');
                 document.getElementById('viewToggleWaiting').classList.remove('active');
 
                 if (wasActive) {
-                    // Si elle était active, on la désactive et on retourne à la vue Période
                     currentKpiFilter = null;
-                    document.getElementById('viewTogglePeriod').click(); // Simule clic sur "Vue Période"
+                    document.getElementById('viewTogglePeriod').click(); 
                 } else {
-                    // Si elle n'était pas active, on l'active
                     card.classList.add('kpi-chart-active');
                     card.classList.remove('opacity-60');
-                    currentKpiFilter = cardId; // Définir comme filtre actif
-                    renderFilteredData(); // Re-filtrer les données
+                    currentKpiFilter = cardId; 
+                    renderFilteredData(); 
                 }
             };
 
             kpiCards.forEach(id => {
                 const cardEl = document.getElementById(id);
                 if (cardEl) {
-                    // Etat initial (R1 complété actif par défaut)
-                    if (id === 'kpi-card-r1-completed') {
+                    if (id === 'kpi-card-r1-completed') { // Actif par défaut
                         cardEl.classList.add('kpi-chart-active');
                         cardEl.classList.remove('opacity-60');
                     } else {
@@ -394,16 +388,59 @@
                         cardEl.classList.add('opacity-60');
                     }
                     cardEl.addEventListener('click', kpiToggleLogic);
-                } else {
-                    console.warn(`KPI Card Toggle non trouvé: #${id}`);
-                }
+                } else { console.warn(`KPI Card Toggle non trouvé: #${id}`); }
             });
             document.getElementById('kpi-card-cash-future')?.classList.remove('kpi-card-toggle', 'opacity-60');
         }
         
-        function updateTable(data) { /* ... (inchangée) ... */ const tB=document.getElementById('detailsTableBody'); if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;} tB.innerHTML=data.map(i=>{const sV=i.status||'R1 Scheduled';const sC=getStatusClass(sV);const tA=Number(i.amountCollected)||0; const qST=(i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A'; const qC=qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400'); const pN=i.prospectName||'N/A';const ePn=pN.replace(/"/g,'&quot;'); const dTD=`${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`; const dTD_R2=`${i.prospectDateR2||'-'} ${i.prospectTimeR2 ? `<span class="text-xs text-gray-400">${i.prospectTimeR2}</span>` : ''}`; const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-'; let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;} return `<tr> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td> <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('Waiting','En Attente').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD_R2}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td> <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td> <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td> </tr>`;}).join(''); }
+        function updateTable(data) {
+             const tB=document.getElementById('detailsTableBody');
+             if(data.length===0){tB.innerHTML=`<tr><td colspan="9" class="text-center py-4 text-gray-400">Aucune donnée.</td></tr>`; return;}
+             tB.innerHTML = data.map(i => {
+                 const sV = i.status || 'R1 Scheduled'; const sC = getStatusClass(sV);
+                 const tA = Number(i.amountCollected) || 0;
+                 const qST = (i.qualificationStatus && i.qualificationStatus !== 'N/A') ? i.qualificationStatus.replace(' (Client Rêvé)','').trim() : 'N/A';
+                 const qC = qST.includes('VERT')?'text-green-400':(qST.includes('ROUGE')?'text-red-400':'text-gray-400');
+                 const pN = i.prospectName || 'N/A'; const ePn = pN.replace(/"/g,'&quot;');
+                 const dTD = `${i.prospectDate||'N/A'} ${i.prospectTime?`<span class="text-xs text-gray-400">${i.prospectTime}</span>`:''}`;
+                 const dTD_R2 = `${i.prospectDateR2||'-'} ${i.prospectTimeR2 ? `<span class="text-xs text-gray-400">${i.prospectTimeR2}</span>` : ''}`;
+                 const relaunchDate = i.relaunchDate ? `<span class="text-blue-300">${i.relaunchDate}</span>` : '-';
+                 
+                 let aB; if(sV==='R1 Scheduled'){aB=`<button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="start-r1-prompt-btn text-yellow-400 hover:text-yellow-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors whitespace-nowrap">Démarrer R1</button>`;} else {aB=`<a href="main.html?docId=${i.id}" class="details-btn text-blue-400 hover:text-blue-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Détails</a>`;}
+                 
+                 return `<tr>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 truncate max-w-xs">${pN}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="${qC}">${qST}</span></td>
+                     <td class="px-1 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-center">${i.scores?.total??'N/A'}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700"><span class="status-badge ${sC}">${sV.replace('Completed','Effectué').replace('Scheduled','Planifié').replace('Waiting','En Attente').replace('No Show R1','No Show R1').replace('No Show R2','No Show R2')}</span></td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${dTD_R2}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700">${relaunchDate}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-200 border-b border-slate-700 text-right">${tA>0?tA.toLocaleString('fr-FR')+'€':'-'}</td>
+                     <td class="px-2 py-3 whitespace-nowrap text-sm border-b border-slate-700 text-center space-x-2"> ${aB} <button data-doc-id="${i.id}" class="edit-btn text-green-400 hover:text-green-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Modifier</button> <button data-doc-id="${i.id}" data-prospect-name="${ePn}" class="delete-btn text-red-400 hover:text-red-300 text-xs font-medium px-1.5 py-0.5 rounded hover:bg-slate-700 transition-colors">Suppr.</button> </td>
+                 </tr>`;
+             }).join('');
+         }
+
         function getStatusClass(status) { /* ... */ switch(status){ case 'R1 Scheduled': return 'status-scheduled'; case 'Waiting': return 'status-waiting'; case 'No Show R1': return 'status-noshow-r1'; case 'No Show R2': return 'status-noshow-r2'; case 'R1 Completed':return 'status-r1';case 'R2 Scheduled':return 'status-r2';case 'Closed':return 'status-closed';case 'Lost':return 'status-lost';default:return 'status-other';} }
-        function resetKPIs() { safeSet('kpiR1Planned', '0'); safeSet('kpiR1NoShowCount', '0'); safeSet('kpiR1NoShowRate', '(0%)'); safeSet('kpiR1Completed', '0'); safeSet('kpiR2Count', '0'); safeSet('kpiR2NoShowCount', '0'); safeSet('kpiR2NoShowRate', '(0%)'); safeSet('kpiClosingCount', '0');safeSet('kpiR1toR2Rate', '0%'); safeSet('kpiR1toR2Count', '(0)'); safeSet('kpiR2toClosedRate', '0%'); safeSet('kpiR2toClosedCount', '(0)'); safeSet('kpiCashCollected', '0€'); safeSet('kpiCashFutureRecurring', '0€'); safeSet('kpiWaitingCount', '0'); }
+        
+        function resetKPIs() {
+            safeSet('kpiR1Planned', '0');
+            safeSet('kpiR1NoShowCount', '0');
+            safeSet('kpiR1NoShowRate', '(0%)');
+            safeSet('kpiR1Completed', '0');
+            safeSet('kpiR2Count', '0');
+            safeSet('kpiR2NoShowCount', '0');
+            safeSet('kpiR2NoShowRate', '(0%)');
+            safeSet('kpiClosingCount', '0');
+            safeSet('kpiR1toR2Rate', '0%'); 
+            safeSet('kpiR1toR2Count', '(0)');
+            safeSet('kpiR2toClosedRate', '0%');
+            safeSet('kpiR2toClosedCount', '(0)');
+            safeSet('kpiCashCollected', '0€');
+            safeSet('kpiCashFutureRecurring', '0€');
+            safeSet('kpiWaitingCount', '0');
+        }
         
         function setupFiltersAndLoad() {
             const s=document.getElementById('startDate'),e=document.getElementById('endDate'),f=document.getElementById('filterButton');
@@ -419,11 +456,12 @@
                 shortcuts.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
                 ev.target.classList.add('active');
                 currentViewMode = 'period';
-                currentKpiFilter = null; // Réinitialiser le filtre KPI
+                currentKpiFilter = null;
                 viewPeriodBtn.classList.add('active');
                 viewWaitingBtn.classList.remove('active');
-                deactiveAllKpiCards(); // Désactiver visuellement les KPIs
-                setupKpiCardToggles(); // Réappliquer l'état par défaut (R1 actif)
+                deactiveAllKpiCards(); 
+                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active'); // Réactiver R1 par défaut
+                document.getElementById('kpi-card-r1-completed').classList.remove('opacity-60');
                 
                 const days=ev.target.dataset.days; const today=new Date(); let startDate=new Date(today),endDate=new Date(today);
                 if(days==='month'){startDate=new Date(today.getFullYear(),today.getMonth(),1);endDate=new Date(today.getFullYear(),today.getMonth()+1,0);}
@@ -445,7 +483,8 @@
                 viewPeriodBtn.classList.add('active');
                 viewWaitingBtn.classList.remove('active');
                 deactiveAllKpiCards();
-                setupKpiCardToggles(); // Réappliquer l'état par défaut
+                document.getElementById('kpi-card-r1-completed').classList.add('kpi-chart-active'); // Réactiver R1 par défaut
+                document.getElementById('kpi-card-r1-completed').classList.remove('opacity-60');
                 shortcuts.querySelector('button[data-days="month"]').click();
             });
             viewWaitingBtn.addEventListener('click', () => {
@@ -528,13 +567,12 @@
                  closeEditModal();
                  const docIndex = currentData.findIndex(item => item.id === dId);
                  if (docIndex > -1) { 
-                     // Mettre à jour les données locales pour refléter les suppressions
                      const updatedDoc = { ...currentData[docIndex], ...dTU, id: dId, lastUpdatedAt: Timestamp.now() };
                      if (!newProspectDateR2) { delete updatedDoc.prospectDateR2; delete updatedDoc.prospectTimeR2; }
                      if (nS !== 'Waiting') { delete updatedDoc.relaunchDate; }
                      currentData[docIndex] = updatedDoc;
                  }
-                 renderFilteredData(); // Re-render
+                 renderFilteredData(); 
              } catch(error){ console.error("Err update:",error); mE.textContent=error.message || "Erreur sauvegarde."; }
              finally { sB.disabled=false; sB.textContent='Enregistrer'; }
         }

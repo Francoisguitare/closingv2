@@ -127,7 +127,7 @@
                     
                     <!-- Bouton Pitch (Feu Vert) -->
                     <button id="showPitchButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-800/40">Voir la Proposition GIA &rarr;</button>
-                    <!-- Bouton Sauvegarde (Feu Rouge) -->
+                    <!-- NOUVEAU BOUTON: Sauvegarde (Feu Rouge) -->
                     <button id="saveAndExitButton" class="hidden w-full text-lg font-bold py-3 px-5 rounded-lg transition-all duration-300 shadow-lg bg-red-700 hover:bg-red-600 text-white shadow-red-800/40">
                         Enregistrer & Quitter (Feu Rouge)
                     </button>
@@ -207,6 +207,7 @@
                 if (docIdParam) {
                     this.state.isViewingMode = true;
                     await this.loadProspectData(docIdParam);
+                    // Mettre à jour le statut seulement si on vient de "Démarrer R1"
                     if (this.state.currentStatus === 'R1 Scheduled') {
                         await this.updateProspectStatusOnly('R1 Completed', null, false);
                         this.state.currentStatus = 'R1 Completed';

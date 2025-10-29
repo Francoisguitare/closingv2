@@ -132,6 +132,7 @@
                             <th class="w-[10%]">Date R2</th>
                             <th class="w-[10%]">Date Relance</th>
                             <th class="w-[10%] text-right">Montant Total</th>
+                            <th class="w-[10%]">Dernière MAJ</th> <!-- Colonne ajoutée -->
                             <th class="w-[18%] text-center">Actions</th>
                         </tr>
                     </thead>
@@ -199,7 +200,7 @@
                  await fetchAndDisplaySlidingKPIs(currentData); 
                  
                  // Appliquer les filtres par défaut (via setupFiltersAndLoad)
-                 // renderFilteredData(); // Cet appel est maintenant dans setupFiltersAndLoad
+                 renderFilteredData(); 
              } catch (error) { 
                  console.error("Erreur fetch Firestore:", error); 
                  displayError("Erreur chargement données."); 
@@ -209,7 +210,7 @@
         
         async function fetchAndDisplaySlidingKPIs(data) {
             // CORRECTION: Vérifier que 'data' (currentData) existe
-            if (!data || data.length === 0) { console.warn("J-180: Pas de données à filtrer."); return; }
+            if (!data) { console.warn("J-180: Données non prêtes."); return; }
             const today = new Date(); const endDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)); let startDate = new Date(endDate); startDate.setDate(startDate.getDate() - 180); startDate.setUTCHours(0, 0, 0, 0);
             try {
                  const slidingData = data.filter(item => { const iRD = parseDateString(item.prospectDate); return iRD && iRD >= startDate && iRD <= endDate; });
@@ -220,6 +221,7 @@
             } catch(e) { console.error("Erreur calcul J-180:", e); safeSet('kpi-180-planned', 'Err'); }
         }
         
+        // --- Fonction de MAJ sûre ---
         const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; else console.warn(`Element KPI non trouvé: #${id}`); };
 
         function updateKPIs(dataForPeriod, filterStart, filterEnd) {

@@ -207,12 +207,13 @@
                 if (docIdParam) {
                     this.state.isViewingMode = true;
                     await this.loadProspectData(docIdParam);
+                    // Mettre à jour le statut seulement si on vient de "Démarrer R1"
                     if (this.state.currentStatus === 'R1 Scheduled') {
                         await this.updateProspectStatusOnly('R1 Completed', null, false);
                         this.state.currentStatus = 'R1 Completed';
                     }
                 } else {
-                    this.showFeedback("Erreur: ID prospect manquant. Retour au dashboard.", true);
+                    this.showFeedback("Erreur: ID prospect manquant.", true);
                     console.error("ID de document manquant dans l'URL. Impossible de charger la fiche.");
                     return; // Arrêter l'initialisation
                 }
@@ -248,36 +249,64 @@
             calculateScores(context) { const scores = { dispo: 0, motiv: 0, adeq: 0, capa: 0, competence: 0 }; const addPoints = (bt) => { if (!bt) return; const idx = allBadgeNames.indexOf(bt); if (idx === -1) return; const pts = badgeData[idx]; if (pts) { pts.forEach((p, i) => { scores[Object.keys(scores)[i]] += p; }); } }; addPoints(context.statut); addPoints(context.temps); addPoints(context.age); addPoints(context.consequence); addPoints(context.experience); addPoints(context.parcours); context.materiel.forEach(addPoints); context.douleur.forEach(addPoints); context.style.forEach(addPoints); Object.keys(scores).forEach(key => { scores[key] = Math.max(0, Math.min(scores[key], maxScores[key])); }); scores.total = scores.dispo + scores.motiv + scores.adeq + scores.capa + scores.competence; return scores; },
             updateGauges(scores) { const uG = (g, l, s, m, t, tk) => { if (!g || !l) return; const p = (s / m) * 100, pc = Math.max(0, Math.min(100, p)); g.style.width = `${pc}%`; g.classList.remove('bg-red-500', 'bg-amber-500', 'bg-green-500'); Object.values(this.gaugeLabelColors).forEach(cc => l.classList.remove(cc)); if (tk === 'motiv' || tk === 'capa') { l.classList.add(s > t ? this.gaugeLabelColors.green : this.gaugeLabelColors.red); } else { l.classList.add(s >= t ? this.gaugeLabelColors.green : this.gaugeLabelColors.amber); } if (pc < (t / m * 100)) { g.classList.add('bg-red-500'); } else if (pc < 80) { g.classList.add('bg-amber-500'); } else { g.classList.add('bg-green-500'); } }; uG(this.elements.gaugeDispo, this.elements.gaugeDispoLabel, scores.dispo, maxScores.dispo, SEUILS.dispo, 'dispo'); uG(this.elements.gaugeMotiv, this.elements.gaugeMotivLabel, scores.motiv, maxScores.motiv, SEUILS.motiv, 'motiv'); uG(this.elements.gaugeAdeq, this.elements.gaugeAdeqLabel, scores.adeq, maxScores.adeq, SEUILS.adeq, 'adeq'); uG(this.elements.gaugeCapa, this.elements.gaugeCapaLabel, scores.capa, maxScores.capa, SEUILS.capa, 'capa'); uG(this.elements.gaugeCompetence, this.elements.gaugeCompetenceLabel, scores.competence, maxScores.competence, SEUILS.competence, 'competence'); },
             
+            // --- CORRECTION: Logique 'else' (Correction Erreur Syntaxe) ---
             updateQualification(scores, context, isReady) {
-                const isCapable = scores.capa > SEUILS.capa; const isMotivated = scores.motiv > SEUILS.motiv; const isTotalOK = scores.total >= SEUILS.total; // Utilise 35
+                const isCapable = scores.capa > SEUILS.capa; 
+                const isMotivated = scores.motiv > SEUILS.motiv; 
+                const isTotalOK = scores.total >= SEUILS.total; // Utilise 35
                 let qual = { status: "En attente...", text: "...", color: "bg-gray-500", isCapable, isMotivated, isTotalOK, isFinal: isReady };
-                if (!isReady) { let m = []; if (!context.statut) m.push("Statut"); if (!context.temps) m.push("Temps"); if (context.douleur.length === 0) m.push("Objectifs"); if (!context.consequence) m.push("Conséquence"); qual.text = `Remplir: ${m.join(', ')}.`; }
-                else {
-                    if (!isCapable || !isMotivated || !isTotalOK) { qual.status = "FEU ROUGE"; qual.text = "Inqualifiable. Pas de R2."; qual.color = "bg-red-600"; }
-                    else { const isIdeal = scores.total >= 40; qual.status = `FEU VERT ${isIdeal ? "(Client Rêvé)" : ""}`; qual.text = "Prospect qualifié !"; qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600"; }
+                
+                if (!isReady) {
+                    let m = []; if (!context.statut) m.push("Statut"); if (!context.temps) m.push("Temps"); if (context.douleur.length === 0) m.push("Objectifs"); if (!context.consequence) m.push("Conséquence"); qual.text = `Remplir: ${m.join(', ')}.`;
+                } else {
+                    if (!isCapable || !isMotivated || !isTotalOK) { 
+                        qual.status = "FEU ROUGE"; qual.text = "Inqualifiable. Pas de R2."; qual.color = "bg-red-600"; 
+                    } else { 
+                        const isIdeal = scores.total >= 40; 
+                        qual.status = `FEU VERT ${isIdeal ? "(Client Rêvé)" : ""}`; qual.text = "Prospect qualifié !"; qual.color = isIdeal ? "bg-emerald-600" : "bg-green-600"; 
+                    }
                 }
+
                 if (this.elements.qualificationStatus) { this.elements.qualificationStatus.textContent = qual.status; this.elements.qualificationStatus.className = `inline-block text-lg font-bold px-5 py-2 rounded-lg text-white shadow-lg ${qual.color}`; }
                 if (this.elements.qualificationText) { this.elements.qualificationText.textContent = qual.text; }
-                const spb = qual.status.includes("VERT");
+                
+                const showVertButton = qual.status.includes("VERT");
                 const showRougeButton = qual.status.includes("ROUGE") && isReady;
-                this.elements.showPitchButton?.classList.toggle('hidden', !spb);
+                
+                this.elements.showPitchButton?.classList.toggle('hidden', !showVertButton);
                 this.elements.saveAndExitButton?.classList.toggle('hidden', !showRougeButton);
+                
                 return qual;
             },
 
             updateFinalDiagnostic(scores, qual, isReady, context) {
                 const c = this.elements.finalDiagnosticContainer; if (!c) return; const { diagnosticForts: fE, diagnosticVigilance: vE, diagnosticVigilanceTitle: vt } = this.elements; Object.values(this.diagBorderColors).forEach(cls => cls.split(' ').forEach(cn => c.classList.remove(cn)));
                 if (!isReady) { c.classList.add('hidden'); this.diagBorderColors.neutral.split(' ').forEach(cn => c.classList.add(cn)); return; } c.classList.remove('hidden'); const { isCapable, isMotivated } = qual; const ig = qual.status.includes("VERT"); const ir = qual.status.includes("ROUGE");
+                
+                // MODIFIÉ: Renommer "Points Bloquants" en "Points d'Alerte"
                 if (ig) { this.diagBorderColors.green.split(' ').forEach(cn => c.classList.add(cn)); if (vt) vt.textContent = "Tes Points d'Effort (Pour réussir)"; }
                 else if (ir) { this.diagBorderColors.red.split(' ').forEach(cn => c.classList.add(cn)); if (vt) vt.textContent = "Points d'Alerte (Ce qui manque)"; }
                 else { this.diagBorderColors.neutral.split(' ').forEach(cn => c.classList.add(cn)); }
+                
                 if (fE) fE.innerHTML = ''; if (vE) vE.innerHTML = ''; let fm = []; let vm = [];
-                if (im) { const vst=context.douleur.includes("Improviser librement")?"...": "..."; fm.push(`Motivation claire... '${context.consequence||'N/A'}') = moteurs.`); } if (scores.competence >= SEUILS.competence) { fm.push(`Expérience ('${context.experience || 'N/A'}') = bon départ...`); } if (scores.dispo >= SEUILS.dispo) { fm.push(`Disponibilité ('${context.temps || 'N/A'}') = prêt à investir...`); } if (fm.length === 0 && !ig && fE) { fE.innerHTML = `...`; }
-                if (!isCapable) { vm.push(`Focus : *capacité à t'investir*...`); } if (!im) { vm.push(`Focus : *Envie*. GIA intensive...`); } if (scores.dispo < SEUILS.dispo) { vm.push(`Focus : *Temps*. '${context.temps}'...`); } if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) { vm.push(`Focus : *Vision*. ('${context.douleur[0]||'N/A'}')...`); }
-                if (scores.competence < SEUILS.competence && (context.experience === "< 1 an" || context.parcours === "Pas de cours")) { vm.push(`Point de focus : *Motivation & Discipline*. Profil débutant. S'assurer de la motivation face au défi, clarifier les efforts requis...`); }
-                else if (scores.competence < SEUILS.competence) { vm.push(`Focus : *Humilité*. Niveau ('${context.experience||'N/A'}')...`); }
+                if (isMotivated) { const vst=context.douleur.includes("Improviser librement")?"...": "..."; fm.push(`Motivation claire... ('${context.consequence||'N/A'}') = moteurs.`); } if (scores.competence >= SEUILS.competence) { fm.push(`Expérience ('${context.experience || 'N/A'}') = bon départ...`); } if (scores.dispo >= SEUILS.dispo) { fm.push(`Disponibilité ('${context.temps || 'N/A'}') = prêt à investir...`); } if (fm.length === 0 && !ig && fE) { fE.innerHTML = `...`; }
+                
+                if (!isCapable) { vm.push(`Focus : *capacité à t'investir*...`); } 
+                if (!isMotivated) { vm.push(`Focus : *Envie*. GIA intensive...`); } 
+                if (scores.dispo < SEUILS.dispo) { vm.push(`Focus : *Temps*. '${context.temps}'...`); } 
+                if (scores.adeq < SEUILS.adeq && !context.douleur.includes("Jouer des solos")) { vm.push(`Focus : *Vision*. ('${context.douleur[0]||'N/A'}')...`); }
+                
+                // MODIFIÉ: Logique Alerte Expérience/Parcours
+                if (scores.competence < SEUILS.competence && (context.experience === "< 1 an" || context.parcours === "Pas de cours")) { 
+                    vm.push(`Point de focus : *Motivation & Discipline*. Profil débutant. S'assurer de la réelle motivation face au défi, clarifier les efforts requis (régularité, discipline) pour un débutant complet.`); 
+                } else if (scores.competence < SEUILS.competence) { 
+                    vm.push(`Focus : *Humilité*. Niveau ('${context.experience||'N/A'}')...`); 
+                }
+                
                 if (context.douleur.includes("Jouer des solos")) { vm.push(`Focus (Adéquation) : 'Jouer solos' = 'piège à tablatures'...`); } if (context.douleur.includes("Technique")) { vm.push(`Focus (Volonté) : Blocage 'Technique' = 'fausse douleur'...`); } if (context.consequence === "Aucun") { vm.push(`Focus (Urgence) : Conséquence ('Aucun') = *manque d'urgence*...`); } if (vm.length === 0 && ig && vE) { vE.innerHTML = `<li class="text-green-300 italic">Aucune réserve majeure...</li>`; }
-                fm.forEach(t => { if (fE) fE.innerHTML += `<li>${t.replace(/\*(.*?)\*/g, '<span class="font-semibold text-white">$1</span>')}</li>`; }); vm.forEach(t => { if (vE) vE.innerHTML += `<li>${t.replace(/\*(.*?)\*/g, '<span class="font-semibold text-white">$1</span>')}</li>`; });
+                
+                fm.forEach(t => { if (fE) fE.innerHTML += `<li>${t.replace(/\*(.*?)\*/g, '<span class="font-semibold text-white">$1</span>')}</li>`; }); 
+                vm.forEach(t => { if (vE) vE.innerHTML += `<li>${t.replace(/\*(.*?)\*/g, '<span class="font-semibold text-white">$1</span>')}</li>`; });
             },
 
             updateQuestionCoach(scores, context, isReady) { const lE=this.elements.questionCoachList; if(!lE)return; let qs=[]; const {statut:s,temps:t,douleur:d,consequence:c,experience:e,parcours:p,style:st,materiel:m}=context; if(d.length===0){qs.push(`*Rêve* guitariste ? (→ *Vise 'Impro...'*)`);} if(!c){qs.push(`Dans 6 mois sans changement...? (→ *Vise 'Frustration'*)`);} if(!t){qs.push(`Heures/sem *vraiment* prêt à bloquer ? (→ *Vise '+5h'*)`);} if(!s){qs.push(`Actif ou + temps libre (retraité...) ? (→ *Vise 'Retraité'*)`);} if(e===''){qs.push(`Joues depuis combien temps ?`);} if(p===''){qs.push(`Déjà suivi cours structurés ?`);} if(st.length===0){qs.push(`Styles envie jouer ? (→ *Vise 'Blues/Rock'*)`);} if(m.length===0){qs.push(`Type guitare ? (→ *Vise 'Électrique'*)`);} if(isReady&&qs.length===0){if(scores.dispo<SEUILS.dispo){qs.push(`[ALERTE TEMPS 🔴] '${t}' vs 5h min. Où trouver heures ?`);} if(scores.capa<=SEUILS.capa){qs.push(`[ALERTE CAPA 🔴] Déjà investi k€ ? Comment vois-tu investissement ?`);} if(scores.motiv<=SEUILS.motiv){qs.push(`[ALERTE MOTIV 🔴] Objectif '${d.join(', ')}'. Pourquoi iras au bout cette fois ?`);} if(c==="Aucun"){qs.push(`[ALERTE URGENCE 🟠] Pas de conséquence. Pourquoi *maintenant* ?`);} if(scores.adeq<SEUILS.adeq&&!d.includes("Jouer des solos")){qs.push(`[ALERTE VISION 🟠] Objectif '${d[0]}'. Prêt 3 mois théorie avant résultats ?`);} if(d.includes("Jouer des solos")){qs.push(`[ALERTE VISION 🟠] 'Jouer solos'. Prêt focus *compréhension* avant plans ?`);} if(d.includes("Technique")){qs.push(`[ALERTE VOLONTÉ 🟠] Blocage 'Technique'. Prêt accepter vrai problème ailleurs ?`);}} if(isReady&&qs.length===0){lE.innerHTML=`<li class="text-green-300 italic">Excellent profil ! Prépare le R2.</li>`;} else if(qs.length===0){lE.innerHTML=`<li class="text-gray-400 italic">Remplis badges...</li>`;} else {lE.innerHTML=qs.map(q=>{let fq=q.replace(/(\(→.*?\))/g,'<span class="text-amber-400/60 italic text-xs">$1</span>'); if(q.includes("[ALERTE")){fq=fq.replace(/\[ALERTE.*?(\p{Emoji}).*?\]/gu,'<span class="font-semibold text-red-300">Alerte $1 :</span>');} fq=fq.replace(/\*(.*?)\*/g,'<span class="font-semibold text-white">$1</span>'); return `<li class="pb-1">${fq}</li>`;}).join('');} },
@@ -288,22 +317,55 @@
             async exportToPDF() {
                 const prospectName = `${this.state.prospectFirstName} ${this.state.prospectLastName}`; const { prospectDate } = this.state; const filename = `Fiche_Qualif_GIA_${prospectName.replace(/\s+/g, '_') || 'Prospect'}_${prospectDate || 'date'}.pdf`;
                 const spinner = document.createElement('div'); spinner.id = 'pdf-spinner'; spinner.innerHTML = '<span id="pdf-spinner-text">Génération PDF...</span>'; document.body.appendChild(spinner);
-                const coach = this.elements.questionCoachContainer; const gaugeCapa = this.elements.gaugeCpa?.parentElement; const totalScoreEl = this.elements.totalScore?.parentElement; const vigilanceItems = this.elements.diagnosticVigilance?.querySelectorAll('li'); let financialAlertItem = null; vigilanceItems?.forEach(item => { if (item.textContent.includes("capacité") || item.textContent.includes("investir")) { financialAlertItem = item; } });
+                
+                // --- Éléments à masquer ---
+                const coach = this.elements.questionCoachContainer;
+                const gaugeCapa = this.elements.gaugeCapa?.parentElement.parentElement; // Le div parent
+                const totalScoreEl = this.elements.totalScore?.parentElement; 
+                const vigilanceItems = this.elements.diagnosticVigilance?.querySelectorAll('li');
+                let financialAlertItem = null;
+                vigilanceItems?.forEach(item => { if (item.textContent.includes("capacité") || item.textContent.includes("investir")) { financialAlertItem = item; } });
+
                 const mainGrid = this.elements.mainGrid; const leftCol = this.elements.leftColumn; const dashboardCol = this.elements.dashboardColumn;
                 const coachOrigDisplay = coach ? coach.style.display : ''; const capaOrigDisplay = gaugeCapa ? gaugeCapa.style.display : ''; const scoreOrigDisplay = totalScoreEl ? totalScoreEl.style.display : ''; const alertOrigDisplay = financialAlertItem ? financialAlertItem.style.display : ''; const gridOrigLayout = mainGrid ? mainGrid.style.gridTemplateColumns : ''; const leftColOrigSpan = leftCol ? leftCol.className : ''; const dashColOrigSpan = dashboardCol ? dashboardCol.className : '';
+                
                 try {
-                    if (coach) coach.style.display = 'none'; if (gaugeCapa) gaugeCapa.style.display = 'none'; if (totalScoreEl) totalScoreEl.style.display = 'none'; if (financialAlertItem) financialAlertItem.style.display = 'none';
-                    if (mainGrid) mainGrid.style.gridTemplateColumns = '1fr'; if (leftCol) leftCol.className = leftCol.className.replace('md:col-span-2', 'col-span-1'); if (dashboardCol) dashboardCol.className = dashboardCol.className.replace('md:col-span-1', 'col-span-1');
+                    // Cacher les éléments
+                    if (coach) coach.style.display = 'none'; 
+                    if (gaugeCapa) gaugeCapa.style.display = 'none'; 
+                    if (totalScoreEl) totalScoreEl.style.display = 'none'; 
+                    if (financialAlertItem) financialAlertItem.style.display = 'none';
+                    // Forcer le layout 1 colonne pour PDF portrait
+                    if (mainGrid) mainGrid.style.gridTemplateColumns = '1fr'; 
+                    if (leftCol) leftCol.className = leftCol.className.replace('md:col-span-2', 'col-span-1'); 
+                    if (dashboardCol) dashboardCol.className = dashboardCol.className.replace('md:col-span-1', 'col-span-1');
+                    
                     await new Promise(r => setTimeout(r, 150));
+                    
                     const { jsPDF } = window.jspdf; if (!jsPDF || !window.html2canvas) throw new Error("Libs PDF manquantes!");
+                    
                     const canvas = await window.html2canvas(this.elements.mainScreen, { useCORS: true, backgroundColor: '#0f172a', scale: 1.5, logging: false, windowWidth: 800 });
-                    const imgData = canvas.toDataURL('image/png'); const pdf = new jsPDF('p', 'mm', 'a4'); const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = pdf.internal.pageSize.getHeight(); const canvasWidth = canvas.width, canvasHeight = canvas.height; const canvasRatio = canvasWidth / canvasHeight; const pdfRatio = pdfWidth / pdfHeight; let imgFinalWidth, imgFinalHeight;
-                    if (canvasRatio > pdfRatio) { imgFinalWidth = pdfWidth - 20; imgFinalHeight = imgFinalWidth / canvasRatio; } else { imgFinalHeight = pdfHeight - 20; imgFinalWidth = imgFinalHeight * canvasRatio; } const x = (pdfWidth - imgFinalWidth) / 2, y = (pdfWidth - imgFinalWidth) / 2;
-                    pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight); pdf.save(filename);
+                    const imgData = canvas.toDataURL('image/png'); 
+                    const pdf = new jsPDF('p', 'mm', 'a4'); // 'p' pour Portrait
+                    const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = pdf.internal.pageSize.getHeight(); 
+                    const canvasWidth = canvas.width, canvasHeight = canvas.height; const canvasRatio = canvasWidth / canvasHeight; const pdfRatio = pdfWidth / pdfHeight; let imgFinalWidth, imgFinalHeight;
+                    if (canvasRatio > pdfRatio) { imgFinalWidth = pdfWidth - 20; imgFinalHeight = imgFinalWidth / canvasRatio; } 
+                    else { imgFinalHeight = pdfHeight - 20; imgFinalWidth = imgFinalHeight * canvasRatio; } 
+                    const x = (pdfWidth - imgFinalWidth) / 2, y = (pdfWidth - imgFinalWidth) / 2;
+                    
+                    pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight); 
+                    pdf.save(filename);
+                
                 } catch (e) { console.error("Err PDF:", e); }
                 finally {
-                    if (mainGrid) mainGrid.style.gridTemplateColumns = gridOrigLayout; if (leftCol) leftCol.className = leftColOrigSpan; if (dashboardCol) dashboardCol.className = dashColOrigSpan;
-                    if (coach) coach.style.display = coachOrigDisplay; if (gaugeCapa) gaugeCapa.style.display = capaOrigDisplay; if (totalScoreEl) totalScoreEl.style.display = scoreOrigDisplay; if (financialAlertItem) financialAlertItem.style.display = alertOrigDisplay;
+                    // Restaurer les styles
+                    if (mainGrid) mainGrid.style.gridTemplateColumns = gridOrigLayout; 
+                    if (leftCol) leftCol.className = leftColOrigSpan; 
+                    if (dashboardCol) dashboardCol.className = dashColOrigSpan;
+                    if (coach) coach.style.display = coachOrigDisplay; 
+                    if (gaugeCapa) gaugeCapa.style.display = capaOrigDisplay; 
+                    if (totalScoreEl) totalScoreEl.style.display = scoreOrigDisplay; 
+                    if (financialAlertItem) financialAlertItem.style.display = alertOrigDisplay;
                     spinner.remove();
                 }
             },
@@ -314,6 +376,7 @@
             async confirmR2Schedule() { const success = await this.updateProspectStatusOnly('R2 Scheduled'); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             async confirmR2Rejection() { const reason = this.elements.lostReasonInput?.value.trim() || ""; const success = await this.updateProspectStatusOnly('Lost', reason); if (success) { setTimeout(() => { window.location.href = './dashboard.html'; }, 1000); } },
             
+            // --- CORRECTION: Logique de redirection ---
             async loadProspectData(docId) {
                 const { db } = window.firebaseServices || {};
                 if (!db) { this.showFeedback("Erreur DB", true); return; }
